@@ -1,0 +1,59 @@
+/* src/Header.css */
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.header {
+  background-color: white;
+  padding: 20px 0;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.tab-list {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+.tab {
+  margin: 0 20px;
+}
+
+.tab a {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+  padding: 10px 15px;
+  position: relative;
+}
+
+.tab.active a {
+  color: black;
+  /* Change text color for active tab */
+}
+
+.tab a::after {
+  content: '';
+  display: block;
+  height: 2px;
+  background: black;
+  /* Line color */
+  width: 100%;
+  position: absolute;
+  bottom: -5px;
+  /* Positioning the line */
+  left: 0;
+  right: 0;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.tab.active a::after {
+  transform: scaleX(1);
+  /* Show underline for active tab */
+}
