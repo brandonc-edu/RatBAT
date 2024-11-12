@@ -1,16 +1,22 @@
 // src/App.js
 import React from 'react';
-import Header from './Header'; // Import the Header component
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Header from './Header';
+import Home from './pages/Home';
+import FRDRQuery from './pages/FRDRQuery';
+import DataPreprocessing from './pages/DataPreprocessing';
+import ComputeSummaryMeasures from './pages/ComputeSummaryMeasures';
 
-const App = () => {
-  return (
-    <div>
-      <Header /> { }
-      <h1></h1>
-      {/* Other components can go here */}
-    </div>
-  );
-};
+const App = () => (
+  <Router>
+    <Header />
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/frdr-query" element={<FRDRQuery />} />
+      <Route path="/data-preprocessing" element={<DataPreprocessing />} />
+      <Route path="/compute-summary-measures" element={<ComputeSummaryMeasures />} />
+    </Routes>
+  </Router>
+);
 
 export default App;
-
