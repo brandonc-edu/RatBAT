@@ -1,0 +1,29 @@
+h2{
+    margin-bottom: 0px;
+}
+
+.filterBox{
+    background: #d3d3d3;
+    border-radius: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    height: 400px;
+    display: flex;
+}
+
+.parameters{
+    margin: 5px;
+    flex: 3 1 0%;
+}
+
+.metaVariables{
+    flex: 1;
+    margin: 50px;
+    
+    background-color: white;
+}
+
+.metaVariables > div{
+    padding: 0;
+    margin-top: -15px;   
+}
