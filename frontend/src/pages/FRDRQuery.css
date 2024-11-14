@@ -3,35 +3,47 @@ h2{
 }
 
 .filterBox{
-    background: #d3d3d3;
     border-radius: 10px;
     margin-left: 10px;
     margin-right: 10px;
+    border: solid black;
     height: 400px;
     display: flex;
 }
 
 .parameters{
     margin: 5px;
-    flex: 3 1 0%;
+    flex: 4 1 0%;
 }
 
 .metaVariables{
     flex: 1;
     margin: 50px;
-    
     background-color: white;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); /* Flexible columns */
+    gap: 2px 15px; /* Adjusts row gap (first value) and column gap (second value) */
+    padding: 10px;
+    border: 1px solid #ccc; 
 }
 
-.metaVariables > div{
-    padding: 0;
-    margin-top: -15px;   
+.metaVar{
+    width: 70px;
+    height: 20px;
+    cursor: pointer;
+    background-color: white;
+    transition: background-color 0.3s ease;
+}
+.metaVar.toggled{
+    background-color: #a9a9a9; /* Darker background color when toggled */
+    border-color: #888;
 }
 
 .dataEntries{
     height: 400px;
+    border-radius: 10px;
     border: solid black;
-    background: lightgray;
     margin-left: 10px;
     margin-right: 10px;
 }

@@ -14,11 +14,26 @@ const sampleData = [
 
 
 const FRDRQuery = () => {
-    const metaButtons = ['var1', 'var2', 'var3', 'var3', 'var5'];
+    const metaButtons = ['var1', 'var2', 'var3', 'var3', 'var5','wow','crying','1','2','3','4','5','6', '1','2','3','4','5','6'];
 
+
+    // Data filtering states
     const [filters, setFilters] = useState({});
     const [filteredData, setFilteredData] = useState(sampleData);
 
+     // State to track toggled buttons (using an array of boolean values)
+    const [toggledButtons, setToggledButtons] = useState([]);
+
+    // Toggle button state
+    const handleToggle = (index) => {
+        setToggledButtons((prevState) => {
+        const newToggledButtons = [...prevState];
+        newToggledButtons[index] = !newToggledButtons[index]; // Toggle state
+        return newToggledButtons;
+        });
+    };
+
+    // Handle filtering logic for data (filters -> aug data -> show data)
     const applyFilters = (newFilters) => {
         setFilters(newFilters);
         const filteredEntries = sampleData.filter(item =>
@@ -26,22 +41,26 @@ const FRDRQuery = () => {
             value ? item[key] === value : true
           )
         );
-        setFilteredData(filteredEntries);
+    setFilteredData(filteredEntries);
     };
 
     return (
     <div>
         {/* FILTERBOX */}
-        <h2>FILTERS</h2>
+        <h2>Filters</h2>
         <div className = 'filterBox'>
             <div className = 'parameters'>
                 <FilterButtons filters={filters} onChange={applyFilters} />
             </div>
             <div className = 'metaVariables'>
-                <div>Metavariables</div>
-                {metaButtons.map((btn) => {
-                    return <button class = 'metaVar'>{btn}</button>;
-                })}
+                {metaButtons.map((btn, index) => (
+                    <button 
+                        key = {index}
+                        className={`metaVar ${toggledButtons[index] ? 'toggled' : ''}`}
+                        onClick={() => handleToggle(index)}
+                    >    
+                    {btn}</button>
+                ))}
             </div>
         </div>
         <h2>Filtered Data Entries</h2>
