@@ -27,3 +27,11 @@ h2{
     padding: 0;
     margin-top: -15px;   
 }
+
+.dataEntries{
+    height: 400px;
+    border: solid black;
+    background: lightgray;
+    margin-left: 10px;
+    margin-right: 10px;
+}
