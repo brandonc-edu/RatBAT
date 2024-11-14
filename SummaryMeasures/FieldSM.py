@@ -5,7 +5,7 @@ This module contains all of the required functionality in regards to calculation
 
 Authors: Brandon Carrasco
 Created on: 07-11-2024
-Modified on: 09-11-2024
+Modified on: 14-11-2024
 """
 
 # Necessary Imports
@@ -107,7 +107,7 @@ class Environment:
     def __init__(self, grid, objects, shape):
         """
         
-        grid is a list of two lists (horizontal & vertical lines) containing lists that contain two tuples that specify the start & ends coordinates of their lines.
+        grid is a list of two lists (horizontal & vertical lines) containing lists (each representing a line) that contain two tuples that specify the start & ends coordinates of their lines.
         """
         self.grid = self.GenerateGrid(grid)
         self.objects = objects
@@ -180,7 +180,43 @@ class Environment:
 
 ## Common Environment
 
+COMMON_ENV = Environment(
+    [
+        [ # Horizontal Lines
+            [(20, 20), (180, 20)],
+            [(20, 40), (180, 40)],
+            [(20, 80), (180, 80)],
+            [(20, 120), (180, 120)],
+            [(20, 160), (180, 160)],
+            [[(20, 180), (180, 180)]]
+        ],
+        [ # Vertical Lines
+            [(20, 20), (20, 180)],
+            [(40, 20), (40, 180)],
+            [(80, 20), (80, 180)],
+            [(120, 20), (120, 180)],
+            [(160, 20), (160, 180)],
+            [(180, 20), (180, 180)],
+        ]
+    ],
+    [ # List of objects
+        Rectangle([(56, 136), (64, 144)]),
+        Rectangle([(172, 172), (180, 180)]),
+        Rectangle([(94.75, 55.75), (105.25, 64.25)]),
+        Polygon([
+            (174.343, 20),
+            (180, 25.6569),
+            (174.343, 31.3137),
+            (168.686, 25.6569),
+            (174.343, 20)
+        ])
+    ],
+    'FillerShape'
+)
+
 ## Q21 to Q23 Environments
+Q20S_ENV = None
 
 ## Q17 Environment
+Q17_ENV = None
 
