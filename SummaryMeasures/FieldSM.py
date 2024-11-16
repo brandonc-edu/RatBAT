@@ -5,7 +5,7 @@ This module contains all of the required functionality in regards to calculation
 
 Authors: Brandon Carrasco
 Created on: 07-11-2024
-Modified on: 14-11-2024
+Modified on: 16-11-2024
 """
 
 # Necessary Imports
@@ -19,11 +19,11 @@ from itertools import chain
 
 # Constants
 
-LOCALE_MAPPING = [22, 21, 20, 19, 18,
-                  23, 8, 7, 6, 17,
-                  24, 9, 1, 5, 16,
-                  25, 2, 3, 4, 15,
-                  10, 11, 12, 13, 14]
+LOCALE_MAPPING = [70, 75, 80, 85, 10,
+                  65, 7, 8, 1, 15,
+                  60, 6, 0, 2, 20,
+                  55, 5, 4, 3, 25,
+                  50, 45, 40, 35, 30]
 
 # Classes
 
@@ -55,7 +55,7 @@ class Rectangle(PhysicalObject):
         xMax, yMax = self.points[1]
         return (x > xMin and x < xMax) and (y > yMin and y < yMax)
 
-class Polygon(PhysicalObject):
+class PolygonObject(PhysicalObject):
 
     def __init__(self, points):
         """
@@ -128,25 +128,30 @@ class Environment:
         fullCoords = set(horizontalCoords).union(set(verticalCoords))
         
         # Initialize x-coordinates & y-coordinates of the grid
-        xCoords = set(0)
-        yCoords = set(0)
+        xCoords = set()
+        yCoords = set()
 
         # Grab all x & y coordinates that are used in the grid
         for x, y in fullCoords:
+            # print(x)
             xCoords.add(x)
             yCoords.add(y)
 
         # Create the grid
-        xCoords = np.array(xCoords).sort()
-        yCoords = np.array(yCoords).sort()
+        xCoords = np.sort(np.array(list(xCoords)))
+        yCoords = np.sort(np.array(list(yCoords)))
         grid = np.meshgrid(xCoords, yCoords)
 
         return grid
 
 
-    def SpecimenLocation(self, x, y):
+    def SpecimenLocation(self, x, y, index=False):
         """
             Given the x and y values of the specimen (assumed a rat), return which locale (specified by a mapping to LOCALE_MAPPING) it is currently present in.
+
+            NOTE: X & Y data never goes below 20.
+
+            index specifies if the function returns the locale that the specimen is located in or the index of the locale the specimen is located in with respect to LOCALE_MAPPING.
 
             Currently only handles rectangular fields. Will add circular functionality later.
         """
@@ -155,22 +160,30 @@ class Environment:
 
         for i in range(len(xv) - 1):
             for j in range(len(yv) - 1):
-                xMin = xv[j + 1, i]
-                yMin = yv[j + 1, i]
-                xMax = xv[j, i + 1]
-                yMax = yv[j, i + 1]
+                xLower = xv[j + 1, i]
+                yLower = yv[j + 1, i]
+                xUpper = xv[j, i + 1]
+                yUpper = yv[j, i + 1]
 
                 # Biased towards the first locale the specimen could be in.
                 ## Biased towards upper left-most locales
                 ### If specimen is on boundary between two or more locales (VERY RARE; requires whole number), it will choose the upper left-most locale as the locale the specimen is in.
-                if (x >= xMin and x <= xMax) and (y >= yMin and y <= yMax):
-                    return LOCALE_MAPPING[locale]
+                if (x >= xLower and x <= xUpper) and (y <= yLower and y >= yUpper):
+                    if not index:
+                        return LOCALE_MAPPING[locale]
+                    else:
+                        return locale
                 locale += 1
         raise Exception("Error: specimen was not located within any locale.")
 
 
-                
+### Helper Functions
 
+def GetLocaleFromIndex(index):
+    """
+        Given an index, return the locale that the index maps to in LOCALE_MAPPING.
+    """
+    return LOCALE_MAPPING[index]
 
 
 
@@ -188,7 +201,7 @@ COMMON_ENV = Environment(
             [(20, 80), (180, 80)],
             [(20, 120), (180, 120)],
             [(20, 160), (180, 160)],
-            [[(20, 180), (180, 180)]]
+            [(20, 180), (180, 180)]
         ],
         [ # Vertical Lines
             [(20, 20), (20, 180)],
@@ -203,7 +216,7 @@ COMMON_ENV = Environment(
         Rectangle([(56, 136), (64, 144)]),
         Rectangle([(172, 172), (180, 180)]),
         Rectangle([(94.75, 55.75), (105.25, 64.25)]),
-        Polygon([
+        PolygonObject([
             (174.343, 20),
             (180, 25.6569),
             (174.343, 31.3137),
@@ -220,3 +233,4 @@ Q20S_ENV = None
 ## Q17 Environment
 Q17_ENV = None
 
+# TESTING

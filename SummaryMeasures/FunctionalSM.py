@@ -5,13 +5,14 @@ This module contains all of the required functionality in regards to Summary Mea
 
 Authors: Brandon Carrasco
 Created on: 07-11-2024
-Modified on: 14-11-2024
+Modified on: 16-11-2024
 """
 
 # Imports
 import numpy as np
 # import pandas as pd
 import FieldSM as fsm
+from FieldSM import GetLocaleFromIndex
 
 # Constants
 
@@ -77,6 +78,10 @@ def CalculateHomeBases(movementType, env: fsm.Environment, preExistingCalcs=None
         return the two locales (main home base & secondary home base) of the specimen.
 
         If the main home base is visited only once, then return None for secondary home base. 
+
+        Also referred to as fHBname01LING & fHBname02LING.
+
+        Reference ID for Commander: calc_homebases
     """
     localeVisits = [0 for x in range(25)]
     localeDuration = [0 for x in range(25)]
@@ -85,7 +90,7 @@ def CalculateHomeBases(movementType, env: fsm.Environment, preExistingCalcs=None
     for i in range(len(movementType)):
         frame = movementType[i]
         if frame[2] == 0:
-            specimenLocale = env.SpecimenLocation(frame[0], frame[1]) - 1
+            specimenLocale = env.SpecimenLocation(frame[0], frame[1], index=True)
             if not stopped:
                 localeVisits[specimenLocale] += 1
                 stopped = True
@@ -103,13 +108,17 @@ def CalculateHomeBases(movementType, env: fsm.Environment, preExistingCalcs=None
         mainHomeBase = localeA if localeVisits[localeA] > localeVisits[localeB] else localeB
     secondaryHomeBase = localeA if mainHomeBase == localeB else localeB
     if localeA < 2 and localeB < 2: # In case that there's less than two stops for main home base. In this case, the home base would essentially be a random locale that has one stop in it.
-        return mainHomeBase + 1, None
+        return GetLocaleFromIndex(mainHomeBase), None
     else:
-        return mainHomeBase + 1, secondaryHomeBase + 1
+        return GetLocaleFromIndex(mainHomeBase), GetLocaleFromIndex(secondaryHomeBase)
     
-def CalculateFreqHomeBaseStops(movementType, mainHomeBase, env: fsm.Environment):
+def CalculateFreqHomeBaseStops(movementType, mainHomeBase: int, env: fsm.Environment):
     """
         Calculates the cumulative number of stops within the first home base
+
+        Also referred to as KPcumReturnfreq01
+
+        Reference ID is: calc_HB1_cumulativeReturn
     """
     numStops = 0
     stopped = False
@@ -125,9 +134,13 @@ def CalculateFreqHomeBaseStops(movementType, mainHomeBase, env: fsm.Environment)
             stopped = False
     return numStops
 
-def CalculateMeanDurationHomeBaseStops(movementType, mainHomeBase, env: fsm.Environment):
+def CalculateMeanDurationHomeBaseStops(movementType, mainHomeBase: int, env: fsm.Environment):
     """
-        Calculates the mean duration (in seconds) of the specimen remaining in the main home base.
+        Calculates the mean duration (in seconds) of the specimen remaining in the main home base. Additionally returns the log (base 10) of this duration as well.
+
+        Also referred to as KPmeanStayTime01_s & KPmeanStayTime01_s_log.
+
+        Reference ID is: calc_HB1_meanDurationStops
     """
     numStops = 0
     totalDuration = 0
@@ -144,11 +157,16 @@ def CalculateMeanDurationHomeBaseStops(movementType, mainHomeBase, env: fsm.Envi
                 totalDuration += 1
         else:
             stopped = False
-    return (totalDuration / numStops) / FRAMES_PER_SECOND
+    duration_in_seconds = (totalDuration / numStops) / FRAMES_PER_SECOND
+    return duration_in_seconds, np.log10(duration_in_seconds)
 
-def CalculateMeanReturnHomeBase(movementType, mainHomeBase, env: fsm.Environment):
+def CalculateMeanReturnHomeBase(movementType, mainHomeBase: int, env: fsm.Environment):
     """
         Calculates the mean return time to the main home base (in seconds). Also can be thought of as the mean duration of execursions.
+
+        Also referred to as KPcumReturnfreq01
+
+        Reference ID is: calc_HB1_meanReturn
     """
     totalExcursions = 0
     totalDuration = 0
@@ -166,9 +184,13 @@ def CalculateMeanReturnHomeBase(movementType, mainHomeBase, env: fsm.Environment
             excursion = False
     return (totalDuration / totalExcursions) / FRAMES_PER_SECOND
 
-def CalculateMeanStopsExcursions(movementType, mainHomeBase, env: fsm.Environment):
+def CalculateMeanStopsExcursions(movementType, mainHomeBase: int, env: fsm.Environment):
     """
         Calculates the mean number of stops during excursions (away from the Main Home Base).
+
+        Also referred to as KPstopsToReturn01
+
+        Reference ID is: calc_HB1_meanExcursionStops
     """
     totalExcursions = 0
     totalStops = 0
@@ -191,6 +213,9 @@ def CalculateMeanStopsExcursions(movementType, mainHomeBase, env: fsm.Environmen
 # x = np.array([1, 5, 21, 1, 2, 5, 9, 21])
 # print(x[np.argpartition(x, len(x) - 2)][-2:])
 
+# x = 10
+# print(np.log10(x))
 
-
+# x = np.array([[1, 2, 3, 10], [4, 5, 6, 11], [7, 8, 9, 12]])
+# print(x[:, [0, 2, 3]])
 
