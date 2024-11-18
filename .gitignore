@@ -1,4 +1,5 @@
 venv/
 backend/backend/__pycache__/
 globus_transfer/.env
+database/.env
 .vscode

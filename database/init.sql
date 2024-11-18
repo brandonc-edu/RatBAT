@@ -78,12 +78,12 @@ CREATE TABLE IF NOT EXISTS Treatment (
     Treatment_ID           INT           NOT NULL,
     SurgeryManipulation_ID INT           NOT NULL,
     SurgeryOutcome_ID      INT           NOT NULL,
-    DrugRx_Drug1           VARCHAR(20)   NOT NULL,
-    DrugRx_Dose1           DECIMAL(12,8) NOT NULL,
-    DrugRx_Drug2           VARCHAR(20)   NOT NULL,
-    DrugRx_Dose2           DECIMAL(12,8) NOT NULL,
-    DrugRx_Drug3           VARCHAR(20)   NOT NULL,
-    DrugRx_Dose3           DECIMAL(12,8) NOT NULL,
+    DrugRx_Drug1           VARCHAR(20)   NOT NULL,--Can't be NOT NULL
+    DrugRx_Dose1           DECIMAL(12,8) NOT NULL,--Can't be NOT NULL
+    DrugRx_Drug2           VARCHAR(20)   NOT NULL,--Can't be NOT NULL
+    DrugRx_Dose2           DECIMAL(12,8) NOT NULL,--Can't be NOT NULL
+    DrugRx_Drug3           VARCHAR(20)   NOT NULL,--Can't be NOT NULL
+    DrugRx_Dose3           DECIMAL(12,8) NOT NULL,--Can't be NOT NULL
     PRIMARY KEY (Treatment_ID),
     FOREIGN KEY (SurgeryManipulation_ID) REFERENCES SurgeryManipulation(SurgeryManipulation_ID),
     FOREIGN KEY (SurgeryOutcome_ID)      REFERENCES SurgeryOutcome(SurgeryOutcome_ID)
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS Trial (
     Experimenter    VARCHAR(100) NOT NULL,
     Duration        INT          NOT NULL,
     FallsDuringTest INT          NOT NULL,
-    Notes           VARCHAR(100) NOT NULL,
+    Notes           VARCHAR(100) NOT NULL,--Can't be NOT NULL
     Trackfile       BOOLEAN      NOT NULL,
     Pathplot        BOOLEAN      NOT NULL,
     Video           BOOLEAN      NOT NULL,
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS Fall (
 );
 
 CREATE TABLE IF NOT EXISTS Experiment (
-    Experiment_ID INT NOT NULL,
+    Experiment_ID INT NOT NULL, --Should be String
     Trial_ID      INT NOT NULL,
     PRIMARY KEY (Experiment_ID, Trial_ID),
     FOREIGN KEY (Trial_ID) REFERENCES Trial(Trial_ID)
@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS Experiment (
 
 CREATE TABLE IF NOT EXISTS Study (
     Study_ID      CHAR(3) NOT NULL,
-    Experiment_ID INT     NOT NULL,
+    Experiment_ID INT     NOT NULL, --Should be String
     PRIMARY KEY (Study_ID, Experiment_ID),
     FOREIGN KEY (Experiment_ID) REFERENCES Experiment(Experiment_ID)
 );
