@@ -1,3 +1,5 @@
+/* src/ComputeSummaryMeasures.css */
+
 /* Adding space between each item and its checkbox */
 .measure-item label input,
 .data-item label input,
@@ -19,6 +21,7 @@
   height: 100vh;
   box-sizing: border-box;
   padding: 20px;
+  background-color: #f8f9fa;
 }
 
 .top-section {
@@ -27,25 +30,21 @@
   flex: 1;
 }
 
-.summary-measures {
-  flex: 1;
+.summary-measures,
+.selected-data,
+.result-section {
+  background-color: white;
   border: 1px solid #ccc;
-  padding: 10px;
-  padding-left: 20px;
-  max-height: 250px;
-  overflow-y: auto;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.summary-measures,
 .selected-data {
   flex: 1;
-  border: 1px solid #ccc;
-  padding: 10px;
-  padding-left: 20px;
-  max-height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-sizing: border-box;
+  max-height: 250px; /* Set a fixed height */
+  overflow-y: auto; /* Enable scrolling */
 }
 
 .data-items {
@@ -64,9 +63,6 @@
 }
 
 .result-section {
-  border: 1px solid #ccc;
-  padding: 10px;
-  padding-left: 20px;
   display: flex;
   flex-direction: column;
   height: calc(100vh - 250px);
@@ -86,4 +82,23 @@
   border-top: 1px solid #ccc;
   position: sticky;
   bottom: 35px;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+h3 {
+  margin-top: 0;
+  color: #343a40;
 }

@@ -174,7 +174,9 @@ class Environment:
                     else:
                         return locale
                 locale += 1
+        print(f"Specimen coordinates: x={x}, y={y}")
         raise Exception("Error: specimen was not located within any locale.")
+      
 
 
 ### Helper Functions
