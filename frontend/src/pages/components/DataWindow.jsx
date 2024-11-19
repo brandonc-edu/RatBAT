@@ -1,56 +1,73 @@
-// src/pages/components/DataWindow.jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import './DataWindow.css';
 
-
-//Search Function is included in the datawindow as it is the most simpliest way
-
 const DataWindow = ({ data }) => {
+    console.log('DataWindow received data:', data); // Debugging log
+
+    // If data is not an array, handle gracefully
+    if (!Array.isArray(data) || data.length === 0) {
+        return <p>No data available</p>;
+    }
+
     const [searchTerm, setSearchTerm] = useState('');
 
     // Function to handle changes to the search bar
     const handleSearchChange = (event) => {
-      setSearchTerm(event.target.value);
+        setSearchTerm(event.target.value);
     };
 
-    // Filtered data based on search term
-    const filteredData = data.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.color.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Filtered data based on search term.
+    const filteredData = Array.isArray(data) ? data.filter(item =>
+        Object.values(item).some(value =>
+            value !== null &&
+            !Number.isNaN(value) &&
+            value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    ) : [];
+
+    // Extract unique keys for table headers
+    const headers = filteredData.length > 0 ? Object.keys(filteredData[0]) : [];
 
     return (
         <div>
             <input 
-                type = "text"
-                placeholder = "Search..."
-                value = {searchTerm}
-                onChange = {handleSearchChange}
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={handleSearchChange}
             />
-            {filteredData.length > 0 ? (
-            <ol>
-                {filteredData.map((item) => (
-                <li key={item.id}>
-                    {item.name} - {item.category} - {item.color}
-                </li>
-                ))}
-            </ol>
-            ) : (
-            <p>No matching entries found.</p>
-            )}
+            <div className="scrollable-container">
+                {filteredData.length > 0 ? (
+                    <div className="data-grid">
+                        {/* Render headers */}
+                        <div className="header-row">
+                            {headers.map((header, index) => (
+                                <div key={index} className="data-cell header-cell">
+                                    {header}
+                                </div>
+                            ))}
+                        </div>
+                        {/* Render data rows */}
+                        {filteredData.map((item, index) => (
+                            <div key={index} className="data-row">
+                                {headers.map((key, i) => (
+                                    <div key={i} className="data-cell">
+                                        {item[key]?.toString()}
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p>No matching entries found.</p>
+                )}
+            </div>
         </div>
     );
 };
 
 DataWindow.propTypes = {
-    data: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-        name: PropTypes.string.isRequired,
-        category: PropTypes.string.isRequired,
-        color: PropTypes.string.isRequired,
-    })).isRequired,
+    data: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
-
 export default DataWindow;
