@@ -9,8 +9,8 @@ Modified on: 16-11-2024
 """
 
 import numpy as np
-import FieldSM as fsm
-import FunctionalSM as fcsm
+from . import FieldSM as fsm
+from . import FunctionalSM as fcsm
 import pandas as pd
 
 ### Summary Measure Dependency Helper ###
@@ -79,7 +79,7 @@ class Commander:
         """
         for i in range(len(summaryMeasures)):
             sm = summaryMeasures[i]
-
+            
     def AccountForJitter(self, data: np.ndarray, min=20, max=180):
         """
             Given the preprocessed data, it will return the dataset with all x & y coordinates capped between 20 & 180 (the coordinate system used by the supervisors).
@@ -91,7 +91,7 @@ class Commander:
         data[:, 1] = np.clip(data[:, 1], min, max)
         # y-coord
         data[:, 2] = np.clip(data[:, 2], min, max)
-        return data
+        return data        
         
 
     def CalculateSummaryMeasures(self, data, summaryMeasures):
@@ -109,7 +109,7 @@ class Commander:
 
         # Handle data jitter
         data = self.AccountForJitter(data)
-
+        
         # Run through summary measures & calculate them
         ## 0 = frame
         ## 1 = x-coord
@@ -118,28 +118,32 @@ class Commander:
         ## 4 = segmentType (lingering vs. progression)
         for sm in summaryMeasures: ## Developer's note
             if sm == "calc_homebases": # Takes in x, y, segmentType + environment
-                self.calculatedSummaryMeasures[sm] = fcsm.CalculateHomeBases(data[:, [1, 2, 4]], self.env)
+                homebases = fcsm.CalculateHomeBases(data[:, [1, 2, 4]], self.env)
+                self.calculatedSummaryMeasures[sm] = {
+                    "main_home_base": homebases[0],
+                    "secondary_home_base": homebases[1]
+                }
             elif sm == "calc_HB1_cumulativeReturn": # Takes in x, y, segmentType + mainHomeBase + environment
                 self.calculatedSummaryMeasures[sm] = fcsm.CalculateFreqHomeBaseStops(data[:, [1, 2, 4]],
-                                                                                     self.calculatedSummaryMeasures["calc_homebases"][0],
+                                                                                     self.calculatedSummaryMeasures["calc_homebases"]["main_home_base"],
                                                                                      self.env)
             elif sm == "calc_HB1_meanDurationStops": # Takes in x, y, segmentType + mainHomeBase + environment
                 self.calculatedSummaryMeasures[sm] = fcsm.CalculateMeanDurationHomeBaseStops(data[:, [1, 2, 4]],
-                                                                                     self.calculatedSummaryMeasures["calc_homebases"][0],
+                                                                                     self.calculatedSummaryMeasures["calc_homebases"]["main_home_base"],
                                                                                      self.env)
             elif sm == "calc_HB1_meanReturn": # Takes in x, y + mainHomeBase + environment
-                if self.calculatedSummaryMeasures["calc_homebases"][1] == None:
+                if self.calculatedSummaryMeasures["calc_homebases"]["secondary_home_base"] is None:
                     print("WARNING: Cannot calculate mean return time to main home base, as second home base does not exist!")
                 else:
                     self.calculatedSummaryMeasures[sm] = fcsm.CalculateMeanReturnHomeBase(data[:, [1, 2]],
-                                                                                        self.calculatedSummaryMeasures["calc_homebases"][0],
+                                                                                        self.calculatedSummaryMeasures["calc_homebases"]["main_home_base"],
                                                                                         self.env)
             elif sm == "calc_HB1_meanExcursionStops": # Takes in x, y, segmentType + mainHomeBase + environment
-                if self.calculatedSummaryMeasures["calc_homebases"][1] == None:
+                if self.calculatedSummaryMeasures["calc_homebases"]["secondary_home_base"] is None:
                     print("WARNING: Cannot calculate mean number of stops during excursions (from main home base), as second home base does not exist!")
                 else:
                     self.calculatedSummaryMeasures[sm] = fcsm.CalculateMeanStopsExcursions(data[:, [1, 2, 4]],
-                                                                                     self.calculatedSummaryMeasures["calc_homebases"][0],
+                                                                                     self.calculatedSummaryMeasures["calc_homebases"]["main_home_base"],
                                                                                      self.env)
 
 ### TESTING ###

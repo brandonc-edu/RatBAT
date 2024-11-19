@@ -11,8 +11,8 @@ Modified on: 16-11-2024
 # Imports
 import numpy as np
 # import pandas as pd
-import FieldSM as fsm
-from FieldSM import GetLocaleFromIndex
+from . import FieldSM as fsm
+from . FieldSM import GetLocaleFromIndex
 
 # Constants
 

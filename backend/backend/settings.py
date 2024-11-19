@@ -26,6 +26,12 @@ SECRET_KEY = 'django-insecure-wxc@uh@&j%c-!yml93a16hwyic_+-nocmckim1@+(hs%kc)#!^
 DEBUG = True
 
 ALLOWED_HOSTS = []
+import os
+import sys
+
+# Add the project root to sys.path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(BASE_DIR, '..'))
 
 
 # Application definition
@@ -37,17 +43,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'summary_measures',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Allow all origins (for development purposes)
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'backend.urls'
 
