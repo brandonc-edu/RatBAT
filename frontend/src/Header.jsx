@@ -1,6 +1,7 @@
-// src/Header.js
+// src/Header.jsx
 import React, { useState } from 'react';
-import './Header.css'; // Import the CSS for the header
+import { Link } from 'react-router-dom';
+import './Header.css';
 
 const Header = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -13,16 +14,16 @@ const Header = () => {
     <div className="header">
       <ul className="tab-list">
         <li className={`tab ${activeTab === 'home' ? 'active' : ''}`}>
-          <a href="#home" onClick={() => handleTabClick('home')}>Home</a>
+          <Link to="/" onClick={() => handleTabClick('home')}>Home</Link>
         </li>
         <li className={`tab ${activeTab === 'frdr-query' ? 'active' : ''}`}>
-          <a href="#frdr-query" onClick={() => handleTabClick('frdr-query')}>FRDR Query</a>
+          <Link to="/frdr-query" onClick={() => handleTabClick('frdr-query')}>FRDR Query</Link>
         </li>
         <li className={`tab ${activeTab === 'data-preprocessing' ? 'active' : ''}`}>
-          <a href="#data-preprocessing" onClick={() => handleTabClick('data-preprocessing')}>Data Preprocessing</a>
+          <Link to="/data-preprocessing" onClick={() => handleTabClick('data-preprocessing')}>Data Preprocessing</Link>
         </li>
         <li className={`tab ${activeTab === 'compute-summary-measures' ? 'active' : ''}`}>
-          <a href="#compute-summary-measures" onClick={() => handleTabClick('compute-summary-measures')}>Compute Summary Measures</a>
+          <Link to="/compute-summary-measures" onClick={() => handleTabClick('compute-summary-measures')}>Compute Summary Measures</Link>
         </li>
       </ul>
     </div>
