@@ -79,7 +79,19 @@ class Commander:
         """
         for i in range(len(summaryMeasures)):
             sm = summaryMeasures[i]
-            
+
+    def AccountForJitter(self, data: np.ndarray, min=20, max=180):
+        """
+            Given the preprocessed data, it will return the dataset with all x & y coordinates capped between 20 & 180 (the coordinate system used by the supervisors).
+            This accounts for the rat being on the edges of the field -> the jitter of the tracking device sometimes makes the rat look like its crossing those boundaries, but its not.
+
+            This is only being handled here for the purposes of the PoC -> Future iterations of the platform will handle jitter in the preprocessing step.
+        """
+        # x-coord
+        data[:, 1] = np.clip(data[:, 1], min, max)
+        # y-coord
+        data[:, 2] = np.clip(data[:, 2], min, max)
+        return data
         
 
     def CalculateSummaryMeasures(self, data, summaryMeasures):
@@ -94,6 +106,9 @@ class Commander:
         self.PerformPreCalculations(summaryMeasures)
 
         # Check summary measure dependencies 
+
+        # Handle data jitter
+        data = self.AccountForJitter(data)
 
         # Run through summary measures & calculate them
         ## 0 = frame
