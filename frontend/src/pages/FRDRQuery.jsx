@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 
 const FRDRQuery = () => {
     const [data, setData] = useState([]);
-    const metaButtons = ['var1', 'var2', 'var3', 'var3', 'var5','wow','crying','1','2','3','4','5','6', '1','2','3','4','5','6'];
+    const metaButtons = ['TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD'];
 
 
     // Data filtering states

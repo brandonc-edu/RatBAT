@@ -1,39 +1,7 @@
-input{
+input {
     margin: 10px;
-}
-
-.scrollable-container {
-    max-height: 800px; /* Adjust the height as per your requirement */
-    overflow: auto;
-    border: 1px solid #ccc; /* Optional: Adds border around the scrollable area */
-    padding: 8px; /* Optional: Adds padding inside the scrollable area */
-    white-space: nowrap;
-}
-
-.data-grid {
-    display: flex;
-    flex-direction: column; /* Ensures rows are displayed as separate lines */
-    gap: 8px; /* Optional: spacing between rows */
-}
-
-.header-row, .data-row {
-    display: flex;
-    flex-direction: row; /* Ensures cells are aligned horizontally */
-    gap: 8px; /* Optional: spacing between cells */
-    border: 1px solid black;
-}
-
-.header-row{
-    background-color: cornsilk;
-}
-
-.data-cell, .header-cell {
-    padding: 8px;
-    border-left: 1px solid #ccc;
-    border-right: 1px solid #ccc;
-    white-space: nowrap; /* Prevents text wrapping */
-    overflow: hidden; /* Hides overflowing text */
-    text-overflow: ellipsis; /* Adds ellipsis for overflowing text */
-    flex-grow: 1; /* Allows cells to expand to fill available space */
-    min-width: 150px; /* Optional: Adjust the minimum width as needed */
+    padding: 5px;
+    width: 100%;
+    max-width: 300px;
+    box-sizing: border-box;
 }
