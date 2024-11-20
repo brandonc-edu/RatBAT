@@ -1,4 +1,5 @@
 // src/pages/DataPreprocessing.jsx
+<<<<<<< HEAD
 import React, { useState } from 'react';
 import './DataPreprocessing.css';
 
@@ -115,5 +116,14 @@ const DataPreprocessing = () => {
     </div>
   );
 };
+=======
+import React from 'react';
+
+const DataPreprocessing = () => (
+    <div>
+        src/pages/DataPreprocessing.jsx
+    </div>
+);
+>>>>>>> FRDRQuery
 
 export default DataPreprocessing;
