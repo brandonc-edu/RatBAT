@@ -2,21 +2,6 @@ import React from 'react';
 import './FilterButtons.css';
 
 function FilterButtons({ filters, onChange }) {
-
-  //Animal 
-  // lightColonyDesc
-  // lightCycleTest
-
-  //Apparatus
-  // arenaLocDesc discrete
-  // arenaTypeDesc discrete
-  // arenaObjectDesc 
-
-  //Treatment
-  // drug1 discrete
-  // dose1 discrete
-
-  
   // Discrete Filter Options
   const discreteFilters = {
     SUBJECTS_LightDarkCycleWhenTested: ['lights ON','lights OFF'],
@@ -42,14 +27,14 @@ function FilterButtons({ filters, onChange }) {
   };
 
   return (
-    <div>
+    <div className="filter-buttons">
       {/* Dropdown Discrete Filters */}
       {Object.entries(discreteFilters).map(([key, options]) => (
         <div key={key}>
           <label htmlFor={key}>{key}:</label>
           <select
             id={key}
-            className = 'filter'
+            className='filter'
             value={filters[key] || ''}
             onChange={(e) => handleDropdownChange(key, e.target.value)}
           >
@@ -73,7 +58,6 @@ function FilterButtons({ filters, onChange }) {
           min="1" // You can adjust restrictions as needed
         />
       </div> */}
-
     </div>
   );
 }

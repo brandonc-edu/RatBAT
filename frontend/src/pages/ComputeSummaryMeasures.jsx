@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import './ComputeSummaryMeasures.css';
 import axios from 'axios';
@@ -180,15 +179,3 @@ const ComputeSummaryMeasures = () => {
 };
 
 export default ComputeSummaryMeasures;
-=======
-// src/pages/ComputeSummaryMeasures.jsx
-import React from 'react';
-
-const ComputeSummaryMeasures = () => (
-    <div>
-        src/pages/ComputeSummaryMeasures.jsx
-    </div>
-);
-
-export default ComputeSummaryMeasures;
->>>>>>> FRDRQuery

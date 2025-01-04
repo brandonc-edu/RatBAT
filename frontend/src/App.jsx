@@ -6,10 +6,6 @@ import Home from './pages/Home';
 import FRDRQuery from './pages/FRDRQuery';
 import DataPreprocessing from './pages/DataPreprocessing';
 import ComputeSummaryMeasures from './pages/ComputeSummaryMeasures';
-<<<<<<< HEAD
-=======
-import './App.css';
->>>>>>> FRDRQuery
 
 const App = () => (
   <Router>

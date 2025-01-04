@@ -1,4 +1,3 @@
-// src/pages/components/DataWindow.jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import './DataWindow.css';
@@ -32,7 +31,7 @@ const DataWindow = ({ data }) => {
       };
 
     return (
-        <div>
+        <div className="data-window">
             <input 
                 type="text"
                 placeholder="Search..."

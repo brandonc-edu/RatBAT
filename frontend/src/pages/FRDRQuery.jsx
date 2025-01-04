@@ -1,7 +1,4 @@
 // src/pages/FRDRQuery.jsx
-<<<<<<< HEAD
-import React from 'react';
-=======
 import React, { useState,useEffect } from 'react';
 import './FRDRQuery.css';
 import DataWindow from './components/DataWindow';
@@ -89,4 +86,3 @@ const FRDRQuery = () => {
 };
 
 export default FRDRQuery;
->>>>>>> FRDRQuery
