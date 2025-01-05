@@ -1,4 +1,4 @@
-/* src/ComputeSummaryMeasures.css */
+/* src/pages/ComputeSummaryMeasures.css */
 
 /* Adding space between each item and its checkbox */
 .measure-item label input,
@@ -29,6 +29,46 @@
   gap: 20px;
   flex: 1;
 }
+.measure-item {
+  position: relative;
+  cursor: pointer;
+}
+
+
+.measure-item label {
+  display: flex;
+  align-items: center;
+}
+
+.measure-item {
+  position: relative;
+  cursor: pointer;
+}
+
+.measure-item::after {
+  content: attr(data-tooltip); /* Use custom tooltip text */
+  position: absolute;
+  left: 15%;
+  top: 100%; /* Show below the element */
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  visibility: hidden; /* Hidden by default */
+  opacity: 0; /* Transparent by default */
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 10;
+}
+
+.measure-item:hover::after {
+  visibility: visible; /* Show on hover */
+  opacity: 1; /* Fade in */
+}
+
 
 .summary-measures,
 .selected-data,

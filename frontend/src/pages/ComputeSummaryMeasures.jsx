@@ -80,7 +80,14 @@ const ComputeSummaryMeasures = () => {
       console.error("Error:", error.response ? error.response.data : error.message);
     }
   };
-
+  const measureDisplayNames = {
+    calc_homebases: 'Homebases',
+    calc_HB1_cumulativeReturn: 'Cumulative Return',
+    calc_HB1_meanDurationStops: 'Mean Duration Stops',
+    calc_HB1_meanReturn: 'Mean Return',
+    calc_HB1_meanExcursionStops: 'Mean Excursion Stops',
+  };
+  
   const formatResults = (data) => {
     const formattedResults = [];
     for (const [key, value] of Object.entries(data)) {
@@ -116,14 +123,18 @@ const ComputeSummaryMeasures = () => {
         <div className="summary-measures">
           <h3>Summary Measures</h3>
           {summaryMeasuresOptions.map((measure, index) => (
-            <div key={index} className="measure-item">
+            <div 
+              key={index} 
+              className="measure-item" 
+              data-tooltip={measure} // Custom tooltip content
+            >
               <label>
                 <input
                   type="checkbox"
                   checked={selectedSummaryMeasures.includes(measure)}
                   onChange={() => handleSummaryMeasureToggle(measure)}
                 />
-                {capitalizeFirstLetter(measure.replace('calc_', '').replace(/_/g, ' '))}
+                {measureDisplayNames[measure]}
               </label>
             </div>
           ))}
