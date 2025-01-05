@@ -1,0 +1,14 @@
+.data-window input {
+  margin: 10px;
+  padding: 5px;
+  width: 100%;
+  max-width: 300px;
+  box-sizing: border-box;
+}
+
+.data-window .download {
+  position: absolute;
+  right: 0;
+  margin-top: 10px;
+  margin-right: 50px;
+}
