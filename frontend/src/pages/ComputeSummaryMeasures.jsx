@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './ComputeSummaryMeasures.css';
 import axios from 'axios';
 
@@ -9,6 +9,9 @@ const ComputeSummaryMeasures = () => {
   const [selectedDataFile, setSelectedDataFile] = useState('');
   const [selectedResults, setSelectedResults] = useState([]);
   const [summaryMeasuresOptions, setSummaryMeasuresOptions] = useState([]);
+  const [showModal, setShowModal] = useState(true); // State to control the modal visibility
+  const modalRef = useRef(null);
+  const offset = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     // Fetch available data files from the backend
@@ -81,6 +84,14 @@ const ComputeSummaryMeasures = () => {
     }
   };
 
+  const measureDisplayNames = {
+    calc_homebases: 'Homebases',
+    calc_HB1_cumulativeReturn: 'Cumulative Return',
+    calc_HB1_meanDurationStops: 'Mean Duration Stops',
+    calc_HB1_meanReturn: 'Mean Return',
+    calc_HB1_meanExcursionStops: 'Mean Excursion Stops',
+  };
+
   const formatResults = (data) => {
     const formattedResults = [];
     for (const [key, value] of Object.entries(data)) {
@@ -102,28 +113,81 @@ const ComputeSummaryMeasures = () => {
   };
 
   const handleDownloadSelected = () => {
-    console.log("Downloading selected results...");
-    // Implement download functionality here
+    const selectedData = selectedResults.map(result => {
+      const [key, value] = result.split(': ');
+      return { key, value };
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + selectedData.map(e => `${e.key},${e.value}`).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "selected_results.csv");
+    document.body.appendChild(link); // Required for Firefox
+
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const capitalizeFirstLetter = (string) => {
-    return string.replace(/\b\w/g, char => char.toUpperCase());
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  const handleMouseDown = (e) => {
+    const rect = modalRef.current.getBoundingClientRect();
+    offset.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleMouseMove = (e) => {
+    modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+    modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+  };
+
+  const handleMouseUp = () => {
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
   };
 
   return (
     <div className="compute-summary-measures">
+      {showModal && (
+        <div
+          className="modal"
+          ref={modalRef}
+          onMouseDown={handleMouseDown}
+        >
+          <div className="modal-content">
+            <span className="close" onClick={handleCloseModal}>&times;</span>
+            <h2>Welcome to Compute Summary Measures</h2>
+            <p>Here you can select data files and summary measures to compute various metrics.</p>
+            <p>Use the checkboxes to select the summary measures you are interested in.</p>
+            <p>Click "Apply" to compute the selected summary measures for the chosen data file.</p>
+          </div>
+        </div>
+      )}
       <div className="top-section">
         <div className="summary-measures">
           <h3>Summary Measures</h3>
           {summaryMeasuresOptions.map((measure, index) => (
-            <div key={index} className="measure-item">
+            <div 
+              key={index} 
+              className="measure-item" 
+              data-tooltip={measure} // Custom tooltip content
+            >
               <label>
                 <input
                   type="checkbox"
                   checked={selectedSummaryMeasures.includes(measure)}
                   onChange={() => handleSummaryMeasureToggle(measure)}
                 />
-                {capitalizeFirstLetter(measure.replace('calc_', '').replace(/_/g, ' '))}
+                {measureDisplayNames[measure]}
               </label>
             </div>
           ))}
