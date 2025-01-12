@@ -1,54 +1,54 @@
 CREATE TABLE IF NOT EXISTS LightCycleColony (
     LightCycleColony_ID  INT          NOT NULL,
-    LightCycleColonyDesc VARCHAR(100) NOT NULL,
+    LightCycleColonyDesc VARCHAR(200) NOT NULL,
     PRIMARY KEY (LightCycleColony_ID)
 );
 
 CREATE TABLE IF NOT EXISTS LightCycleTest (
     LightCycleTest_ID  INT          NOT NULL,
-    LightCycleTestDesc VARCHAR(100) NOT NULL,
+    LightCycleTestDesc VARCHAR(200) NOT NULL,
     PRIMARY KEY (LightCycleTest_ID)
 );
 
 CREATE TABLE IF NOT EXISTS ArenaType (
     ArenaType_ID  INT          NOT NULL,
-    ArenaTypeDesc VARCHAR(100) NOT NULL,
+    ArenaTypeDesc VARCHAR(200) NOT NULL,
     PRIMARY KEY (ArenaType_ID)
 );
 
 CREATE TABLE IF NOT EXISTS ArenaLoc (
     ArenaLoc_ID  INT          NOT NULL,
-    ArenaLocDesc VARCHAR(100) NOT NULL,
+    ArenaLocDesc VARCHAR(200) NOT NULL,
     PRIMARY KEY (ArenaLoc_ID)
 );
 
 CREATE TABLE IF NOT EXISTS ArenaObjects (
     ArenaObjects_ID  INT          NOT NULL,
-    ArenaObjectsDesc VARCHAR(100) NOT NULL,
+    ArenaObjectsDesc VARCHAR(200) NOT NULL,
     PRIMARY KEY (ArenaObjects_ID)
 );
 
 CREATE TABLE IF NOT EXISTS LightConditions (
     LightConditions_ID  INT          NOT NULL,
-    LightConditionsDesc VARCHAR(100) NOT NULL,
+    LightConditionsDesc VARCHAR(200) NOT NULL,
     PRIMARY KEY (LightConditions_ID)
 );
 
 CREATE TABLE IF NOT EXISTS SurgeryManipulation (
     SurgeryManipulation_ID  INT          NOT NULL,
-    SurgeryManipulationDesc VARCHAR(100) NOT NULL,
+    SurgeryManipulationDesc VARCHAR(200) NOT NULL,
     PRIMARY KEY (SurgeryManipulation_ID)
 );
 
 CREATE TABLE IF NOT EXISTS SurgeryOutcome (
     SurgeryOutcome_ID  INT          NOT NULL,
-    SurgeryOutcomeDesc VARCHAR(100) NOT NULL,
+    SurgeryOutcomeDesc VARCHAR(200) NOT NULL,
     PRIMARY KEY (SurgeryOutcome_ID)
 );
 
 CREATE TABLE IF NOT EXISTS EventType (
     EventType_ID  INT          NOT NULL,
-    EventTypeDesc VARCHAR(100) NOT NULL,
+    EventTypeDesc VARCHAR(200) NOT NULL,
     PRIMARY KEY (EventType_ID)
 );
 
@@ -78,12 +78,12 @@ CREATE TABLE IF NOT EXISTS Treatment (
     Treatment_ID           INT           NOT NULL,
     SurgeryManipulation_ID INT           NOT NULL,
     SurgeryOutcome_ID      INT           NOT NULL,
-    DrugRx_Drug1           VARCHAR(20)   NOT NULL,--Can't be NOT NULL
-    DrugRx_Dose1           DECIMAL(12,8) NOT NULL,--Can't be NOT NULL
-    DrugRx_Drug2           VARCHAR(20)   NOT NULL,--Can't be NOT NULL
-    DrugRx_Dose2           DECIMAL(12,8) NOT NULL,--Can't be NOT NULL
-    DrugRx_Drug3           VARCHAR(20)   NOT NULL,--Can't be NOT NULL
-    DrugRx_Dose3           DECIMAL(12,8) NOT NULL,--Can't be NOT NULL
+    DrugRx_Drug1           VARCHAR(20)   ,
+    DrugRx_Dose1           VARCHAR(100)  ,
+    DrugRx_Drug2           VARCHAR(20)   ,
+    DrugRx_Dose2           VARCHAR(100)  ,
+    DrugRx_Drug3           VARCHAR(20)   ,
+    DrugRx_Dose3           VARCHAR(100)  ,
     PRIMARY KEY (Treatment_ID),
     FOREIGN KEY (SurgeryManipulation_ID) REFERENCES SurgeryManipulation(SurgeryManipulation_ID),
     FOREIGN KEY (SurgeryOutcome_ID)      REFERENCES SurgeryOutcome(SurgeryOutcome_ID)
@@ -91,18 +91,19 @@ CREATE TABLE IF NOT EXISTS Treatment (
 
 CREATE TABLE IF NOT EXISTS Trial (
     Trial_ID        INT          NOT NULL,
-    DateAndTime     DATETIME     NOT NULL,
-    AnimalWeight    INT          NOT NULL,
+    DateAndTime     VARCHAR(100) NOT NULL,
+    AnimalWeight    INT          ,
     InjectionNumber INT          NOT NULL,
-    OFTestNumber    INT          NOT NULL,
+    OFTestNumber    INT          ,
     DrugRxNumber    INT          NOT NULL,
     Experimenter    VARCHAR(100) NOT NULL,
     Duration        INT          NOT NULL,
     FallsDuringTest INT          NOT NULL,
-    Notes           VARCHAR(100) NOT NULL,--Can't be NOT NULL
+    Notes           VARCHAR(2000),
     Trackfile       BOOLEAN      NOT NULL,
     Pathplot        BOOLEAN      NOT NULL,
     Video           BOOLEAN      NOT NULL,
+    Video_ID        VARCHAR(100),
     EventType_ID    INT          NOT NULL,
     Animal_ID       VARCHAR(100) NOT NULL,
     Apparatus_ID    INT          NOT NULL,
@@ -114,13 +115,6 @@ CREATE TABLE IF NOT EXISTS Trial (
     FOREIGN KEY (Treatment_ID) REFERENCES Treatment(Treatment_ID)
 );
 
-CREATE TABLE IF NOT EXISTS Video (
-    Video_ID VARCHAR(100) NOT NULL,
-    Trial_ID INT          NOT NULL,
-    PRIMARY KEY (Video_ID, Trial_ID),
-    FOREIGN KEY (Trial_ID) REFERENCES Trial(Trial_ID)
-);
-
 CREATE TABLE IF NOT EXISTS Fall (
     Trial_ID     INT NOT NULL,
     TimeWhenFell INT NOT NULL,
@@ -129,22 +123,36 @@ CREATE TABLE IF NOT EXISTS Fall (
 );
 
 CREATE TABLE IF NOT EXISTS Experiment (
-    Experiment_ID INT NOT NULL, --Should be String
+    Experiment_ID  VARCHAR(100) NOT NULL,
+    ExperimentDesc VARCHAR(200) NOT NULL,
+    PRIMARY KEY (Experiment_ID)
+);
+
+CREATE TABLE IF NOT EXISTS ExperimentGroup (
+    Experiment_ID VARCHAR(100) NOT NULL,
     Trial_ID      INT NOT NULL,
     PRIMARY KEY (Experiment_ID, Trial_ID),
+    FOREIGN KEY (Experiment_ID) REFERENCES Experiment(Experiment_ID),
     FOREIGN KEY (Trial_ID) REFERENCES Trial(Trial_ID)
 );
 
 CREATE TABLE IF NOT EXISTS Study (
-    Study_ID      CHAR(3) NOT NULL,
-    Experiment_ID INT     NOT NULL, --Should be String
+    Study_ID  CHAR(3)      NOT NULL,
+    StudyDesc VARCHAR(200) NOT NULL,
+    PRIMARY KEY (Study_ID)
+);
+
+CREATE TABLE IF NOT EXISTS StudyGroup (
+    Study_ID      CHAR(3)          NOT NULL,
+    Experiment_ID VARCHAR(100)     NOT NULL,
     PRIMARY KEY (Study_ID, Experiment_ID),
+    FOREIGN KEY (Study_ID)   REFERENCES Study(Study_ID),
     FOREIGN KEY (Experiment_ID) REFERENCES Experiment(Experiment_ID)
 );
 
 CREATE TABLE IF NOT EXISTS Project (
     Project_ID  INT          NOT NULL,
-    ProjectDesc VARCHAR(100) NOT NULL,
+    ProjectDesc VARCHAR(200) NOT NULL,
     PRIMARY KEY (Project_ID)
 );
 
