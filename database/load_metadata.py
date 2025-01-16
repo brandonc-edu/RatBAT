@@ -1,5 +1,5 @@
-import os, dotenv, pathlib, re
-
+import os, pathlib, re
+from dotenv import load_dotenv
 import pandas as pd
 import sqlalchemy
 
@@ -16,7 +16,7 @@ def str_to_list(s):
             l_out.append(i)
     return l_out
 # Load database info and create datasbase engine with sqlalchemy.
-dotenv.load_dotenv()
+load_dotenv()
 
 db_user = os.getenv("DB_USER")
 db_pass = os.getenv("DB_PASS")
@@ -88,7 +88,9 @@ tables["Trial"] = df.groupby("Trial_ID").first().reset_index()[
                      "Duration",
                      "FallsDuringTest",
                      "Notes",
-                     "Trackfile/Pathplot/Video",
+                     "Trackfile",
+                     "Pathplot",
+                     "Video",
                      "Video_ID",
                      "EventType_ID",
                      "Animal_ID",
@@ -130,44 +132,6 @@ tables["Fall"] = df.groupby("Trial_ID").first().reset_index()[["Trial_ID","TimeW
 # Split each fall in a trial into its own line.
 tables["Fall"].loc[:,"TimeWhenFell"] = tables["Fall"].loc[:,"TimeWhenFell"].map(str_to_list)
 tables["Fall"] = tables["Fall"].explode("TimeWhenFell",ignore_index=True).dropna().drop_duplicates().reset_index(drop=True)
-
-# Divide "Trackfile/Pathplot/Video" column into 3 boolean columns.
-tables["Trial"]["Trackfile"] = [False for _ in tables["Trial"].index]
-tables["Trial"]["Pathplot"]  = [False for _ in tables["Trial"].index]
-tables["Trial"]["Video"]     = [False for _ in tables["Trial"].index]
-
-available_ID_dict = {"1":(True,True,True),
-                     "2":(True,True,False),
-                     "3":(True,False,True),
-                     "4":(False,True,True),
-                     "5":(True,False,False),
-                     "6":(False,False,True)}
-for row in tables["Trial"].index:
-    tables["Trial"].loc[row,"Trackfile"] = available_ID_dict[tables["Trial"].loc[row,"Trackfile/Pathplot/Video"]][0]
-    tables["Trial"].loc[row,"Pathplot"]  = available_ID_dict[tables["Trial"].loc[row,"Trackfile/Pathplot/Video"]][1]
-    tables["Trial"].loc[row,"Video"]     = available_ID_dict[tables["Trial"].loc[row,"Trackfile/Pathplot/Video"]][2]
-
-tables["Trial"].drop("Trackfile/Pathplot/Video",axis=1,inplace=True)
-
-# Reorder columns.
-tables["Trial"] = tables["Trial"][["Trial_ID",
-                     "DateAndTime",
-                     "AnimalWeight",
-                     "InjectionNumber",
-                     "OFTestNumber",
-                     "DrugRxNumber",
-                     "Experimenter",
-                     "Duration",
-                     "FallsDuringTest",
-                     "Notes",
-                     "Trackfile",
-                     "Pathplot",
-                     "Video",
-                     "Video_ID",
-                     "EventType_ID",
-                     "Animal_ID",
-                     "Apparatus_ID",
-                     "Treatment_ID"]]
 
 publish_order = ["LightCycleColony",
                  "LightCycleTest",
