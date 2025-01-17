@@ -15,13 +15,7 @@ import pandas as pd
 
 ### Summary Measure Dependency Helper ###
 
-SM_DEPENDENCIES = {
-    "calc_homebases" : [],
-    "calc_HB1_cumulativeReturn" : ["calc_homebases"],
-    "calc_HB1_meanDurationStops" : ["calc_homebases"],
-    "calc_HB1_meanReturn" : ["calc_homebases"],
-    "calc_HB1_meanExcursionStops" : ["calc_homebases"]
-}
+
 
 
 ### Commander Class ###
