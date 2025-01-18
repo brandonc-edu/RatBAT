@@ -1,5 +1,5 @@
 import requests
-import pymysql
+import sqlalchemy
 import pandas as pd
 from dotenv import load_dotenv
 import os
@@ -34,22 +34,14 @@ def query(filters:dict, dtypes, save:bool = True):
     db_port = int(os.getenv("DB_PORT"))
     db_name = os.getenv("DB_NAME")
 
-    db_con = pymysql.connect(
-        host     = db_host,
-        user     = db_user,
-        password = db_pass,
-        database = db_name,
-        port     = db_port
-    )
-
-    cursor = db_con.cursor()
+    db_engine = sqlalchemy.create_engine(f'mysql+mysqlconnector://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}')
 
     # Determine what data already exists in the database, compile list of data to access.
 
     # All files that need to be retrieved from the FRDR are added to a list (ID, type, url). 
 
 
-def frdr_request(files:list,save:bool):
+def frdr_request(files:list,save:bool,db_engine):
     save_data = pd.DataFrame(columns=["Trial_ID","Sample_ID","T","X","Y","X_S","Y_S","V_S","MovementType_S"])
     for file in files:
         url = file[2].replace("g-624536.53220.5898.data.globus.org","www.frdr-dfdr.ca/repo/files")
@@ -57,7 +49,9 @@ def frdr_request(files:list,save:bool):
         # do whatever needs to be done for frontend transfering purposes.
         if save and file[1] == 0:
             save_data = pd.concat([save_data,format_trackfile(file[0],url)],ignore_index=True)
-    print(save_data.head)
+    if save:    
+        save_data.to_sql(if_exists='append')
+
 
 def format_trackfile(trial_ID,url):
     tf = pd.read_csv(url, header = 31)
