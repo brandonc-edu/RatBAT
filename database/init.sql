@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS ProjectGroup (
 CREATE TABLE IF NOT EXISTS TimeSeries (
     Trial_ID       INT NOT NULL,
     Sample_ID      INT NOT NULL,
-    T              DECIMAL(10,2) NOT NULL,
+    T              DECIMAL(10,2),
     X              DECIMAL(10,2),
     Y              DECIMAL(10,2),
     X_S            DECIMAL(10,2),
