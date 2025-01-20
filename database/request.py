@@ -126,6 +126,9 @@ def get_trackfile(trial_ID:int, url:str):
     tf = tf[["Trial_ID","Sample_ID","T","X","Y"]]
     tf.replace("-",np.nan,inplace=True)
     return tf
+"""
+For testing purposes:
+
 
 load_dotenv()
 db_user = os.getenv("DB_USER")
@@ -140,3 +143,4 @@ url1 = "https://g-624536.53220.5898.data.globus.org/11/published/publication_440
 url2 = "https://g-624536.53220.5898.data.globus.org/11/published/publication_440/submitted_data/Q17/03_Videos_mpgFiles/Q17Clg3_of1_inj09_20011213_007_008_009_010_011_012.mpg"
 
 frdr_request(files=[(62, "t", url1),(46, "v", url2)], cache_path="./database/data/test_data", db_engine=db_engine, save = True)
+"""
