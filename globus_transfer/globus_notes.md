@@ -24,3 +24,6 @@
 "/11/published/publication_[0-9]{3}/submitted_data/Q[0-9]{2}/(03_Videos_mpgFiles|05_EthoVision_csvTrackFiles|06_Pathplots_individual)"  
 *Regex for all possible data types.*  
 *Note: needs to be updated when preprocessed data is added*
+
+#### Filename format:
+[study_id][]

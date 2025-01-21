@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'summary_measures',
     'corsheaders',
+    'db_connector',
 ]
 
 MIDDLEWARE = [
@@ -89,10 +90,10 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'db',
-        'USER': 'user',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',  # Or your DB server host
+        'NAME': 'ocd_lib',
+        'USER': 'ratbat',
+        'PASSWORD': 'LabRat123',
+        'HOST': 'localhost',
         'PORT': '3306',
     }
 }
