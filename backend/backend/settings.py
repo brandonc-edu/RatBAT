@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'summary_measures',
     'corsheaders',
+    'db_connector',
 ]
 
 MIDDLEWARE = [
