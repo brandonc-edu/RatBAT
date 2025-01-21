@@ -1,10 +1,10 @@
 import pathlib, re
 import pandas as pd
-import numpy as np
-import django
 import db_connector.models as models
 from django.core.management.base import BaseCommand
 from django.db import connection
+from database.db_helper import build_model
+import os
 
 # Transforms a string of fall times to a list of fall times
 # Each list is separated by numbers
@@ -19,45 +19,18 @@ def str_to_list(s):
             l_out.append(i)
     return l_out
 
-def get_foreign_keys(model):
-    fkeys = []
-    for col in model._meta.get_fields():
-        if isinstance(col, django.db.models.ForeignKey):
-            fkeys.append(col)
-    return fkeys
-
-def build_model(model,data):
-
-    data.replace(np.nan,None, inplace = True)
-    # Replace foreign key references ids with actual referenced model
-    fkeys = get_foreign_keys(model)
-    fkeys = {key.name:key for key in fkeys}
-
-    row_models = []
-    for _,row in data.iterrows():
-        row_dict = {}
-        for col, val in row.items():
-            if col in fkeys:
-                row_dict[col] = fkeys[col].related_model.objects.get(**{col:val})
-            else:
-                row_dict[col] = val
-
-        row_models.append(model(**(row_dict)))
-        
-    model.objects.all().delete()
-    model.objects.bulk_create(row_models)
-
-
 class Command(BaseCommand):
     help = "Load all metadata into the database."
     
     def handle(self,*args,**kwargs):
         # Load metadata from csv file.
-        data_path = pathlib.Path("./db_connector/data/FRDR_interface_20211029_SupplementaryMaterial(MetaDataTable).csv")
+        data_path = os.path.join(os.path.dirname(__file__),'..','..','..','..','database','data','FRDR_interface_20211029_SupplementaryMaterial(MetaDataTable).csv')
+        data_path = os.path.abspath(data_path)
         df = pd.read_csv(data_path,header=1, encoding_errors="replace", dtype=str)
 
         # Rename columns to match the database column names and drop columns that do not appear in the database.
-        label_path = pathlib.Path("./db_connector/data/FRDR_variable_translations.csv")
+        label_path = os.path.join(os.path.dirname(__file__),'..','..','..','..','database','data','FRDR_variable_translations.csv')
+        label_path = os.path.abspath(label_path)
         labels = pd.read_csv(label_path)
         drop_labels = []
         labels = labels.set_index("Original Label")["New Label"]

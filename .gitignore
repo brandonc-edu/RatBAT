@@ -1,7 +1,7 @@
 venv/
 backend/summary_measures/migrations/
 backend/db_connector/migrations/
-backend/db_connector/data/test_data/
+database/data/test_data/
 .vscode
 .env
 **/__pycache__/

@@ -1,11 +1,9 @@
 import requests
-import sqlalchemy
 import pandas as pd
 import numpy as np
-from dotenv import load_dotenv
-import os
+from database.db_helper import build_model
 
-def request_data(filters:dict, dtypes:str, cache_path:str, save:bool = True) -> None:
+def get_frdr_urls():
     """Retreives requested data from local db/FRDR and optionally saves to local database.
 
     Parameters
@@ -24,23 +22,11 @@ def request_data(filters:dict, dtypes:str, cache_path:str, save:bool = True) -> 
     save : bool
         If true the accessed time series data will be saved into the database. (defaults to True)
     """
-    load_dotenv()
-    db_user = os.getenv("DB_USER")
-    db_pass = os.getenv("DB_PASS")
-    db_host = os.getenv("DB_HOST")
-    db_port = int(os.getenv("DB_PORT"))
-    db_name = os.getenv("DB_NAME")
+    url1 = "https://g-624536.53220.5898.data.globus.org/11/published/publication_440/submitted_data/Q17/05_EthoVision_csvTrackFiles/Q17Clg3012_04_5_0042_0000062_TrackFile.csv"
+    url2 = "https://g-624536.53220.5898.data.globus.org/11/published/publication_440/submitted_data/Q17/03_Videos_mpgFiles/Q17Clg3_of1_inj09_20011213_007_008_009_010_011_012.mpg"
+    return [(62, "t", url1),(46, "v", url2)]
 
-    db_engine = sqlalchemy.create_engine(f'mysql+mysqlconnector://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}')
-
-    frdr_files = []
-
-    # Determine what data already exists in the database, compile list of data to access.
-
-    # All files that need to be retrieved from the FRDR are added to a list (ID, type, url). 
-    frdr_request(frdr_files,cache_path, db_engine, save)
-
-def frdr_request(files:list, cache_path:str, db_engine:sqlalchemy.Engine, save:bool) -> pd.DataFrame:
+def frdr_request(files:list, cache_path:str, model, save:bool) -> None:
     """Given a list of files accesses neccesary data from the frdr.
 
     Parameters
@@ -75,7 +61,7 @@ def frdr_request(files:list, cache_path:str, db_engine:sqlalchemy.Engine, save:b
     
         
     if save:    
-        ts_data.to_sql(name="TimeSeries",con=db_engine,if_exists='append',index=False)
+        build_model(model,ts_data)
     
     print("All FRDR files successfully cached")
 
