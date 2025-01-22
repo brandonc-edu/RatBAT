@@ -1,9 +1,11 @@
 import requests
 import pandas as pd
 import numpy as np
-from database.db_helper import build_model
+from django.db.models import Q
+from database.db_helper import build_model, FIELD_LOOKUPS
 
-def get_frdr_urls():
+
+def get_frdr_urls(filters,trial_model,dtypes):
     """Retreives requested data from local db/FRDR and optionally saves to local database.
 
     Parameters
@@ -17,16 +19,39 @@ def get_frdr_urls():
              - "t" : raw time series data
              - "p" : raw pathplots
             Any combination also works
-    cache : str
-        filepath to location to cache requested data.
-    save : bool
-        If true the accessed time series data will be saved into the database. (defaults to True)
     """
-    url1 = "https://g-624536.53220.5898.data.globus.org/11/published/publication_440/submitted_data/Q17/05_EthoVision_csvTrackFiles/Q17Clg3012_04_5_0042_0000062_TrackFile.csv"
-    url2 = "https://g-624536.53220.5898.data.globus.org/11/published/publication_440/submitted_data/Q17/03_Videos_mpgFiles/Q17Clg3_of1_inj09_20011213_007_008_009_010_011_012.mpg"
-    return [(62, "t", url1),(46, "v", url2)]
+    query = Q()
+    #query = Q(timeseries__TrialID__isnull = True)
 
-def frdr_request(files:list, cache_path:str, model, save:bool) -> None:
+    for f in filters:
+        field  = f.get('field')
+        lookup = f.get('lookup')
+        value  = f.get('value')
+
+        if not lookup in FIELD_LOOKUPS:
+            raise ValueError(f"Invalid lookup type provided: {lookup}")
+
+        field = field.replace("trial__","")
+        filter = {f"{field}__{lookup}":value}
+
+        query = query & Q(**filter)
+
+    query_out = trial_model.objects.filter(query)
+    
+    urls = []
+
+    if dtypes == 'a':
+        dtypes = 'vtp'
+    if 'v' in dtypes:
+        urls = urls + [(trial.Trial_ID,'v',trial.Video) for trial in query_out if not trial.Video == None]
+    if 't' in dtypes:
+        urls = urls + [(trial.Trial_ID,'t',trial.Trackfile) for trial in query_out if not trial.Trackfile == None]
+    if 'p' in dtypes:
+        urls = urls + [(trial.Trial_ID,'p',trial.Pathplot) for trial in query_out if not trial.Pathplot == None]
+
+    return urls
+
+def frdr_request(files:list[tuple[int,str,str]], cache_path:str, model, save:bool) -> None:
     """Given a list of files accesses neccesary data from the frdr.
 
     Parameters

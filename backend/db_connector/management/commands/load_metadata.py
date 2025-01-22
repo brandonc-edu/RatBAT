@@ -157,7 +157,7 @@ class Command(BaseCommand):
         # Publish all tables to database.
         for table in publish_order:
             self.stdout.write(f"loading table '{table[1]}' into the database...")
-            build_model(table[0],tables[table[1]])
+            build_model(table[0],tables[table[1]],replace = True)
          
 
         self.stdout.write("\033[32mSuccessfully loaded metadata into database.\033[0m")

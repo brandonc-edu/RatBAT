@@ -122,4 +122,4 @@ class TimeSeries(models.Model):
     X_S = models.DecimalField(max_digits=10, decimal_places=2,null=True)
     Y_S = models.DecimalField(max_digits=10, decimal_places=2,null=True)
     V_S = models.DecimalField(max_digits=10, decimal_places=2,null=True)
-    MovementType_S = models.IntegerField()
+    MovementType_S = models.IntegerField(null=True)
