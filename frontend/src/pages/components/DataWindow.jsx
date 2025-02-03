@@ -1,3 +1,4 @@
+// src/pages/components/DataWindow.jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import './DataWindow.css';
@@ -20,28 +21,31 @@ const DataWindow = ({ data }) => {
     ) : [];
 
     const handleDownload = () => {
-        const dataStr = JSON.stringify(data, null, 2); // Convert data to string with pretty-printing
+        if (!filteredData || filteredData.length === 0) {
+            alert("No data available to download."); // Optional: Notify the user if no data is available
+            return;
+        }
+        const dataStr = JSON.stringify(filteredData, null, 2); // Convert filtered data to JSON with pretty formatting
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'data.json';
+        link.download = 'filtered_data_entries.json'; // Set download filename
         link.click();
         URL.revokeObjectURL(url);
-      };
+    };
 
     return (
-        <div className="data-window">
+        <div>
             <input 
                 type="text"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={handleSearchChange}
             />
-            <button className='download'
-                onClick={handleDownload}
-            >
-                download</button>
+            <button className="download" onClick={handleDownload}>
+                Download Filtered Data
+            </button>
             {filteredData.length > 0 ? (
                 <ol>
                     {filteredData.map((item, index) => (
@@ -55,9 +59,10 @@ const DataWindow = ({ data }) => {
                     ))}
                 </ol>
             ) : (
-                <p>No matching entries found.</p>
+                <p className="no-matching-entries">No matching entries found.</p>
             )}
         </div>
+
     );
 };
 

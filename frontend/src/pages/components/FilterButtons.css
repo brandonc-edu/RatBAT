@@ -1,8 +1,20 @@
-.filter-buttons div {
-  margin-top: 10px;
-  margin-bottom: 20px;
+div {
+    margin-top: 10px;
+    margin-bottom: 20px;
 }
 
-.filter-buttons .filter {
-  margin-left: 5px;
+.filter {
+    margin-left: 5px;
+    padding: 5px 10px; /* Adds padding for better visibility */
+    border: 1px solid #ccc; /* Adds a visible border */
+    border-radius: 3px;
+    background-color: #f9f9f9; /* Light background color */
+    color: #000; /* Ensures text is visible */
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.filter:hover {
+    background-color: #e0e0e0; /* Slightly darker background on hover */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Adds subtle shadow on hover */
 }

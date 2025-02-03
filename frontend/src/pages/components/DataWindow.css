@@ -1,12 +1,12 @@
-.data-window input {
+input {
     margin: 10px;
     padding: 5px;
     width: 100%;
     max-width: 300px;
     box-sizing: border-box;
-  }
-  
-  .data-window .download {
+}
+
+.download {
     background-color: #007bff; /* Blue background */
     color: white; /* White text */
     border: none; /* Remove border */

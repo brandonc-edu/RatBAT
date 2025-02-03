@@ -3,19 +3,35 @@ import React, { useState,useEffect } from 'react';
 import './FRDRQuery.css';
 import DataWindow from './components/DataWindow';
 import FilterButtons from './components/FilterButtons';
-import * as XLSX from 'xlsx';
 
 const FRDRQuery = () => {
-    const [data, setData] = useState([]);
-    const metaButtons = ['TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD'];
 
+    //Button Filter
+    const [data, setData] = useState([]);
+    const metaButtons = [
+      "Light/Dark Cycle",
+      "Arena Type",
+      "Arena ID",
+      "Drug Treatment",
+      "Dose",
+      "Date",
+      "Trial Duration",
+      "Project Label",
+      "Study Title",
+      "Room Light Condition",
+      "Body Weight",
+      "Trial Type",
+      "What Objects",
+      "Track Duration", 
+      "Experimenter"
+  ];
 
     // Data filtering states
     const [filters, setFilters] = useState({});
     const [filteredData, setFilteredData] = useState([]);
 
      // State to track toggled buttons (using an array of boolean values)
-    const [toggledButtons, setToggledButtons] = useState([]);
+    const [toggledButtons, setToggledButtons] = useState(Array(metaButtons.length).fill(false));
 
 
     useEffect(() => {
@@ -33,6 +49,7 @@ const FRDRQuery = () => {
       fetchData();
     }, []);
 
+    //Filter Data
     useEffect(() => {
       const filteredEntries = data.filter(item =>
         Object.entries(filters).every(([key, value]) =>
@@ -63,7 +80,7 @@ const FRDRQuery = () => {
         <h2>Filters</h2>
         <div className = 'filterBox'>
             <div className = 'parameters'>
-                <FilterButtons filters={filters} onChange={applyFilters} />
+                <FilterButtons filters={filters} onChange={applyFilters} toggledButtons={toggledButtons} />
             </div>
             <div className = 'metaVariables'>
                 {metaButtons.map((btn, index) => (
@@ -85,4 +102,4 @@ const FRDRQuery = () => {
     )
 };
 
-export default FRDRQuery;
+export default FRDRQuery; 
