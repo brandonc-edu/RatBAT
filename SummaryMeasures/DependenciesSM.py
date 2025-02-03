@@ -5,24 +5,13 @@ This module contains all of the required functionality in regards to proper plan
 
 Authors: Brandon Carrasco
 Created on: 15-01-2025
-Modified on: 15-01-2025
+Modified on: 24-01-2025
 """
 
 # Summary Measure Dependencies
 
-## SM Dependencies
-### All SMs that are dependent on other SMs to be calculated appear here in this dict.
-### Their values is a list of summary measures that must be calculated before the key SM is calculated.
-SM_DEPENDENCIES = {
-    "calc_HB1_cumulativeReturn" : ["calc_homebases"],
-    "calc_HB1_meanDurationStops" : ["calc_homebases"],
-    "calc_HB1_meanReturn" : ["calc_homebases"],
-    "calc_HB1_meanExcursionStops" : ["calc_homebases"]
-}
+from FunctionalSM import DATA_DEPENDENCIES, SM_DEPENDENCIES
 
-## Data Dependencies
-### Dictionary of summary measure names (strings) matched to the functions that calculate the metrics that the summary measure needs.
-DATA_DEPENDENCIES = {}
 
 # Helper Class - Chain
 
@@ -75,7 +64,7 @@ class Karpov:
 
     def AddRequiredSummaryMeasures(self, summary_measures):
         """
-            Given a list of summary measures, checks and produces a list of all dependecies (other summary measures) that must be calculated prior to them.
+            Given a list of summary measures, checks and produces a list of all dependencies (other summary measures) that must be calculated prior to them.
         """
         requiredSMs = []
         for sm in summary_measures:
@@ -118,11 +107,11 @@ class Karpov:
         data_depend = set()
         summary_reordered = []
 
-        for sm in summary_measures:
-            # Grab data dependency (function to call) from data dependencies constant
-            data_depend.add(DATA_DEPENDENCIES[sm])
         summary_reordered = self.AddRequiredSummaryMeasures(summary_measures) + summary_measures
         summary_reordered = self.OrderSummaryMeasures(summary_reordered)
+        for sm in summary_reordered:
+            # Grab data dependency (function to call) from data dependencies constant
+            data_depend.add(DATA_DEPENDENCIES[sm])
 
-        return list(data_depend), summary_reordered
+        return summary_reordered, list(data_depend)
 
