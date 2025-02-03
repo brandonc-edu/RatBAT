@@ -70,75 +70,75 @@ def CalculateLocale(movementMat, env: fsm.Environment):
 
     
 
-def CalculateHomeBaseMetrics(movementType, env: fsm.Environment, localeVector=None):
-    """
-        Given an environment and matrix containing columns specifying the x-coords, y-coords, and movement type (lingering or progression) of the specimen per frame (every sample is one frame),
-        return the information necessary to calculate all other summary measures.
+# def CalculateHomeBaseMetrics(movementType, env: fsm.Environment, localeVector=None):
+#     """
+#         Given an environment and matrix containing columns specifying the x-coords, y-coords, and movement type (lingering or progression) of the specimen per frame (every sample is one frame),
+#         return the information necessary to calculate all other summary measures.
 
-        Will return main home base duration, visits, and rat locale location (empty list if provided as parameter).
+#         Will return main home base duration, visits, and rat locale location (empty list if provided as parameter).
 
-        Durations are recorded in frames. Divide by FRAMES_PER_SECOND to obtain their values in seconds.
+#         Durations are recorded in frames. Divide by FRAMES_PER_SECOND to obtain their values in seconds.
 
-        TO BE IMPLEMENTED (to save on computation time)
-    """
-    totalLocaleVisits = [0 for x in range(25)]
-    totalLocaleStopDurations = [0 for x in range(25)]
-    totalLocaleDurations = [0 for x in range(25)]
-    specimenLocaleVector = []
-    currentLocale = localeVector
-    stopped = False # In the case that our stops need to involve moving outside of the current locale before recording another stop, then it'll be pretty easy to implement -> stopped = locale (can't be current locale of the specimen to record a visit)
-    for i in range(len(movementType)):
-        frame = movementType[i]
-        if localeVector == None: # If no locale vector was passed as argument (finding it for the first time), find the specimen's locale and add it to the new locale vector.
-            specimenLocale = env.SpecimenLocation(frame[0], frame[1]) - 1
-            specimenLocaleVector.append(specimenLocale + 1)
-        if frame[2] == 0: # If specimen is lingering/stopped in the locale.
-            if localeVector != None: # If we were already passed the localeVector as a function argument, then use the localeVector's value for that frame
-                specimenLocale = localeVector[i] - 1
-            if not stopped: # If we haven't recorded a stop in this locale already -> do so, and freeze it so we don't record multiple stops.
-                totalLocaleVisits[specimenLocale] += 1
-                stopped = True
-            totalLocaleStopDurations[specimenLocale] += 1 # Record stop duration
-        else:
-            stopped = False
-        totalLocaleDurations[specimenLocale] += 1 # Record total durations that specimen spends in each locale
+#         TO BE IMPLEMENTED (to save on computation time)
+#     """
+#     totalLocaleVisits = [0 for x in range(25)]
+#     totalLocaleStopDurations = [0 for x in range(25)]
+#     totalLocaleDurations = [0 for x in range(25)]
+#     specimenLocaleVector = []
+#     currentLocale = localeVector
+#     stopped = False # In the case that our stops need to involve moving outside of the current locale before recording another stop, then it'll be pretty easy to implement -> stopped = locale (can't be current locale of the specimen to record a visit)
+#     for i in range(len(movementType)):
+#         frame = movementType[i]
+#         if localeVector == None: # If no locale vector was passed as argument (finding it for the first time), find the specimen's locale and add it to the new locale vector.
+#             specimenLocale = env.SpecimenLocation(frame[0], frame[1]) - 1
+#             specimenLocaleVector.append(specimenLocale + 1)
+#         if frame[2] == 0: # If specimen is lingering/stopped in the locale.
+#             if localeVector != None: # If we were already passed the localeVector as a function argument, then use the localeVector's value for that frame
+#                 specimenLocale = localeVector[i] - 1
+#             if not stopped: # If we haven't recorded a stop in this locale already -> do so, and freeze it so we don't record multiple stops.
+#                 totalLocaleVisits[specimenLocale] += 1
+#                 stopped = True
+#             totalLocaleStopDurations[specimenLocale] += 1 # Record stop duration
+#         else:
+#             stopped = False
+#         totalLocaleDurations[specimenLocale] += 1 # Record total durations that specimen spends in each locale
         
-    return totalLocaleVisits, totalLocaleStopDurations, totalLocaleDurations, specimenLocaleVector
+#     return totalLocaleVisits, totalLocaleStopDurations, totalLocaleDurations, specimenLocaleVector
 
 
 ### Calculating metrics
 
-def CalculateHomeBaseMetrics(movementType, env: fsm.Environment):
-    """
-        Given an environment and matrix containing columns specifying the x-coords, y-coords, and movement type (lingering or progression) of the specimen per frame (every sample is one frame),
-        return the information necessary to calculate all other summary measures.
+# def CalculateHomeBaseMetrics(movementType, env: fsm.Environment):
+#     """
+#         Given an environment and matrix containing columns specifying the x-coords, y-coords, and movement type (lingering or progression) of the specimen per frame (every sample is one frame),
+#         return the information necessary to calculate all other summary measures.
 
-        Will return main home base duration, visits, and rat locale location (empty list if provided as parameter).
+#         Will return main home base duration, visits, and rat locale location (empty list if provided as parameter).
 
-        Durations are recorded in frames. Divide by FRAMES_PER_SECOND to obtain their values in seconds.
+#         Durations are recorded in frames. Divide by FRAMES_PER_SECOND to obtain their values in seconds.
 
-        TO BE IMPLEMENTED (to save on computation time)
-    """
-    totalLocaleVisits = [0 for x in range(25)]
-    totalLocaleStopDurations = [0 for x in range(25)]
-    totalLocaleDurations = [0 for x in range(25)]
-    currentLocale = None
-    stopped = False # In the case that our stops need to involve moving outside of the current locale before recording another stop, then it'll be pretty easy to implement -> stopped = locale (can't be current locale of the specimen to record a visit)
-    for i in range(len(movementType)):
-        frame = movementType[i]
-        currentLocale = env.SpecimenLocation(frame[0], frame[1]) - 1
-        if frame[2] == 0: # If specimen is lingering/stopped in the locale.
-            if localeVector != None: # If we were already passed the localeVector as a function argument, then use the localeVector's value for that frame
-                specimenLocale = localeVector[i] - 1
-            if not stopped: # If we haven't recorded a stop in this locale already -> do so, and freeze it so we don't record multiple stops.
-                totalLocaleVisits[specimenLocale] += 1
-                stopped = True
-            totalLocaleStopDurations[specimenLocale] += 1 # Record stop duration
-        else:
-            stopped = False
-        totalLocaleDurations[specimenLocale] += 1 # Record total durations that specimen spends in each locale
+#         TO BE IMPLEMENTED (to save on computation time)
+#     """
+#     totalLocaleVisits = [0 for x in range(25)]
+#     totalLocaleStopDurations = [0 for x in range(25)]
+#     totalLocaleDurations = [0 for x in range(25)]
+#     currentLocale = None
+#     stopped = False # In the case that our stops need to involve moving outside of the current locale before recording another stop, then it'll be pretty easy to implement -> stopped = locale (can't be current locale of the specimen to record a visit)
+#     for i in range(len(movementType)):
+#         frame = movementType[i]
+#         currentLocale = env.SpecimenLocation(frame[0], frame[1]) - 1
+#         if frame[2] == 0: # If specimen is lingering/stopped in the locale.
+#             if localeVector != None: # If we were already passed the localeVector as a function argument, then use the localeVector's value for that frame
+#                 specimenLocale = localeVector[i] - 1
+#             if not stopped: # If we haven't recorded a stop in this locale already -> do so, and freeze it so we don't record multiple stops.
+#                 totalLocaleVisits[specimenLocale] += 1
+#                 stopped = True
+#             totalLocaleStopDurations[specimenLocale] += 1 # Record stop duration
+#         else:
+#             stopped = False
+#         totalLocaleDurations[specimenLocale] += 1 # Record total durations that specimen spends in each locale
         
-    return totalLocaleVisits, totalLocaleStopDurations, totalLocaleDurations, specimenLocaleVector
+#     return totalLocaleVisits, totalLocaleStopDurations, totalLocaleDurations, specimenLocaleVector
 
 # def CalculateStops # Each functions returns a list of tuples of the form: (NAME IN AUXILARY INFO, DATA)
 

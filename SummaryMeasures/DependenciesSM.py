@@ -11,6 +11,7 @@ Modified on: 24-01-2025
 # Summary Measure Dependencies
 
 from FunctionalSM import DATA_DEPENDENCIES, SM_DEPENDENCIES
+from itertools import chain
 
 
 # Helper Class - Chain
@@ -59,29 +60,29 @@ from FunctionalSM import DATA_DEPENDENCIES, SM_DEPENDENCIES
 
 class Karpov:
 
-    def __init__(self):
-        pass
-
-    def AddRequiredSummaryMeasures(self, summary_measures):
+    def AddRequiredSummaryMeasures(summary_measures):
         """
             Given a list of summary measures, checks and produces a list of all dependencies (other summary measures) that must be calculated prior to them.
         """
         requiredSMs = []
         for sm in summary_measures:
+            if sm not in SM_DEPENDENCIES.keys():
+                continue
             dependencies = SM_DEPENDENCIES[sm]
             if len(dependencies) > 0:
                 requiredSMs = requiredSMs + [dep for dep in dependencies if dep not in summary_measures] # If dependency not already in summary measures, add it
-        return requiredSMs
+        return list(set(requiredSMs))
 
-    def OrderSummaryMeasures(self, summary_measures):
+    def OrderSummaryMeasures(summary_measures):
         """
             Given a list of summary measures, re-orders such that all dependencies are calculated prior to their dependent summary measure.
         """
-        full_dependencies = list(set([SM_DEPENDENCIES[sm] for sm in summary_measures]))
-        head_SMs = [sm for sm in summary_measures if sm not in full_dependencies]
-        floater_SMs = [sm for sm in summary_measures if sm not in full_dependencies and sm not in SM_DEPENDENCIES.keys()]
-        tail_SMs = [sm for sm in summary_measures if sm in full_dependencies and sm not in SM_DEPENDENCIES.keys()]
-        link_SMs = list(set(summary_measures) -  set(head_SMs + floater_SMs + tail_SMs))
+        all_dep = list(chain.from_iterable([SM_DEPENDENCIES[sm] for sm in summary_measures if sm in SM_DEPENDENCIES.keys()])) # Flatten full list of dependencies
+        full_dependencies = list(set(all_dep)) # Get rid of duplicate dependences
+        head_SMs = [sm for sm in summary_measures if sm not in full_dependencies] # If sm not a dependency, but is dependent
+        floater_SMs = [sm for sm in summary_measures if sm not in full_dependencies and sm not in SM_DEPENDENCIES.keys()] # If sm is neither a dependency or dependent
+        tail_SMs = [sm for sm in summary_measures if sm in full_dependencies and sm not in SM_DEPENDENCIES.keys()] # If sm is a dependency, but not dependent
+        link_SMs = list(set(summary_measures) -  set(head_SMs + floater_SMs + tail_SMs)) # If sm is both a dependency and dependent.
 
         # Add all non-dependent SMs
         reordered_summary_measures = tail_SMs + floater_SMs
@@ -100,18 +101,28 @@ class Karpov:
         reordered_summary_measures = reordered_summary_measures + head_SMs
         return reordered_summary_measures
 
-    def ResolveDependencies(self, summary_measures):
+    def ResolveDependencies(summary_measures):
         """
             Given a list of summary_measures, return list of data dependencies (aka. data that should be pre-calc'd for efficiency's sake) and the full re-ordered list of SMs that satisfy all SM dependencies.
         """
         data_depend = set()
         summary_reordered = []
 
-        summary_reordered = self.AddRequiredSummaryMeasures(summary_measures) + summary_measures
-        summary_reordered = self.OrderSummaryMeasures(summary_reordered)
+        summary_reordered = Karpov.AddRequiredSummaryMeasures(summary_measures) + summary_measures
+        summary_reordered = Karpov.OrderSummaryMeasures(summary_reordered)
         for sm in summary_reordered:
             # Grab data dependency (function to call) from data dependencies constant
-            data_depend.add(DATA_DEPENDENCIES[sm])
+            if sm in DATA_DEPENDENCIES.keys():
+                for dDep in DATA_DEPENDENCIES[sm]:
+                    data_depend.add(dDep)
 
         return summary_reordered, list(data_depend)
 
+### TESTING ###
+
+ls = ['calc_HB1_cumulativeReturn', 'calc_HB1_meanDurationStops']
+# ordered = Karpov.OrderSummaryMeasures(ls)
+# added = Karpov.AddRequiredSummaryMeasures(ls)
+ordered, data = Karpov.ResolveDependencies(ls)
+print(ordered)
+print(data)
