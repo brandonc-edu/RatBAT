@@ -1,0 +1,60 @@
+VariableColumn#,Variable,VariableValue,ValueLabel
+8,APPARATUS_ArenaType_number,1,160x160 cm table surface on 60 cm high legs
+8,APPARATUS_ArenaType_number,2,160x160x60 cm table with a 5 cm high Plexiglas border at edges
+8,APPARATUS_ArenaType_number,3,Circular arena 220 cm in diameter and with a 50 cm high wall
+8,APPARATUS_ArenaType_number,4,Elevated plus maze
+8,APPARATUS_ArenaType_number,9,Plexiglas box 40x40x35 cm
+10,APPARATUS_ArenaID_number,1,OF #1 in room U59_south
+10,APPARATUS_ArenaID_number,2,OF #2 in room U59_north
+10,APPARATUS_ArenaID_number,3,OF #3 in room U60_south
+10,APPARATUS_ArenaID_number,4,OF #4 in room U60_north
+10,APPARATUS_ArenaID_number,5,Circular arena in room EPM_room
+10,APPARATUS_ArenaID_number,9,Activity box in room ActivityMonitorCages_room
+12,APPARATUS_ArenaObjects_number,0,empty with no objects in arena
+12,APPARATUS_ArenaObjects_number,1,an object in OF locales 10 14 5 and 8
+12,APPARATUS_ArenaObjects_number,2,objects ROTATION 180 deg to locales 18 22 9 and 4
+12,APPARATUS_ArenaObjects_number,3,empty with no objects in Activity Monitor (AM) cage
+14,APPARATUS_ArenaTestingRoomLightCondition_number,0,room ILLUMINATED (fluorescent lights ON)
+14,APPARATUS_ArenaTestingRoomLightCondition_number,1,room DARK (infrared lights ON)
+16,SUBJECTS_LightDarkCycleInColonyRoom_number,0,Lights ON 7 AM to 7 PM in housing colony
+18,SUBJECTS_LightDarkCycleWhenTested_number,0,Tested during subjective night/sleep cycle (lights ON)
+18,SUBJECTS_LightDarkCycleWhenTested_number,1,Tested during subjective day/activity cycle (lights OFF)
+20,TREATMENT_BrainSurgery_manipulation_number,0,No surgery done
+20,TREATMENT_BrainSurgery_manipulation_number,1,Sham lesion done
+20,TREATMENT_BrainSurgery_manipulation_number,2,Infralimbic Ctx (ILC) targeted
+20,TREATMENT_BrainSurgery_manipulation_number,3,Basal Lateral Amygdala (BLA) targeted
+20,TREATMENT_BrainSurgery_manipulation_number,4,Nucleus Accumbens Core (NAc) targeted
+20,TREATMENT_BrainSurgery_manipulation_number,5,Orbital Frontal Ctx (OFC) targeted
+20,TREATMENT_BrainSurgery_manipulation_number,6,Pituitary targeted
+22,TREATMENT_BrainSurgery_HistologyFindingsOutcome_number,0,No lesion present
+22,TREATMENT_BrainSurgery_HistologyFindingsOutcome_number,1,Lesion meets criterion of at least 55% of ROI lesioned bilaterally
+22,TREATMENT_BrainSurgery_HistologyFindingsOutcome_number,2,Lesion does NOT meet criteria
+22,TREATMENT_BrainSurgery_HistologyFindingsOutcome_number,3,Complete hypophysectomy
+22,TREATMENT_BrainSurgery_HistologyFindingsOutcome_number,9,Histology not available
+40,TRIALinfo_TypeOfEvent_number,1,Standard OF trial
+40,TRIALinfo_TypeOfEvent_number,2,Test for conditioned effects
+40,TRIALinfo_TypeOfEvent_number,3,Test for sensitization
+40,TRIALinfo_TypeOfEvent_number,4,Object rotation test
+40,TRIALinfo_TypeOfEvent_number,5,Light/dark test
+40,TRIALinfo_TypeOfEvent_number,6,Test with 0.1mg/kg QNP
+40,TRIALinfo_TypeOfEvent_number,7,Filmed in activity cages
+40,TRIALinfo_TypeOfEvent_number,8,EPM
+40,TRIALinfo_TypeOfEvent_number,9,10min OF test before sacrifice
+40,TRIALinfo_TypeOfEvent_number,10,Test with 2 drugs injected
+40,TRIALinfo_TypeOfEvent_number,11,Drug substitution test
+40,TRIALinfo_TypeOfEvent_number,12,SAL instead 2nd drug
+40,TRIALinfo_TypeOfEvent_number,13,Test with 0.1mg/kg DPAT
+40,TRIALinfo_TypeOfEvent_number,14,Test without objects in OF
+40,TRIALinfo_TypeOfEvent_number,15,Test with 3 drugs injected (Ritanserin reversal trials)
+47,QSTUDYinfo_Project_number,1,Probing the neural circuit mediating sensitization and compulsive checking
+47,QSTUDYinfo_Project_number,2,Probing the neurochemistry of sensitization and compulsive checking
+47,QSTUDYinfo_Project_number,3,Pharmacology of sensitization and compulsive checking
+47,QSTUDYinfo_Project_number,4,Probing for drugs that mitigate sensitization and compulsive checking
+47,QSTUDYinfo_Project_number,5,Probing the mode of action of mCPP on compulsive checking
+47,QSTUDYinfo_Project_number,6,Probing the mode of action of quinpirole on behavior
+47,QSTUDYinfo_Project_number,7,Probing the role of hormones in compulsive checking
+47,QSTUDYinfo_Project_number,8,Probing the parameters of sensitization and compulsive checking
+47,QSTUDYinfo_Project_number,9,Probing the environmental modulation of sensitization and compulsive checking
+47,QSTUDYinfo_Project_number,10,Probing for comorbidity
+47,QSTUDYinfo_Project_number,11,Probing for biological markers of the pathogenesis of compulsive checking
+47,QSTUDYinfo_Project_number,12,Resynthesis of compulsive checking

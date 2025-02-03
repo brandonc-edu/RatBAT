@@ -1,2 +1,8 @@
 venv/
 backend/backend/__pycache__/
+SummaryMeasures/__pycache__/
+backend/summary_measures/__pycache__/
+backend/summary_measures/migrations/
+globus_transfer/.env
+database/.env
+.vscode
