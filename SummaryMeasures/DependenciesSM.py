@@ -120,9 +120,9 @@ class Karpov:
 
 ### TESTING ###
 
-ls = ['calc_HB1_cumulativeReturn', 'calc_HB1_meanDurationStops']
-# ordered = Karpov.OrderSummaryMeasures(ls)
-# added = Karpov.AddRequiredSummaryMeasures(ls)
-ordered, data = Karpov.ResolveDependencies(ls)
-print(ordered)
-print(data)
+# ls = ['calc_HB1_cumulativeReturn', 'calc_HB1_meanDurationStops']
+# # ordered = Karpov.OrderSummaryMeasures(ls)
+# # added = Karpov.AddRequiredSummaryMeasures(ls)
+# ordered, data = Karpov.ResolveDependencies(ls)
+# print(ordered)
+# print(data)

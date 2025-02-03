@@ -105,7 +105,7 @@ class Commander:
             func = getattr(fcsm, SM_MAPPING[sm])
             self.calculatedSummaryMeasures[sm] = func(data, self.env, self.calculatedSummaryMeasures, self.storedAuxiliaryInfo)
 
-
+        return self.calculatedSummaryMeasures
         ## 0 = frame
         ## 1 = x-coord
         ## 2 = y-coord
