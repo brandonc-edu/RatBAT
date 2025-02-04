@@ -132,26 +132,26 @@ class Command(BaseCommand):
         tables["Fall"].loc[:,"TimeWhenFell"] = tables["Fall"].loc[:,"TimeWhenFell"].map(str_to_list)
         tables["Fall"] = tables["Fall"].explode("TimeWhenFell",ignore_index=True).dropna().drop_duplicates().reset_index(drop=True)
 
-        publish_order = [(models.LightCycleColony,"LightCycleColony"),
-                        (models.LightCycleTest,"LightCycleTest"),
-                        (models.ArenaType,"ArenaType"),
-                        (models.ArenaLoc,"ArenaLoc"),
-                        (models.ArenaObjects,"ArenaObjects"),
-                        (models.LightConditions,"LightConditions"),
-                        (models.SurgeryManipulation,"SurgeryManipulation"),
-                        (models.SurgeryOutcome,"SurgeryOutcome"),
-                        (models.EventType,"EventType"),
-                        (models.Animal,"Animal"),
-                        (models.Apparatus,"Apparatus"),
-                        (models.Treatment,"Treatment"),
-                        (models.Trial,"Trial"),
-                        (models.Fall,"Fall"),
-                        (models.Experiment,"Experiment"),
-                        (models.ExperimentGroup,"ExperimentGroup"),
-                        (models.Study,"Study"),
-                        (models.StudyGroup,"StudyGroup"),
-                        (models.Project,"Project"),
-                        (models.ProjectGroup,"ProjectGroup")]
+        publish_order = [(models.lightcyclecolony,"LightCycleColony"),
+                        (models.lightcycletest,"LightCycleTest"),
+                        (models.arenatype,"ArenaType"),
+                        (models.arenaloc,"ArenaLoc"),
+                        (models.arenaobjects,"ArenaObjects"),
+                        (models.lightconditions,"LightConditions"),
+                        (models.surgerymanipulation,"SurgeryManipulation"),
+                        (models.surgeryoutcome,"SurgeryOutcome"),
+                        (models.eventtype,"EventType"),
+                        (models.animal,"Animal"),
+                        (models.apparatus,"Apparatus"),
+                        (models.treatment,"Treatment"),
+                        (models.trial,"Trial"),
+                        (models.fall,"Fall"),
+                        (models.experiment,"Experiment"),
+                        (models.experimentgroup,"ExperimentGroup"),
+                        (models.study,"Study"),
+                        (models.studygroup,"StudyGroup"),
+                        (models.project,"Project"),
+                        (models.projectgroup,"ProjectGroup")]
 
 
         # Publish all tables to database.

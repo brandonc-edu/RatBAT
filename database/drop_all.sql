@@ -1,45 +1,45 @@
 SET foreign_key_checks = 0;
 
-DROP TABLE LightCycleColony;
+DROP TABLE db_connector_lightcyclecolony;
 
-DROP TABLE LightCycleTest;
+DROP TABLE db_connector_lightcycletest;
 
-DROP TABLE ArenaType;
+DROP TABLE db_connector_arenatype;
 
-DROP TABLE ArenaLoc;
+DROP TABLE db_connector_arenaloc;
 
-DROP TABLE ArenaObjects;
+DROP TABLE db_connector_arenaobjects;
 
-DROP TABLE LightConditions;
+DROP TABLE db_connector_lightconditions;
 
-DROP TABLE SurgeryManipulation;
+DROP TABLE db_connector_surgerymanipulation;
 
-DROP TABLE SurgeryOutcome;
+DROP TABLE db_connector_surgeryoutcome;
 
-DROP TABLE EventType;
+DROP TABLE db_connector_eventtype;
 
-DROP TABLE Animal;
+DROP TABLE db_connector_animal;
 
-DROP TABLE Apparatus;
+DROP TABLE db_connector_apparatus;
 
-DROP TABLE Treatment;
+DROP TABLE db_connector_treatment;
 
-DROP TABLE Trial;
+DROP TABLE db_connector_trial;
 
-DROP TABLE Fall;
+DROP TABLE db_connector_fall;
 
-DROP TABLE Experiment;
+DROP TABLE db_connector_experiment;
 
-DROP TABLE ExperimentGroup;
+DROP TABLE db_connector_experimentgroup;
 
-DROP TABLE Study;
+DROP TABLE db_connector_study;
 
-DROP TABLE StudyGroup;
+DROP TABLE db_connector_studygroup;
 
-DROP TABLE Project;
+DROP TABLE db_connector_project;
 
-DROP TABLE ProjectGroup;
+DROP TABLE db_connector_projectgroup;
 
-DROP TABLE TimeSeries;
+DROP TABLE db_connector_timeseries;
 
 SET foreign_key_checks = 1;

@@ -2,8 +2,7 @@ import requests
 import pandas as pd
 import numpy as np
 from django.db.models import Q
-from database.db_helper import build_model, FIELD_LOOKUPS
-
+from database.db_helper import build_model, get_relationship, FIELD_LOOKUPS
 
 def get_frdr_urls(filters,trial_model,dtypes):
     """Retreives requested data from local db/FRDR and optionally saves to local database.
@@ -20,9 +19,9 @@ def get_frdr_urls(filters,trial_model,dtypes):
              - "p" : raw pathplots
             Any combination also works
     """
-    query = Q()
-    #query = Q(timeseries__TrialID__isnull = True)
 
+    query = Q()
+    
     for f in filters:
         field  = f.get('field')
         lookup = f.get('lookup')
@@ -31,24 +30,29 @@ def get_frdr_urls(filters,trial_model,dtypes):
         if not lookup in FIELD_LOOKUPS:
             raise ValueError(f"Invalid lookup type provided: {lookup}")
 
+        field = get_relationship(trial_model,field)
+        if field == None:
+            raise ValueError(f"Could not find relationship between table {trial_model._meta.model_name} and field {f.get('field')}.")
         field = field.replace("trial__","")
         filter = {f"{field}__{lookup}":value}
 
         query = query & Q(**filter)
-
+        
     query_out = trial_model.objects.filter(query)
-    
+    query_trk = query & Q(timeseries__isnull = True)
+    query_trk_out = trial_model.objects.filter(query_trk)
+
     urls = []
 
     if dtypes == 'a':
         dtypes = 'vtp'
     if 'v' in dtypes:
-        urls = urls + [(trial.Trial_ID,'v',trial.Video) for trial in query_out if not trial.Video == None]
+        urls = urls + [(trial.trial_id,'v',trial.video) for trial in query_out if not trial.video == None]
     if 't' in dtypes:
-        urls = urls + [(trial.Trial_ID,'t',trial.Trackfile) for trial in query_out if not trial.Trackfile == None]
+        urls = urls + [(trial.trial_id,'t',trial.trackfile) for trial in query_trk_out if not trial.trackfile == None]
     if 'p' in dtypes:
-        urls = urls + [(trial.Trial_ID,'p',trial.Pathplot) for trial in query_out if not trial.Pathplot == None]
-
+        urls = urls + [(trial.trial_id,'p',trial.pathplot) for trial in query_out if not trial.pathplot == None]
+    
     return urls
 
 def frdr_request(files:list[tuple[int,str,str]], cache_path:str, model, save:bool) -> None:
@@ -75,7 +79,7 @@ def frdr_request(files:list[tuple[int,str,str]], cache_path:str, model, save:boo
         Formatted requested trackfile.
     """
 
-    ts_data = pd.DataFrame(columns=["Trial_ID","Sample_ID","T","X","Y","X_S","Y_S","V_S","MovementType_S"])
+    ts_data = pd.DataFrame(columns=["trial_id","Sample_ID","T","X","Y","X_S","Y_S","V_S","MovementType_S"])
     for file in files:
         url = file[2].replace("g-624536.53220.5898.data.globus.org","www.frdr-dfdr.ca/repo/files")
         
@@ -108,17 +112,17 @@ def get_media(url:str,cache_path:str) -> None:
         print(f"Error downloading file: {url}")
 
     with open(cache_path + "/" + filename, "wb") as fh:
-        for i in r.iter_content(chunk_size=1024*1024):
+        for i in r.iter_content(chunk_size=10*1024*1024):
             fh.write(i)
 
 
-def get_trackfile(trial_ID:int, url:str):
+def get_trackfile(trial_id:int, url:str):
     """Fetches trackfile from the FRDR and formats it to match the local database.
 
     Parameters
     ----------
-    trial_ID : int
-        trial_ID of requested trial.
+    trial_id : int
+        trial id of requested trial.
     url : str
         url of the requested trackfile on the frdr.
             
@@ -131,27 +135,11 @@ def get_trackfile(trial_ID:int, url:str):
         tf = pd.read_csv(url, header = 31)
     except:
         print(f"Error downloading file: {url}")
-    tf.rename({"Sample no.":"Sample_ID","Time":"T"},axis=1,inplace=True)
+
+    tf.rename({"Sample no.":"sample_id","Trial_ID":"trial_id","X":"x","Y":"y","Time":"t"},axis=1,inplace=True)
     tf.drop(["Area","ZONES"],axis=1,inplace=True)
-    tf["Trial_ID"] = [trial_ID for _ in range(len(tf.index))]
-    tf = tf[["Trial_ID","Sample_ID","T","X","Y"]]
+    tf["trial_id"] = [trial_id for _ in range(len(tf.index))]
+    tf = tf[["trial_id","sample_id","t","x","y"]]
     tf.replace("-",np.nan,inplace=True)
+
     return tf
-"""
-For testing purposes:
-
-
-load_dotenv()
-db_user = os.getenv("DB_USER")
-db_pass = os.getenv("DB_PASS")
-db_host = os.getenv("DB_HOST")
-db_port = int(os.getenv("DB_PORT"))
-db_name = os.getenv("DB_NAME")
-
-db_engine = sqlalchemy.create_engine(f'mysql+mysqlconnector://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}')
-
-url1 = "https://g-624536.53220.5898.data.globus.org/11/published/publication_440/submitted_data/Q17/05_EthoVision_csvTrackFiles/Q17Clg3012_04_5_0042_0000062_TrackFile.csv"
-url2 = "https://g-624536.53220.5898.data.globus.org/11/published/publication_440/submitted_data/Q17/03_Videos_mpgFiles/Q17Clg3_of1_inj09_20011213_007_008_009_010_011_012.mpg"
-
-frdr_request(files=[(62, "t", url1),(46, "v", url2)], cache_path="./database/data/test_data", db_engine=db_engine, save = True)
-"""

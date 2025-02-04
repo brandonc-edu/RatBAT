@@ -29,11 +29,11 @@ class QueryDataView(APIView):
 
             print(f"Full save path {full_cache_path}")
 
-            frdr_urls = get_frdr_urls(filters,models.Trial,dtypes)
+            frdr_urls = get_frdr_urls(filters,models.trial,dtypes)
             
             print(f"Fetching the following URLs from the FRDR: {frdr_urls}")
 
-            frdr_request(frdr_urls, full_cache_path, models.TimeSeries, save)
+            frdr_request(frdr_urls, full_cache_path, models.timeseries, save)
 
             
             return Response({"message":f"All files saved successfully in {cache_path}"}, status=status.HTTP_200_OK)

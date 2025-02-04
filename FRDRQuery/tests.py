@@ -16,14 +16,31 @@ request = factory.post("/api/query-data/",{"filters":
 {
     "filters":[
         {
-            "field":"Trial_ID",
+            "field":"trial_id",
             "lookup":"lt",
             "value":110
         },
         {
-            "field":"treatment__DrugRx_Drug1",
+            "field":"drugrx_drug1",
             "lookup":"exact",
-            "value":"SAL"
+            "value":"QNP"
+        }
+    ],
+    "cache_path":"database/data/test_data",
+    "dtypes":"pt",
+    "save":true
+}
+{
+    "filters":[
+        {
+            "field":"trial_id",
+            "lookup":"lt",
+            "value":50
+        },
+        {
+            "field":"arenaobjectsdesc",
+            "lookup":"exact",
+            "value":"empty with no objects in Activity Monitor (AM) cage"
         }
     ],
     "cache_path":"database/data/test_data",
