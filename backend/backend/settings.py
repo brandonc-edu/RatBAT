@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'summary_measures',
     'corsheaders',
     'db_connector',
+    'frdr_query',
 ]
 
 MIDDLEWARE = [
