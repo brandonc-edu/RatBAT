@@ -157,7 +157,7 @@ class Commander:
 # # # print(data.head()) # Getting 1.1 when I import it (for segmentType for the first row) which is weird, but not lethal for now.
 # data = data.to_numpy()
 # # # print(data[:5])
-# summaries = ["calc_homebases", "calc_HB1_cumulativeReturn", "calc_HB1_meanDurationStops", "calc_HB1_meanReturn", "calc_HB1_meanExcursionStops"]
+# summaries = ["calc_HB1_cumulativeReturn", "calc_HB1_meanDurationStops", "calc_homebases", "calc_HB1_meanReturn", "calc_HB1_meanExcursionStops"]
 # ordered, common = Karpov.ResolveDependencies(summaries)
 # results = test.CalculateSummaryMeasures(data, ordered, common)
 # print(results)

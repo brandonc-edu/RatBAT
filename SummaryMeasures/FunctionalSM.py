@@ -162,10 +162,11 @@ def CalculateStops(data, env: fsm.Environment):
         elif frame[4] == 1 and stopped: # If it's begun moving and was previously stopped
             stopped = False
             # Get the maximum duration for each locale and add a stop to the max locale
-            maxLocale = np.argmax(stopFrames)
+            maxLocale = np.argmax(locDur)
             stopLocales[maxLocale] += 1
             # Add stop frames to total stop durations
-            stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
+            # stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
+            stopFrames[maxLocale] += sum(locDur) 
             # Reset local locale stop durations (for a stop episode)
             locDur = [0 for x in range(25)]
     return stopLocales, stopFrames
