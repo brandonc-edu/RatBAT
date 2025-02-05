@@ -3,8 +3,9 @@ import pandas as pd
 import numpy as np
 from django.db.models import Q
 from database.db_helper import build_model, get_relationship, FIELD_LOOKUPS
+from django_pandas.io import read_frame
 
-def get_frdr_urls(filters,trial_model,dtypes):
+def get_frdr_urls(filters,trial_model,dtypes:str) -> list[(int,str,str)]:
     """Retreives requested data from local db/FRDR and optionally saves to local database.
 
     Parameters
@@ -29,15 +30,17 @@ def get_frdr_urls(filters,trial_model,dtypes):
 
         if not lookup in FIELD_LOOKUPS:
             raise ValueError(f"Invalid lookup type provided: {lookup}")
-
+        
         field = get_relationship(trial_model,field)
+        
+        get_relationship(trial_model,field)        
         if field == None:
             raise ValueError(f"Could not find relationship between table {trial_model._meta.model_name} and field {f.get('field')}.")
         field = field.replace("trial__","")
         filter = {f"{field}__{lookup}":value}
 
         query = query & Q(**filter)
-        
+    
     query_out = trial_model.objects.filter(query)
     query_trk = query & Q(timeseries__isnull = True)
     query_trk_out = trial_model.objects.filter(query_trk)
@@ -54,6 +57,36 @@ def get_frdr_urls(filters,trial_model,dtypes):
         urls = urls + [(trial.trial_id,'p',trial.pathplot) for trial in query_out if not trial.pathplot == None]
     
     return urls
+
+def get_local_trials(filters,trial_model,dtypes:str) -> list[(int,str)]:
+    if dtypes == 'a':
+        dtypes = 'vtp'
+    if not 't' in dtypes:
+        return []
+    
+    query = Q(timeseries__isnull = False)
+    
+    for f in filters:
+        field  = f.get('field')
+        lookup = f.get('lookup')
+        value  = f.get('value')
+
+        if not lookup in FIELD_LOOKUPS:
+            raise ValueError(f"Invalid lookup type provided: {lookup}")
+        
+        field = get_relationship(trial_model,field)
+        
+        get_relationship(trial_model,field)        
+        if field == None:
+            raise ValueError(f"Could not find relationship between table {trial_model._meta.model_name} and field {f.get('field')}.")
+        field = field.replace("trial__","")
+        filter = {f"{field}__{lookup}":value}
+
+        query = query & Q(**filter)
+
+    query_out = trial_model.objects.filter(query).only("trial_id","trackfile").distinct()
+    
+    return [(trial.trial_id, trial.trackfile.split("/")[-1]) for trial in query_out if not trial.trackfile == None]
 
 def frdr_request(files:list[tuple[int,str,str]], cache_path:str, model, save:bool) -> None:
     """Given a list of files accesses neccesary data from the frdr.
@@ -87,8 +120,7 @@ def frdr_request(files:list[tuple[int,str,str]], cache_path:str, model, save:boo
         
         if save and file[1] == 't':
             ts_data = pd.concat([ts_data,get_trackfile(file[0],url)],ignore_index=True)
-    
-        
+            
     if save:    
         build_model(model,ts_data)
     
@@ -115,6 +147,11 @@ def get_media(url:str,cache_path:str) -> None:
         for i in r.iter_content(chunk_size=10*1024*1024):
             fh.write(i)
 
+def db_request(trials:list[int,str], cache_path:str, model) -> None:
+    for trial in trials:
+        requested_qs = model.objects.filter(trial__exact = trial[0])
+        requested_df = read_frame(requested_qs)[["sample_id","x","y","t"]]
+        requested_df.to_csv(cache_path + "/" + trial[1],index=False)
 
 def get_trackfile(trial_id:int, url:str):
     """Fetches trackfile from the FRDR and formats it to match the local database.

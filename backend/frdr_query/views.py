@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from FRDRQuery.query import frdr_request, get_frdr_urls
+from FRDRQuery.query import frdr_request, get_frdr_urls, db_request, get_local_trials
 
 import db_connector.models as models
 import os
@@ -30,11 +30,13 @@ class QueryDataView(APIView):
             print(f"Full save path {full_cache_path}")
 
             frdr_urls = get_frdr_urls(filters,models.trial,dtypes)
-            
             print(f"Fetching the following URLs from the FRDR: {frdr_urls}")
 
-            frdr_request(frdr_urls, full_cache_path, models.timeseries, save)
+            local_trials = get_local_trials(filters,models.trial,dtypes)
+            print(f"Fetching the following trials from the DB: {local_trials}")
 
+            frdr_request(frdr_urls, full_cache_path, models.timeseries, save)
+            db_request(local_trials, full_cache_path, models.timeseries)
             
             return Response({"message":f"All files saved successfully in {cache_path}"}, status=status.HTTP_200_OK)
         except Exception as e:
