@@ -187,6 +187,12 @@ def GetLocaleFromIndex(index):
     """
     return LOCALE_MAPPING[index]
 
+def GetIndexFromLocale(locale):
+    """
+        Given a locale, return the index that locale belongs to in LOCALE_MAPPING.
+    """
+    return LOCALE_MAPPING.index(locale)
+
 
 
 

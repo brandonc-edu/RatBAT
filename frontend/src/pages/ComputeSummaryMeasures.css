@@ -1,5 +1,3 @@
-/* src/pages/ComputeSummaryMeasures.css */
-
 /* Adding space between each item and its checkbox */
 .measure-item label input,
 .data-item label input,
@@ -11,7 +9,7 @@
 .measure-item,
 .data-item,
 .result-item {
-  margin-bottom: 10px; /* Adjust the spacing between items as needed */
+  margin-bottom: 15px; /* Adjust the spacing between items as needed */
 }
 
 .modal {
@@ -81,11 +79,11 @@
   gap: 20px;
   flex: 1;
 }
+
 .measure-item {
   position: relative;
   cursor: pointer;
 }
-
 
 .measure-item label {
   display: flex;
@@ -97,31 +95,6 @@
   cursor: pointer;
 }
 
-.measure-item::after {
-  content: attr(data-tooltip); /* Use custom tooltip text */
-  position: absolute;
-  left: 15%;
-  top: 100%; /* Show below the element */
-  transform: translateX(-50%);
-  background-color: #333;
-  color: #fff;
-  padding: 5px 10px;
-  border-radius: 4px;
-  white-space: nowrap;
-  font-size: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  visibility: hidden; /* Hidden by default */
-  opacity: 0; /* Transparent by default */
-  transition: opacity 0.2s ease, visibility 0.2s ease;
-  z-index: 10;
-}
-
-.measure-item:hover::after {
-  visibility: visible; /* Show on hover */
-  opacity: 1; /* Fade in */
-}
-
-
 .summary-measures,
 .selected-data,
 .result-section {
@@ -132,26 +105,37 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.summary-measures,
-.selected-data {
-  flex: 1;
-  max-height: 250px; /* Set a fixed height */
-  overflow-y: auto; /* Enable scrolling */
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
 }
 
-.data-items {
-  flex: 1;
-  overflow-y: auto;
+.result-table th,
+.result-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
 }
 
-.data-footer {
-  padding-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-  position: sticky;
-  bottom: 0;
-  background-color: #fff;
-  border-top: 1px solid #ccc;
+/* Data file rows */
+.result-table .data-file-row {
+  background-color: #8db4db; /* Light grey */
+}
+
+/* Measure and value header rows */
+.result-table .measure-header-row {
+  background-color: #e0e0e0; /* Slightly darker grey */
+}
+
+/* Actual value rows */
+.result-table .value-row {
+  background-color: #ffffff; /* Default background color */
+}
+
+/* Ensure alternating row colors do not affect specific rows */
+.result-table tr:not(.data-file-row):not(.measure-header-row):nth-child(even) {
+  background-color: #f9f9f9;
 }
 
 .result-section {
@@ -173,7 +157,33 @@
   padding-top: 10px;
   border-top: 1px solid #ccc;
   position: sticky;
-  bottom: 35px;
+  bottom: 0;
+  background-color: #fff;
+  padding: 10px;
+}
+
+.summary-measures,
+.selected-data {
+  flex: 1;
+  max-height: 250px; /* Set a fixed height */
+  overflow-y: auto; /* Enable scrolling */
+}
+
+.data-items {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.data-footer,
+.measure-footer {
+  padding-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px; /* Add gap between buttons */
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+  border-top: 1px solid #ccc;
 }
 
 button {
