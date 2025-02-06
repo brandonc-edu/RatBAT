@@ -9,9 +9,12 @@ Modified on: 24-01-2025
 """
 
 import numpy as np
-import FieldSM as fsm
-import FunctionalSM as fcsm
-from FunctionalSM import DATA_MAPPING, SM_MAPPING
+from . import FieldSM as fsm
+from . import FunctionalSM as fcsm
+from . FunctionalSM import DATA_MAPPING, SM_MAPPING
+# import FieldSM as fsm
+# import FunctionalSM as fcsm
+# from FunctionalSM import DATA_MAPPING, SM_MAPPING
 import pandas as pd
 
 ### Summary Measure Dependency Helper ###
@@ -107,13 +110,11 @@ class Commander:
 
             Updates self.calculatedSummaryMeasures with calculated summary measures.
         """
-        # Perform pre-calculations where possible to reduce overhead
-        self.PerformPreCalculations(data, self.env, commonCalculations)
-
-
-
         # Handle data jitter
         data = self.AccountForJitter(data)
+
+        # Perform pre-calculations where possible to reduce overhead
+        self.PerformPreCalculations(data, self.env, commonCalculations)
         
         # Run through summary measures & calculate them
         for sm in summaryMeasures:
@@ -153,11 +154,13 @@ class Commander:
         #                                                                              self.env)
 
 ### TESTING ###
+# from DependenciesSM import Karpov
 # test = Commander(None, "common")
-# data = pd.read_excel("./SummaryMeasures/testData.xlsx")
-# # print(data.head()) # Getting 1.1 when I import it (for segmentType for the first row) which is weird, but not lethal for now.
+# data = pd.read_excel("./SummaryMeasures/Q405HT1003_01_0_0299_0015708_smoothed.xlsx")
+# # # print(data.head()) # Getting 1.1 when I import it (for segmentType for the first row) which is weird, but not lethal for now.
 # data = data.to_numpy()
-# # print(data[:5])
-# summaries = ["calc_homebases", "calc_HB1_cumulativeReturn", "calc_HB1_meanDurationStops", "calc_HB1_meanReturn", "calc_HB1_meanExcursionStops"]
-# test.CalculateSummaryMeasures(data, summaries)
-# print(test.calculatedSummaryMeasures)
+# # # print(data[:5])
+# summaries = ["calc_HB1_cumulativeReturn", "calc_HB1_meanDurationStops", "calc_homebases", "calc_HB1_meanReturn", "calc_HB1_meanExcursionStops"]
+# ordered, common = Karpov.ResolveDependencies(summaries)
+# results = test.CalculateSummaryMeasures(data, ordered, common)
+# print(results)

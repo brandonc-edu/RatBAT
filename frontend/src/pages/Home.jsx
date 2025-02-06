@@ -123,7 +123,6 @@ const Home = () => {
       {/* Footer */}
       <footer className="footer">
         <p>For more information, contact us at <a href="mailto:szechtma@mcmaster.ca">szechtma@mcmaster.ca</a> or <a href="mailto:dvorkin@mcmaster.ca">dvorkin@mcmaster.ca</a>.</p>
-        <p>McMaster University, Multiplex Imaging Facility</p>
       </footer>
     </div>
   );

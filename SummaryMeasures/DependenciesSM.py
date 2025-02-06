@@ -10,7 +10,7 @@ Modified on: 24-01-2025
 
 # Summary Measure Dependencies
 
-from FunctionalSM import DATA_DEPENDENCIES, SM_DEPENDENCIES
+from . FunctionalSM import DATA_DEPENDENCIES, SM_DEPENDENCIES
 from itertools import chain
 
 

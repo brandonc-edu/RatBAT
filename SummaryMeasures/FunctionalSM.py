@@ -11,8 +11,10 @@ Modified on: 16-11-2024
 # Imports
 import numpy as np
 # import pandas as pd
-import FieldSM as fsm
-from FieldSM import GetLocaleFromIndex, GetIndexFromLocale
+from . import FieldSM as fsm
+from . FieldSM import GetLocaleFromIndex, GetIndexFromLocale
+# import FieldSM as fsm
+# from FieldSM import GetLocaleFromIndex, GetIndexFromLocale
 
 # Constants
 
@@ -162,10 +164,11 @@ def CalculateStops(data, env: fsm.Environment):
         elif frame[4] == 1 and stopped: # If it's begun moving and was previously stopped
             stopped = False
             # Get the maximum duration for each locale and add a stop to the max locale
-            maxLocale = np.argmax(stopFrames)
+            maxLocale = np.argmax(locDur)
             stopLocales[maxLocale] += 1
             # Add stop frames to total stop durations
-            stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
+            # stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
+            stopFrames[maxLocale] += sum(locDur) 
             # Reset local locale stop durations (for a stop episode)
             locDur = [0 for x in range(25)]
     return stopLocales, stopFrames
@@ -528,4 +531,3 @@ def CalculateMeanStopsExcursions(data, env: fsm.Environment, requiredSummaryMeas
 
 # x = np.array([[1, 2, 3, 10], [4, 5, 6, 11], [7, 8, 9, 12]])
 # print(x[:, [0, 2, 3]])
-
