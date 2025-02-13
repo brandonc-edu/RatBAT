@@ -9,9 +9,12 @@ Modified on: 24-01-2025
 """
 
 import numpy as np
-import FieldSM as fsm
-import FunctionalSM as fcsm
-from FunctionalSM import DATA_MAPPING, SM_MAPPING
+from . import FieldSM as fsm
+from . import FunctionalSM as fcsm
+from . FunctionalSM import DATA_MAPPING, SM_MAPPING
+# import FieldSM as fsm
+# import FunctionalSM as fcsm
+# from FunctionalSM import DATA_MAPPING, SM_MAPPING
 import pandas as pd
 
 ### Summary Measure Dependency Helper ###

@@ -11,8 +11,10 @@ Modified on: 16-11-2024
 # Imports
 import numpy as np
 # import pandas as pd
-import FieldSM as fsm
-from FieldSM import GetLocaleFromIndex, GetIndexFromLocale
+from . import FieldSM as fsm
+from . FieldSM import GetLocaleFromIndex, GetIndexFromLocale
+# import FieldSM as fsm
+# from FieldSM import GetLocaleFromIndex, GetIndexFromLocale
 
 # Constants
 
@@ -482,4 +484,3 @@ def Calculate_Total_Locales_Visited(data, env: fsm.Environment, requiredSummaryM
 
 # x = np.array([[1, 2, 3, 10], [4, 5, 6, 11], [7, 8, 9, 12]])
 # print(x[:, [0, 2, 3]])
-
