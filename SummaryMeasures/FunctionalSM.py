@@ -33,6 +33,7 @@ SM_MAPPING = {
     "calc_HB2_cumulativeReturn" : "Calculate_Frequency_Stops_Secondary_Homebase",
     "calc_HB1_expectedReturn" : "Calculated_Expected_Return_Frequency_Main_Homebase",
     "calc_sessionTotalLocalesVisited" : "Calculate_Total_Locales_Visited",
+    "calc_sessionTotalStops" : "Calculate_Total_Stops",
 }
 
 DATA_MAPPING = {
@@ -68,6 +69,7 @@ DATA_DEPENDENCIES = {
     "calc_HB2_cumulativeReturn" : ["locale_stops_calc"],
     "calc_HB1_expectedReturn" : ["locale_stops_calc"],
     "calc_sessionTotalLocalesVisited" : ["locale_stops_calc"],
+    "calc_sessionTotalStops" : ["locale_stops_calc"],
 }
 
 
@@ -203,6 +205,7 @@ def CalculateHomeBases(data, env: fsm.Environment, requiredSummaryMeasures, preE
         return GetLocaleFromIndex(mainHomeBase), None
     else:
         return GetLocaleFromIndex(mainHomeBase), GetLocaleFromIndex(secondaryHomeBase)
+
 
 def CalculateFreqHomeBaseStops(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
     """
@@ -471,8 +474,28 @@ def Calculate_Total_Locales_Visited(data, env: fsm.Environment, requiredSummaryM
     visitedLocales = [1 if visits > 0 else 0 for visits in localeVisits]
     return sum(visitedLocales)
 
+def Calculate_Total_Stops(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates total number of stops in a session.
 
+        Also referred to as: KP_session_Stops_total#
 
+        Reference ID is: calc_sessionTotalStops
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_sessionTotalStops', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_sessionTotalStops"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    localeVisits = desiredCalcs['locale_stops_calc'][0]
+
+    return sum(localeVisits)
+
+###  Distance & Locomotion Summary Measures ###
+
+# def 
 
 
 ### TESTING ###
