@@ -27,7 +27,13 @@ SM_MAPPING = {
     "calc_HB1_cumulativeReturn" : "CalculateFreqHomeBaseStops",
     "calc_HB1_meanDurationStops" : "CalculateMeanDurationHomeBaseStops",
     "calc_HB1_meanReturn" : "CalculateMeanReturnHomeBase",
-    "calc_HB1_meanExcursionStops" : "CalculateMeanStopsExcursions"
+    "calc_HB1_meanExcursionStops" : "CalculateMeanStopsExcursions",
+    "calc_HB1_stopDuration" :  "Calculate_Main_Homebase_Stop_Duration",
+    "calc_HB2_stopDuration" : "Calculate_Secondary_Homebase_Stop_Duration",
+    "calc_HB2_cumulativeReturn" : "Calculate_Frequency_Stops_Secondary_Homebase",
+    "calc_HB1_expectedReturn" : "Calculated_Expected_Return_Frequency_Main_Homebase",
+    "calc_sessionTotalLocalesVisited" : "Calculate_Total_Locales_Visited",
+    "calc_sessionTotalStops" : "Calculate_Total_Stops",
 }
 
 DATA_MAPPING = {
@@ -43,7 +49,11 @@ SM_DEPENDENCIES = {
     "calc_HB1_cumulativeReturn" : ["calc_homebases"],
     "calc_HB1_meanDurationStops" : ["calc_homebases"],
     "calc_HB1_meanReturn" : ["calc_homebases"],
-    "calc_HB1_meanExcursionStops" : ["calc_homebases"]
+    "calc_HB1_meanExcursionStops" : ["calc_homebases"],
+    "calc_HB1_stopDuration" : ["calc_homebases"],
+    "calc_HB2_stopDuration" : ["calc_homebases"],
+    "calc_HB2_cumulativeReturn" : ["calc_homebases"],
+    "calc_HB1_expectedReturn" : ["calc_homebases"],
 }
 
 ## Data Dependencies
@@ -54,6 +64,12 @@ DATA_DEPENDENCIES = {
     "calc_HB1_meanDurationStops" : ["locale_stops_calc"],
     "calc_HB1_meanReturn" : ["locale_stops_calc"],
     "calc_HB1_meanExcursionStops" : ["locale_stops_calc"],
+    "calc_HB1_stopDuration" : ["locale_stops_calc"],
+    "calc_HB2_stopDuration" : ["locale_stops_calc"],
+    "calc_HB2_cumulativeReturn" : ["locale_stops_calc"],
+    "calc_HB1_expectedReturn" : ["locale_stops_calc"],
+    "calc_sessionTotalLocalesVisited" : ["locale_stops_calc"],
+    "calc_sessionTotalStops" : ["locale_stops_calc"],
 }
 
 
@@ -70,79 +86,33 @@ def CalculateLocale(movementMat, env: fsm.Environment):
         locales.append(env.SpecimenLocation(frame[0], frame[1]))
     return np.array(locales)
 
-    
+def CheckForMissingDependencies(calc, preExistingSMs):
+    """
+        Confirms that the selected calc has all of its summary measure dependencies calculated. Throws error otherwise.
+    """
+    if calc not in SM_DEPENDENCIES.keys(): # If desired SM requires no summary measures to be calculated, then everything's fine
+        return
+    dependencies = SM_DEPENDENCIES[calc]
+    notCalculated = set(dependencies) - set(preExistingSMs)
+    if len(notCalculated) != 0: # If some dependencies still haven't been calculated
+        print(f"Attempting to calculate {calc}, but missing the following necessary summary measures:")
+        for sm in notCalculated:
+            print(f"     - {sm}")
+        raise Exception("Error: Missing one or more summary measures necessary to calculate another summary measure!")
 
-# def CalculateHomeBaseMetrics(movementType, env: fsm.Environment, localeVector=None):
-#     """
-#         Given an environment and matrix containing columns specifying the x-coords, y-coords, and movement type (lingering or progression) of the specimen per frame (every sample is one frame),
-#         return the information necessary to calculate all other summary measures.
-
-#         Will return main home base duration, visits, and rat locale location (empty list if provided as parameter).
-
-#         Durations are recorded in frames. Divide by FRAMES_PER_SECOND to obtain their values in seconds.
-
-#         TO BE IMPLEMENTED (to save on computation time)
-#     """
-#     totalLocaleVisits = [0 for x in range(25)]
-#     totalLocaleStopDurations = [0 for x in range(25)]
-#     totalLocaleDurations = [0 for x in range(25)]
-#     specimenLocaleVector = []
-#     currentLocale = localeVector
-#     stopped = False # In the case that our stops need to involve moving outside of the current locale before recording another stop, then it'll be pretty easy to implement -> stopped = locale (can't be current locale of the specimen to record a visit)
-#     for i in range(len(movementType)):
-#         frame = movementType[i]
-#         if localeVector == None: # If no locale vector was passed as argument (finding it for the first time), find the specimen's locale and add it to the new locale vector.
-#             specimenLocale = env.SpecimenLocation(frame[0], frame[1]) - 1
-#             specimenLocaleVector.append(specimenLocale + 1)
-#         if frame[2] == 0: # If specimen is lingering/stopped in the locale.
-#             if localeVector != None: # If we were already passed the localeVector as a function argument, then use the localeVector's value for that frame
-#                 specimenLocale = localeVector[i] - 1
-#             if not stopped: # If we haven't recorded a stop in this locale already -> do so, and freeze it so we don't record multiple stops.
-#                 totalLocaleVisits[specimenLocale] += 1
-#                 stopped = True
-#             totalLocaleStopDurations[specimenLocale] += 1 # Record stop duration
-#         else:
-#             stopped = False
-#         totalLocaleDurations[specimenLocale] += 1 # Record total durations that specimen spends in each locale
-        
-#     return totalLocaleVisits, totalLocaleStopDurations, totalLocaleDurations, specimenLocaleVector
-
+def HandleMissingInputs(refId: str, data, env: fsm.Environment, calculatedSummaryMeasures, preExistingCalcs):
+    """
+        Calculates al
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies(refId, calculatedSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_HB2_stopDuration"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+    return desiredCalcs
 
 ### Calculating metrics
 
-# def CalculateHomeBaseMetrics(movementType, env: fsm.Environment):
-#     """
-#         Given an environment and matrix containing columns specifying the x-coords, y-coords, and movement type (lingering or progression) of the specimen per frame (every sample is one frame),
-#         return the information necessary to calculate all other summary measures.
-
-#         Will return main home base duration, visits, and rat locale location (empty list if provided as parameter).
-
-#         Durations are recorded in frames. Divide by FRAMES_PER_SECOND to obtain their values in seconds.
-
-#         TO BE IMPLEMENTED (to save on computation time)
-#     """
-#     totalLocaleVisits = [0 for x in range(25)]
-#     totalLocaleStopDurations = [0 for x in range(25)]
-#     totalLocaleDurations = [0 for x in range(25)]
-#     currentLocale = None
-#     stopped = False # In the case that our stops need to involve moving outside of the current locale before recording another stop, then it'll be pretty easy to implement -> stopped = locale (can't be current locale of the specimen to record a visit)
-#     for i in range(len(movementType)):
-#         frame = movementType[i]
-#         currentLocale = env.SpecimenLocation(frame[0], frame[1]) - 1
-#         if frame[2] == 0: # If specimen is lingering/stopped in the locale.
-#             if localeVector != None: # If we were already passed the localeVector as a function argument, then use the localeVector's value for that frame
-#                 specimenLocale = localeVector[i] - 1
-#             if not stopped: # If we haven't recorded a stop in this locale already -> do so, and freeze it so we don't record multiple stops.
-#                 totalLocaleVisits[specimenLocale] += 1
-#                 stopped = True
-#             totalLocaleStopDurations[specimenLocale] += 1 # Record stop duration
-#         else:
-#             stopped = False
-#         totalLocaleDurations[specimenLocale] += 1 # Record total durations that specimen spends in each locale
-        
-#     return totalLocaleVisits, totalLocaleStopDurations, totalLocaleDurations, specimenLocaleVector
-
-# def CalculateStops # Each functions returns a list of tuples of the form: (NAME IN AUXILARY INFO, DATA)
 
 def CalculateStops(data, env: fsm.Environment):
     """
@@ -197,19 +167,9 @@ def CalculateMissingCalcs(data, env: fsm.Environment, preExistingCalcs, calcs):
     
     return desiredCalcs
 
-def CheckForMissingDependencies(calc, preExistingSMs):
-    """
-        Confirms that the selected calc has all of its summary measure dependencies calculated. Throws error otherwise.
-    """
-    if calc not in SM_DEPENDENCIES.keys(): # If desired SM requires no summary measures to be calculated, then everything's fine
-        return
-    dependencies = SM_DEPENDENCIES[calc]
-    notCalculated = set(dependencies) - set(preExistingSMs)
-    if len(notCalculated) != 0: # If some dependencies still haven't been calculated
-        print(f"Attempting to calculate {calc}, but missing the following necessary summary measures:")
-        for sm in notCalculated:
-            print(f"     - {sm}")
-        raise Exception("Error: Missing one or more summary measures necessary to calculate another summary measure!")
+
+
+### Functions to Calculate Summary Measures ###
 
 def CalculateHomeBases(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
     """
@@ -245,6 +205,7 @@ def CalculateHomeBases(data, env: fsm.Environment, requiredSummaryMeasures, preE
         return GetLocaleFromIndex(mainHomeBase), None
     else:
         return GetLocaleFromIndex(mainHomeBase), GetLocaleFromIndex(secondaryHomeBase)
+
 
 def CalculateFreqHomeBaseStops(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
     """
@@ -368,161 +329,176 @@ def CalculateMeanStopsExcursions(data, env: fsm.Environment, requiredSummaryMeas
             excursion = False
     return totalStops / totalExcursions
 
+def Calculate_Main_Homebase_Stop_Duration(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates the cumulative duration of stops within the first home base, measured in seconds.
 
-### Functions to Calculate Summary Measures ###
+        Also referred to as: KPtotalStayTime01_s
+
+        Reference ID is: calc_HB1_stopDuration
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_HB1_stopDuration', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_HB1_stopDuration"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    # localeVisits = desiredCalcs['locale_stops_calc'][0]
+    localeDuration = desiredCalcs['locale_stops_calc'][1]
+    mainHomeBase = requiredSummaryMeasures['calc_homebases'][0]
+
+    ind = GetIndexFromLocale(mainHomeBase)
+    return localeDuration[ind] / FRAMES_PER_SECOND
+
+def Calculate_Secondary_Homebase_Stop_Duration(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates the cumulative duration of stops within the second home base, measured in seconds.
+
+        Warning: There must be at least two stop within the first home base (for the second home base to exist).
+
+        Also referred to as: KPtotalStayTime02_s
+
+        Reference ID is: calc_HB2_stopDuration
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_HB2_stopDuration', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_HB2_stopDuration"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    # Constraint: cannot calculate the summary measure if 2nd home base isn't present
+    if requiredSummaryMeasures["calc_homebases"][1] == None:
+        print("WARNING: Cannot calculate mean return time to main home base, as second home base does not exist!")
+        return None
+
+    # localeVisits = desiredCalcs['locale_stops_calc'][0]
+    localeDuration = desiredCalcs['locale_stops_calc'][1]
+    secondaryHomeBase = requiredSummaryMeasures['calc_homebases'][1]
+
+    ind = GetIndexFromLocale(secondaryHomeBase)
+    return localeDuration[ind] / FRAMES_PER_SECOND
 
 
-# def CalculateHomeBases(movementType, env: fsm.Environment, preExistingCalcs=None):
-#     """
-#         Given an environment and matrix containing columns specifying the x-coords, y-coords, and movement type (lingering or progression) of the specimen per frame (every sample is one frame),
-#         return the two locales (main home base & secondary home base) of the specimen.
+def Calculate_Frequency_Stops_Secondary_Homebase(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates the cumulative number of stops within the second home base.
 
-#         If the main home base is visited only once, then return None for secondary home base. 
+        Warning: There must be at least two stop within the first home base (for the second home base to exist).
 
-#         Also referred to as fHBname01LING & fHBname02LING.
+        Also referred to as: KPcumReturnfreq02
 
-#         Reference ID for Commander: calc_homebases
-#     """
-#     localeVisits = [0 for x in range(25)]
-#     localeDuration = [0 for x in range(25)]
-#     stopped = False
-#     currentLocale = -1
-#     # Count number of visits (and total duration of stops) for each locale
-#     for i in range(len(movementType)):
-#         frame = movementType[i]
-#         if frame[2] == 0: # Stopped
-#             specimenLocale = env.SpecimenLocation(frame[0], frame[1], index=True) # Get current locale of specimen
-#             # Count the stop
-#             if not stopped: # If it was previously moving and just now stopped
-#                 localeVisits[specimenLocale] += 1
-#                 currentLocale = specimenLocale
-#                 stopped = True
-#             elif stopped and currentLocale != specimenLocale: # If it's stopped and slightly lingered into an adjacent locale (think sitting on the borders)
-#                 localeVisits[specimenLocale] += 1
-#                 currentLocale = specimenLocale
-#             # Count the time spent stopped in a locale
-#             localeDuration[specimenLocale] += 1
-#         else: # If it's moving, then make sure we revert the stopped flag
-#             stopped = False
-#     # Calculate home bases
-#     topTwoMostVisited = np.argpartition(np.array(localeVisits), len(localeVisits) - 2)[-2:]
-#     localeA = topTwoMostVisited[0]
-#     localeB = topTwoMostVisited[1]
-#     # Check & handle tiebreaker
-#     if localeVisits[localeA] == localeVisits[localeB]:
-#         mainHomeBase = localeA if localeDuration[localeA] >= localeDuration[localeB] else localeB
-#     else:
-#         mainHomeBase = localeA if localeVisits[localeA] > localeVisits[localeB] else localeB
-#     secondaryHomeBase = localeA if mainHomeBase == localeB else localeB
-#     if localeA < 2 and localeB < 2: # In case that there's less than two stops for main home base. In this case, the home base would essentially be a random locale that has one stop in it.
-#         return GetLocaleFromIndex(mainHomeBase), None
-#     else:
-#         return GetLocaleFromIndex(mainHomeBase), GetLocaleFromIndex(secondaryHomeBase)
+        Reference ID is: calc_HB2_cumulativeReturn
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_HB2_cumulativeReturn', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_HB2_cumulativeReturn"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    # Constraint: cannot calculate the summary measure if 2nd home base isn't present
+    if requiredSummaryMeasures["calc_homebases"][1] == None:
+        print("WARNING: Cannot calculate mean return time to main home base, as second home base does not exist!")
+        return None
+
+    localeVisits = desiredCalcs['locale_stops_calc'][0]
+    # localeDuration = desiredCalcs['locale_stops_calc'][1]
+    secondaryHomeBase = requiredSummaryMeasures['calc_homebases'][1]
+
+    ind = GetIndexFromLocale(secondaryHomeBase)
+    return localeVisits[ind]
+
+def Calculated_Expected_Return_Frequency_Main_Homebase(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates the expected return frequency to the first home base.
+
+        TO DO: Confirm that this function is meant to calculate expected return!
+
+        Also referred to as: KPexpReturnfreq01
+
+        Reference ID is: calc_HB1_expectedReturn
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_HB1_expectedReturn', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_HB1_expectedReturn"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    localeVisits = desiredCalcs['locale_stops_calc'][0]
+    # localeDuration = desiredCalcs['locale_stops_calc'][1]
+    mainHomeBase = requiredSummaryMeasures['calc_homebases'][0]
+
+    # The total number of locales visited during the session
+    totalLocalesVisited = sum([1 if visits > 0 else 0 for visits in localeVisits])
+
+    # All stops in the main home base
+    ind = GetIndexFromLocale(mainHomeBase)
+    mainVisits = localeVisits[ind]
     
-# def CalculateFreqHomeBaseStops(movementType, mainHomeBase: int, env: fsm.Environment):
-#     """
-#         Calculates the cumulative number of stops within the first home base
+    return (mainVisits * totalLocalesVisited) / sum(localeVisits)
 
-#         Also referred to as KPcumReturnfreq01
+def Calculate_Mean_Return_Time_All_Locales(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates the weighted mean return time to all locales,
 
-#         Reference ID is: calc_HB1_cumulativeReturn
-#     """
-#     numStops = 0
-#     stopped = False
-#     homeBase = False
-#     currentLocale = -1
-#     # Count number of visits (and total duration of stops) for each locale
-#     for i in range(len(movementType)):
-#         frame = movementType[i]
-#         if frame[2] == 0: # Get current locale of specimen
-#             specimenLocale = env.SpecimenLocation(frame[0], frame[1])
-#             if (not stopped and specimenLocale == mainHomeBase) or (stopped and not homeBase and specimenLocale == mainHomeBase): # If we stop or linger back into the homebase, count the stop.
-#                 numStops += 1
-#                 stopped = True
-#                 homeBase = True
-#             elif stopped and specimenLocale != mainHomeBase: # If the specimen lingers into another locale, we set homeBase to false such that if it lingers back into homeBase, it's counted as another stop.
-#                 homeBase = False
-#             currentLocale = specimenLocale
-#         else:
-#             stopped = False
-#     return numStops
+        Warning: There must be at least two stop within the first home base (for there to be a main home base). I think.
 
-# def CalculateMeanDurationHomeBaseStops(movementType, mainHomeBase: int, env: fsm.Environment):
-#     """
-#         Calculates the mean duration (in seconds) of the specimen remaining in the main home base. Additionally returns the log (base 10) of this duration as well.
+        Also referred to as: KP_session_ReturnTime_mean
 
-#         Also referred to as KPmeanStayTime01_s & KPmeanStayTime01_s_log.
+        Reference ID is: calc_sessionReturnTimeMean
+    """
+    pass
 
-#         Reference ID is: calc_HB1_meanDurationStops
-#     """
-#     numStops = 0
-#     totalDuration = 0
-#     stopped = False
-#     # Count number of visits (and total duration of stops) for each locale
-#     for i in range(len(movementType)):
-#         frame = movementType[i]
-#         if frame[2] == 0:
-#             specimenLocale = env.SpecimenLocation(frame[0], frame[1])
-#             if specimenLocale == mainHomeBase:
-#                 if not stopped:
-#                     numStops += 1
-#                     stopped = True
-#                 totalDuration += 1
-#         else:
-#             stopped = False
-#     duration_in_seconds = (totalDuration / numStops) / FRAMES_PER_SECOND
-#     return duration_in_seconds, np.log10(duration_in_seconds)
+# def Expected_Return_Time_Main_Homebase
 
-# def CalculateMeanReturnHomeBase(movementType, mainHomeBase: int, env: fsm.Environment):
-#     """
-#         Calculates the mean return time to the main home base (in seconds). Also can be thought of as the mean duration of execursions.
+def Calculate_Total_Locales_Visited(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates the total number of locales visited (1 to 25) throughout a session.
 
-#         Also referred to as KPcumReturnfreq01
+        Also referred to as: KP_session_differentlocalesVisited_#
 
-#         Reference ID is: calc_HB1_meanReturn
-#     """
-#     totalExcursions = 0
-#     totalDuration = 0
-#     excursion = False
-#     # Count number of excursions (and their total duration) for each locale
-#     for i in range(len(movementType)):
-#         frame = movementType[i]
-#         specimenLocale = env.SpecimenLocation(frame[0], frame[1])
-#         if specimenLocale != mainHomeBase:
-#             totalDuration += 1
-#             if not excursion:
-#                 totalExcursions += 1
-#                 excursion = True
-#         else:
-#             excursion = False
-#     return (totalDuration / totalExcursions) / FRAMES_PER_SECOND
+        Reference ID is: calc_sessionTotalLocalesVisited
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_sessionTotalLocalesVisited', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_sessionTotalLocalesVisited"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
 
-# def CalculateMeanStopsExcursions(movementType, mainHomeBase: int, env: fsm.Environment):
-#     """
-#         Calculates the mean number of stops during excursions (away from the Main Home Base).
+    ### Summary Measure Logic
+    localeVisits = desiredCalcs['locale_stops_calc'][0]
+    
+    visitedLocales = [1 if visits > 0 else 0 for visits in localeVisits]
+    return sum(visitedLocales)
 
-#         Also referred to as KPstopsToReturn01
+def Calculate_Total_Stops(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates total number of stops in a session.
 
-#         Reference ID is: calc_HB1_meanExcursionStops
-#     """
-#     totalExcursions = 0
-#     totalStops = 0
-#     excursion = False
-#     # Count number of excursions (and their total stops) for each locale
-#     for i in range(len(movementType)):
-#         frame = movementType[i]
-#         specimenLocale = env.SpecimenLocation(frame[0], frame[1])
-#         if specimenLocale != mainHomeBase: # If the specimen is not in the main home base
-#             if frame[2] == 0: # If the specimen is lingering while on an excursion
-#                 totalStops += 1
-#             if not excursion: # If the specimen is no longer in its main home base, it's on an excursion.
-#                 totalExcursions += 1
-#                 excursion = True
-#         else:
-#             excursion = False
-#     return (totalStops / totalExcursions) / FRAMES_PER_SECOND
+        Also referred to as: KP_session_Stops_total#
+
+        Reference ID is: calc_sessionTotalStops
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_sessionTotalStops', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_sessionTotalStops"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    localeVisits = desiredCalcs['locale_stops_calc'][0]
+
+    return sum(localeVisits)
+
+###  Distance & Locomotion Summary Measures ###
+
+# def 
 
 
+### TESTING ###
 # x = np.array([1, 5, 21, 1, 2, 5, 9, 21])
 # print(x[np.argpartition(x, len(x) - 2)][-2:])
 
