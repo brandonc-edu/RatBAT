@@ -18,7 +18,7 @@
   z-index: 1000;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
+  
   width: 80%;
   max-width: 600px;
   background-color: #fefefe;
@@ -71,7 +71,7 @@
   height: 100vh;
   box-sizing: border-box;
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: #a5a8aa3a;
 }
 
 .top-section {
@@ -90,19 +90,45 @@
   align-items: center;
 }
 
-.measure-item {
-  position: relative;
-  cursor: pointer;
+.data-items {
+  flex: 1;
+  overflow-y: auto;
 }
 
 .summary-measures,
-.selected-data,
+.selected-data {
+  background-color: white;
+  border: 10px solid white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  flex: 1;
+  max-height: 250px; /* Set a fixed height */
+  overflow-y: auto; /* Enable scrolling */
+  padding: 0;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 20px;
+}
+
+.data-footer,
+.measure-footer {
+  padding-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px; /* Add gap between buttons */
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+}
+
 .result-section {
   background-color: white;
-  border: 1px solid #ccc;
+  border: 10px solid white;
   border-radius: 8px;
-  padding: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 }
 
 .result-table {
@@ -128,22 +154,14 @@
   background-color: #e0e0e0; /* Slightly darker grey */
 }
 
-/* Actual value rows */
-.result-table .value-row {
-  background-color: #ffffff; /* Default background color */
-}
-
 /* Ensure alternating row colors do not affect specific rows */
 .result-table tr:not(.data-file-row):not(.measure-header-row):nth-child(even) {
   background-color: #f9f9f9;
 }
 
-.result-section {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 250px);
-  box-sizing: border-box;
-  overflow: hidden;
+/* Actual value rows */
+.result-table .value-row {
+  background-color: #ffffff; /* Default background color */
 }
 
 .result-items {
@@ -162,29 +180,6 @@
   padding: 10px;
 }
 
-.summary-measures,
-.selected-data {
-  flex: 1;
-  max-height: 250px; /* Set a fixed height */
-  overflow-y: auto; /* Enable scrolling */
-}
-
-.data-items {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.data-footer,
-.measure-footer {
-  padding-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 20px; /* Add gap between buttons */
-  position: sticky;
-  bottom: 0;
-  background-color: #fff;
-  border-top: 1px solid #ccc;
-}
 
 button {
   background-color: #007bff;

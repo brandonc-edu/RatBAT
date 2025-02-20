@@ -3,7 +3,7 @@ import './ComputeSummaryMeasures.css';
 import axios from 'axios';
 
 const ComputeSummaryMeasures = () => {
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState({});
   const [selectedSummaryMeasures, setSelectedSummaryMeasures] = useState([]);
   const [dataFiles, setDataFiles] = useState([]);
   const [selectedDataFiles, setSelectedDataFiles] = useState([]);
@@ -82,42 +82,64 @@ const ComputeSummaryMeasures = () => {
   };
 
   const handleSelectAllResults = () => {
-    if (selectedResults.length === results.length) {
+    if (selectedResults.length === Object.keys(results).length) {
       setSelectedResults([]);
     } else {
-      setSelectedResults(results.map(result => result.file));
+      setSelectedResults(Object.keys(results));
     }
   };
   
   const handleDownloadSelected = () => {
-    const selectedData = results.filter(result => selectedResults.includes(result.file));
-    const groupedResults = groupResultsByFile(selectedData);
-
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + Object.entries(groupedResults).map(([file, measures]) => (
-        `${file}\nMeasure,Value\n` + measures.map((measure, measureIndex) => {
-          if (measure.measure === 'Homebases') {
-            const values = measure.value.split(', ');
-            return values.map((value, valueIndex) => (
-              `${valueIndex === 0 ? 'Homebases (KPname01)' : 'Homebases (KPname02)'},${value}`
-            )).join('\n');
-          } else if (measure.measure === 'Mean Duration Stops') {
-            const values = measure.value.split(', ');
-            return values.map((value, valueIndex) => (
-              `${valueIndex === 0 ? 'Mean Duration Stops (KPmeanStayTime01_s)' : 'Mean Duration Stops (KPmeanStayTime01_s_log)'},${value}`
-            )).join('\n');
-          } else {
-            return `${measure.measure},${measure.value}`;
-          }
-        }).join('\n')
-      )).join('\n');
-
-    const encodedUri = encodeURI(csvContent);
+    const selectedData = Object.entries(results).filter(([file]) => selectedResults.includes(file));
+    
+    // Define CSV headers
+    const csvHeaders = [
+      "Data File",
+      "Homebases (KPname01)",
+      "Homebases (KPname02)",
+      "Cumulative Return",
+      "Mean Duration Stops (KPmeanStayTime01_s)",
+      "Mean Duration Stops (KPmeanStayTime01_s_log)",
+      "Mean Return",
+      "Mean Excursion Stops",
+      "Main Homebase Stop Duration",
+      "Secondary Homebase Stop Duration",
+      "Secondary Homebase Cumulative Return",
+      "Expected Return Frequency Main Homebase",
+      "Total Locales Visited",
+      "Total Stops"
+    ];
+  
+    const csvContent = [
+      csvHeaders.join(","),
+      ...selectedData.map(([file, measures]) => (
+        [
+          file,
+          measures['calc_homebases'] ? measures['calc_homebases'][0] : '',
+          measures['calc_homebases'] ? measures['calc_homebases'][1] : '',
+          measures['calc_HB1_cumulativeReturn'] || '',
+          measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][0] : '',
+          measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][1] : '',
+          measures['calc_HB1_meanReturn'] || '',
+          measures['calc_HB1_meanExcursionStops'] || '',
+          measures['calc_HB1_stopDuration'] || '',
+          measures['calc_HB2_stopDuration'] || '',
+          measures['calc_HB2_cumulativeReturn'] || '',
+          measures['calc_HB1_expectedReturn'] || '',
+          measures['calc_sessionTotalLocalesVisited'] || '',
+          measures['calc_sessionTotalStops'] || ''
+        ].join(",")
+      ))
+    ].join("\n");
+  
+    console.log("CSV Content:", csvContent); // Debugging statement
+  
+    const encodedUri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "selected_results.csv");
     document.body.appendChild(link); // Required for Firefox
-
+  
     link.click();
     document.body.removeChild(link);
   };
@@ -135,8 +157,10 @@ const ComputeSummaryMeasures = () => {
         environment: 'common', // or 'q20s' / 'q17'
       });
   
-      console.log("Results:", response.data);
-      setResults(formatResults(response.data));
+      console.log("Results from API:", response.data);
+      const formattedResults = formatResults(response.data);
+      console.log("Formatted Results:", formattedResults);
+      setResults(formattedResults);
       setSelectedResults([]); // Reset selected results after applying
     } catch (error) {
       console.error("Error:", error.response ? error.response.data : error.message);
@@ -149,57 +173,50 @@ const ComputeSummaryMeasures = () => {
     calc_HB1_meanDurationStops: 'Mean Duration Stops',
     calc_HB1_meanReturn: 'Mean Return',
     calc_HB1_meanExcursionStops: 'Mean Excursion Stops',
+    calc_HB1_stopDuration: 'Main Homebase Stop Duration',
+    calc_HB2_stopDuration: 'Secondary Homebase Stop Duration',
+    calc_HB2_cumulativeReturn: 'Secondary Homebase Cumulative Return',
+    calc_HB1_expectedReturn: 'Expected Return Frequency Main Homebase',
+    calc_sessionTotalLocalesVisited: 'Total Locales Visited',
+    calc_sessionTotalStops: 'Total Stops',
   };
-
+  
   const measureTooltips = {
     calc_homebases: 'KPname',
     calc_HB1_cumulativeReturn: 'KPcumReturnfreq01',
     calc_HB1_meanDurationStops: 'KPmeanStayTime01',
     calc_HB1_meanReturn: 'KPcumReturnfreq01',
     calc_HB1_meanExcursionStops: 'KPstopsToReturn01',
+    calc_HB1_stopDuration: 'KPtotalStayTime01_s',
+    calc_HB2_stopDuration: 'KPtotalStayTime02_s',
+    calc_HB2_cumulativeReturn: 'KPcumReturnfreq02',
+    calc_HB1_expectedReturn: 'KPexpReturnfreq01',
+    calc_sessionTotalLocalesVisited: 'KP_session_differentlocalesVisited_#',
+    calc_sessionTotalStops: 'KP_session_Stops_total#',
   };
 
   const formatResults = (data) => {
-    const formattedResults = [];
+    const formattedResults = {};
     for (const [file, measures] of Object.entries(data)) {
+      formattedResults[file] = {};
       for (const [key, value] of Object.entries(measures)) {
         if (!selectedSummaryMeasures.includes(key)) {
           continue; // Skip measures that are not selected
         }
         let displayValue;
         if (key === "calc_homebases") {
-          if (Array.isArray(value) && value.length === 2) {
-            displayValue = `${value[0]}, ${value[1]}`;
-          } else {
-            displayValue = 'Main - N/A, Secondary - N/A';
-          }
+          displayValue = Array.isArray(value) && value.length === 2 ? value : ['Main - N/A', 'Secondary - N/A'];
         } else if (key === "calc_HB1_meanDurationStops" && Array.isArray(value)) {
-          displayValue = value.join(', ');
-        } else {
           displayValue = value;
+        } else {
+          displayValue = [value];
         }
-        formattedResults.push({
-          file,
-          measure: measureDisplayNames[key] || key,
-          value: displayValue,
-        });
+        formattedResults[file][key] = displayValue;
       }
     }
+    console.log("Formatted Results in formatResults:", formattedResults);
     return formattedResults;
   };
-
-  const groupResultsByFile = (results) => {
-    const groupedResults = {};
-    results.forEach(result => {
-      if (!groupedResults[result.file]) {
-        groupedResults[result.file] = [];
-      }
-      groupedResults[result.file].push(result);
-    });
-    return groupedResults;
-  };
-
-  const groupedResults = groupResultsByFile(results);
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -301,57 +318,57 @@ const ComputeSummaryMeasures = () => {
         <h3>Result</h3>
         <div className="result-items">
           <table className="result-table">
-            <tbody>
-              {Object.entries(groupedResults).map(([file, measures], fileIndex) => (
-                <>
-                  <tr key={`file-${fileIndex}`} className="data-file-row">
-                    <td colSpan="2">
-                      <input
-                        type="checkbox"
-                        checked={selectedResults.includes(file)}
-                        onChange={() => handleResultToggle(file)}
-                      />
-                      <strong>{file}</strong>
-                    </td>
-                  </tr>
-                  <tr className="measure-header-row">
-                    <th>Measure</th>
-                    <th>Value</th>
-                  </tr>
-                  {measures.map((measure, measureIndex) => {
-                    if (measure.measure === 'Homebases') {
-                      const values = measure.value.split(', ');
-                      return values.map((value, valueIndex) => (
-                        <tr key={`${fileIndex}-${measureIndex}-${valueIndex}`} className="value-row">
-                          <td>{valueIndex === 0 ? 'Homebases (KPname01)' : 'Homebases (KPname02)'}</td>
-                          <td>{value}</td>
-                        </tr>
-                      ));
-                    } else if (measure.measure === 'Mean Duration Stops') {
-                      const values = measure.value.split(', ');
-                      return values.map((value, valueIndex) => (
-                        <tr key={`${fileIndex}-${measureIndex}-${valueIndex}`} className="value-row">
-                          <td>{valueIndex === 0 ? 'Mean Duration Stops (KPmeanStayTime01_s)' : 'Mean Duration Stops (KPmeanStayTime01_s_log)'}</td>
-                          <td>{value}</td>
-                        </tr>
-                      ));
-                    } else {
-                      return (
-                        <tr key={`${fileIndex}-${measureIndex}`} className="value-row">
-                          <td>{measure.measure}</td>
-                          <td>{measure.value}</td>
-                        </tr>
-                      );
-                    }
-                  })}
-                </>
-              ))}
-            </tbody>
+          <thead>
+            <tr>
+              <th></th> {/* Empty header for checkboxes */}
+              <th>Data File</th>
+              <th>Homebases (KPname01)</th>
+              <th>Homebases (KPname02)</th>
+              <th>Cumulative Return</th>
+              <th>Mean Duration Stops (KPmeanStayTime01_s)</th>
+              <th>Mean Duration Stops (KPmeanStayTime01_s_log)</th>
+              <th>Mean Return</th>
+              <th>Mean Excursion Stops</th>
+              <th>Main Homebase Stop Duration</th>
+              <th>Secondary Homebase Stop Duration</th>
+              <th>Secondary Homebase Cumulative Return</th>
+              <th>Expected Return Frequency Main Homebase</th>
+              <th>Total Locales Visited</th>
+              <th>Total Stops</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(results).map(([file, measures], fileIndex) => (
+              <tr key={`file-${fileIndex}`}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedResults.includes(file)}
+                    onChange={() => handleResultToggle(file)}
+                  />
+                </td>
+                <td>{file}</td>
+                <td>{measures['calc_homebases'] ? measures['calc_homebases'][0] : ''}</td>
+                <td>{measures['calc_homebases'] ? measures['calc_homebases'][1] : ''}</td>
+                <td>{measures['calc_HB1_cumulativeReturn'] || ''}</td>
+                <td>{measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][0] : ''}</td>
+                <td>{measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][1] : ''}</td>
+                <td>{measures['calc_HB1_meanReturn'] || ''}</td>
+                <td>{measures['calc_HB1_meanExcursionStops'] || ''}</td>
+                <td>{measures['calc_HB1_stopDuration'] || ''}</td>
+                <td>{measures['calc_HB2_stopDuration'] || ''}</td>
+                <td>{measures['calc_HB2_cumulativeReturn'] || ''}</td>
+                <td>{measures['calc_HB1_expectedReturn'] || ''}</td>
+                <td>{measures['calc_sessionTotalLocalesVisited'] || ''}</td>
+                <td>{measures['calc_sessionTotalStops'] || ''}</td>
+              </tr>
+            ))}
+          </tbody>
           </table>
         </div>
         <div className="result-footer">
           <button onClick={handleSelectAllResults}>
-            {selectedResults.length === results.length && results.length > 0 ? 'Unselect All' : 'Select All'}
+            {selectedResults.length === Object.keys(results).length && Object.keys(results).length > 0 ? 'Unselect All' : 'Select All'}
           </button>
           <button onClick={handleDownloadSelected}>Download Selected</button>
         </div>
