@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import './ComputeSummaryMeasures.css';
 import axios from 'axios';
+import { ResultsContext } from '../ResultsContext';
 
 const ComputeSummaryMeasures = () => {
-  const [results, setResults] = useState({});
+  const { results, setResults } = useContext(ResultsContext);
   const [selectedSummaryMeasures, setSelectedSummaryMeasures] = useState([]);
   const [dataFiles, setDataFiles] = useState([]);
   const [selectedDataFiles, setSelectedDataFiles] = useState([]);
@@ -88,10 +89,10 @@ const ComputeSummaryMeasures = () => {
       setSelectedResults(Object.keys(results));
     }
   };
-  
+
   const handleDownloadSelected = () => {
     const selectedData = Object.entries(results).filter(([file]) => selectedResults.includes(file));
-    
+
     // Define CSV headers
     const csvHeaders = [
       "Data File",
@@ -109,7 +110,7 @@ const ComputeSummaryMeasures = () => {
       "Total Locales Visited",
       "Total Stops"
     ];
-  
+
     const csvContent = [
       csvHeaders.join(","),
       ...selectedData.map(([file, measures]) => (
@@ -131,15 +132,15 @@ const ComputeSummaryMeasures = () => {
         ].join(",")
       ))
     ].join("\n");
-  
+
     console.log("CSV Content:", csvContent); // Debugging statement
-  
+
     const encodedUri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "selected_results.csv");
     document.body.appendChild(link); // Required for Firefox
-  
+
     link.click();
     document.body.removeChild(link);
   };
@@ -149,14 +150,14 @@ const ComputeSummaryMeasures = () => {
       alert("Please select at least one data file.");
       return;
     }
-  
+
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/compute-summary-measures/', {
         data_file_paths: selectedDataFiles,
         summary_measures: selectedSummaryMeasures,
         environment: 'common', // or 'q20s' / 'q17'
       });
-  
+
       console.log("Results from API:", response.data);
       const formattedResults = formatResults(response.data);
       console.log("Formatted Results:", formattedResults);
@@ -180,7 +181,7 @@ const ComputeSummaryMeasures = () => {
     calc_sessionTotalLocalesVisited: 'Total Locales Visited',
     calc_sessionTotalStops: 'Total Stops',
   };
-  
+
   const measureTooltips = {
     calc_homebases: 'KPname',
     calc_HB1_cumulativeReturn: 'KPcumReturnfreq01',
@@ -286,7 +287,7 @@ const ComputeSummaryMeasures = () => {
             </button>
           </div>
         </div>
-  
+
         <div className="selected-data">
           <h3>Data File</h3>
           <div className="data-items">
@@ -313,7 +314,7 @@ const ComputeSummaryMeasures = () => {
           </div>
         </div>
       </div>
-  
+
       <div className="result-section">
         <h3>Result</h3>
         <div className="result-items">

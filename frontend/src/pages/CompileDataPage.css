@@ -1,0 +1,51 @@
+.compile-data-page {
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+.selection-section {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.selection-group {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  flex: 1;
+}
+
+.selection-group h3 {
+  margin-top: 0;
+}
+
+.selection-group button {
+  margin-top: 10px;
+}
+
+.action-section {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.preview-section {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  overflow-x: auto; /* Add horizontal scrolling */
+}
+
+.preview-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.preview-section th, .preview-section td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
