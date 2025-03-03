@@ -39,7 +39,7 @@ def get_foreign_keys(model):
     return fkeys
 
 
-def get_relationship(start,dest,searched = None) -> (str|None):
+def get_relationship(start,dest,searched = None):
     # Default parameter None instead of set() to avoid reuse of default set created at function definition.
     if searched == None:
         searched = set()
