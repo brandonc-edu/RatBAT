@@ -4,9 +4,50 @@ from rest_framework import status
 
 from FRDRQuery.query import frdr_request, get_frdr_urls, db_request, get_local_trials
 
+from django.apps import apps
+import django
 import db_connector.models as models
 import os
 
+class GetFieldsView(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            fields = []        
+            # Collect all fields from all tables (excluding foreign keys).
+            for model in apps.get_models():
+                for field in model._meta.get_fields():
+                    if not isinstance(field,django.db.models.ForeignKey):
+                        fields.append(field.name)
+                                         
+            return Response(fields, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+'''
+class GetDataView(APIView):
+    def get(self, request, *args, **kwargs):
+        try:        
+            filters    = request.data.get('filters')
+            fields     = request.data.get('fields')
+
+            print(f"Received filters: {filters}")
+            print(f"Received fields: {fields}")
+
+            if not filters or not fields:
+                return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
+
+            frdr_urls = get_frdr_urls(filters,models.trial,dtypes)
+            print(f"Fetching the following URLs from the FRDR: {frdr_urls}")
+
+            local_trials = get_local_trials(filters,models.trial,dtypes)
+            print(f"Fetching the following trials from the DB: {local_trials}")
+
+            frdr_request(frdr_urls, full_cache_path, models.timeseries, save)
+            db_request(local_trials, full_cache_path, models.timeseries)
+            
+            return Response({"message":f"All files saved successfully in {cache_path}"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+'''
 class QueryDataView(APIView):
     def post(self, request, *args, **kwargs):
 

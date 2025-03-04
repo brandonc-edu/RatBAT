@@ -88,6 +88,32 @@ def get_local_trials(filters,trial_model,dtypes:str) -> list[(int,str)]:
     
     return [(trial.trial_id, trial.trackfile.split("/")[-1]) for trial in query_out if not trial.trackfile == None]
 
+def get_data(filters,trial_model, fields):
+
+    query = Q()
+    
+    for f in filters:
+        field  = f.get('field')
+        lookup = f.get('lookup')
+        value  = f.get('value')
+
+        if not lookup in FIELD_LOOKUPS:
+            raise ValueError(f"Invalid lookup type provided: {lookup}")
+        
+        field = get_relationship(trial_model,field)
+        
+        get_relationship(trial_model,field)        
+        if field == None:
+            raise ValueError(f"Could not find relationship between table {trial_model._meta.model_name} and field {f.get('field')}.")
+        field = field.replace("trial__","")
+        filter = {f"{field}__{lookup}":value}
+
+        query = query & Q(**filter)
+    
+    query_out = trial_model.objects.filter(query)
+
+
+
 def frdr_request(files:list[tuple[int,str,str]], cache_path:str, model, save:bool) -> None:
     """Given a list of files accesses neccesary data from the frdr.
 
