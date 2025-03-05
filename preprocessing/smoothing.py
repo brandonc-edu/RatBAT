@@ -12,7 +12,7 @@ def lowess(data:np.ndarray, deg:int, half_window:int, num_iter:int) -> np.ndarra
     Parameters
     ----------
     data : numpy.ndarray
-        nx1 array of raw data (either the x or y axis of a trial).
+        nx1 array of raw x or y movement data.
     deg : int
         The degree of polynomial to be fitted to windows of data.
     half_window : int
@@ -32,7 +32,10 @@ def lowess(data:np.ndarray, deg:int, half_window:int, num_iter:int) -> np.ndarra
 
     # Initialize weight and smoothed data arrays:
     weights = np.zeros(shape=(n, 2 * hw + 1), dtype=float)
-    data_s  = np.zeros(shape=(n), dtype = float)
+    data_s  = np.zeros(shape=(n, 1), dtype = float)
+    
+    # Matrix of relative sample_ids to be used for WLS to fit to 'deg' degree polynomial. 
+    sids = np.vander(np.array([j for j in range(-hw, hw + 1)]).T, deg + 1)
 
     # For each point, define weights for all points within a half window of the point
     # these weights will be used to fit a polynomial to estimate a smoothed value for the point.
@@ -40,16 +43,15 @@ def lowess(data:np.ndarray, deg:int, half_window:int, num_iter:int) -> np.ndarra
         for j in range(max(0, i - hw), min(n, i + hw + 1)):
             weights[i, j-(i-hw)] = (1 - abs((i - j) / hw)**3)**3
     
-    # Polynomial fitting is repeated over multiple iterations based on desired path smoothness. 
+    # Polynomial fitting is repeated over m.ultiple iterations based on desired path smoothness. 
     for _ in range(num_iter):
-        # A 'deg' degree polynomial is fitted for every point in the dataset using computed weights and used to compute a smoothed value.
+        # A 'deg' degree polynomial is fitted for every point in the dataset using weighted least squares.
         for i in range(n):
-            neigbourhood = np.concat((np.zeros(max(hw - i, 0)),
-                                      data[max(0, i - hw) : min(n, i + hw + 1)], 
-                                      np.zeros(max(i - n + hw + 1, 0))))
-            
-            data_s[i] = np.dot((neigbourhood ** deg), weights[i])
-        
+
+            w = weights[i] * np.identity(2 * hw + 1)
+            coef = np.linalg.inv(sids.T * w * sids) * sids.T * w * data            
+            print(coef)
+
         # Residuals are used to adjust weights.
         # Points with large residuals have decreased weights and vice versa. 
         residuals = np.abs(data - data_s)
@@ -86,7 +88,7 @@ def repeated_running_medians(data:np.ndarray, half_windows:list[int], min_arr:in
     Parameters
     ----------
     data : numpy.ndarray
-        nx1 array of raw data (either the x or y axis of a trial).
+        nx1 array of raw x and y movement data.
     half_windows : list[int]
         A list of half-window lengths to be used by each iteration of the algorithm.
         For iteration i, each window has width: 2*half_windows[i] + 1 
@@ -101,7 +103,7 @@ def repeated_running_medians(data:np.ndarray, half_windows:list[int], min_arr:in
         Data with smoothed arrests.
     """
 
-df = pd.read_csv("database/data/test_data/Q23U693012_12_0_0468_0002801_TrackFile.csv")
+df = pd.read_csv("database/data/test_data/Q23U693001_01_5_0001_0020179_TrackFile.csv")
 df = df['x'].to_numpy(np.float64)
 print(df)
-print(lowess(df,2,2,2))
+print(lowess(df,3,2,2))
