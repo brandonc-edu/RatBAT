@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy  as np
+from numpy.linalg import matmul as mul
+import matplotlib.pyplot as plt
 
 def lowess(data:np.ndarray, deg:int, half_window:int, num_iter:int) -> np.ndarray:
     """Locally Weighted Scatter Plot Smothing.
@@ -26,34 +28,38 @@ def lowess(data:np.ndarray, deg:int, half_window:int, num_iter:int) -> np.ndarra
     numpy.ndarray
         Smoothed version of data.
     """
-
+    
     n = data.shape[0]
     hw = half_window
 
     # Initialize weight and smoothed data arrays:
     weights = np.zeros(shape=(n, 2 * hw + 1), dtype=float)
-    data_s  = np.zeros(shape=(n, 1), dtype = float)
+    data_s  = np.zeros(n, dtype = float)
     
     # Matrix of relative sample_ids to be used for WLS to fit to 'deg' degree polynomial. 
-    sids = np.vander(np.array([j for j in range(-hw, hw + 1)]).T, deg + 1)
+    x = np.vander(np.array([j for j in range(-hw, hw + 1)]).T, deg + 1)
 
     # For each point, define weights for all points within a half window of the point
     # these weights will be used to fit a polynomial to estimate a smoothed value for the point.
     for i in range(n):
         for j in range(max(0, i - hw), min(n, i + hw + 1)):
             weights[i, j-(i-hw)] = (1 - abs((i - j) / hw)**3)**3
-    
+
     # Polynomial fitting is repeated over m.ultiple iterations based on desired path smoothness. 
     for _ in range(num_iter):
         # A 'deg' degree polynomial is fitted for every point in the dataset using weighted least squares.
         for i in range(n):
 
             w = weights[i] * np.identity(2 * hw + 1)
-            coef = np.linalg.inv(sids.T * w * sids) * sids.T * w * data            
-            print(coef)
+            y = np.concat((np.zeros(max(hw - i, 0)), data[max(0, i - hw) : min(n, i + hw + 1)], np.zeros(max(i - n + hw + 1, 0))))       
+        
+            coef = mul(np.linalg.pinv(mul(x.T, mul(w, x))), mul(x.T, mul(w, y)))
+            data_s[i] = coef[-1]
+            
 
         # Residuals are used to adjust weights.
         # Points with large residuals have decreased weights and vice versa. 
+        
         residuals = np.abs(data - data_s)
 
         for i in range(n):
@@ -103,7 +109,13 @@ def repeated_running_medians(data:np.ndarray, half_windows:list[int], min_arr:in
         Data with smoothed arrests.
     """
 
-df = pd.read_csv("database/data/test_data/Q23U693001_01_5_0001_0020179_TrackFile.csv")
+# Testing Code
+df = pd.read_csv("database/data/test_data/Q23U693012_12_0_0468_0002801_TrackFile.csv")
 df = df['x'].to_numpy(np.float64)
-print(df)
-print(lowess(df,3,2,2))
+df_s = lowess(df,3,10,2)
+
+x = [i for i in range(len(df))]
+
+plt.scatter(x,df)
+plt.scatter(x,df_s)
+plt.show()
