@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from FRDRQuery.query import frdr_request, get_frdr_urls, db_request, get_local_trials
+from FRDRQuery.query import frdr_request, get_frdr_urls, get_timeseries, get_data
 
 from django.apps import apps
 import django
@@ -10,21 +10,37 @@ import db_connector.models as models
 import os
 
 class GetFieldsView(APIView):
+    """An api view used to access all db fields.
+    
+    ForeignKey fields, reverse_related fields, and auto fields are excluded as they simply reference other tables or auto generated values.
+    """
     def get(self, request, *args, **kwargs):
         try:
-            fields = []        
+            fields = {}        
             # Collect all fields from all tables (excluding foreign keys).
-            for model in apps.get_models():
+            for model in apps.get_app_config('db_connector').get_models():
+                
+                if not model.__name__ in fields.keys():
+                    fields[model.__name__] = []
+
                 for field in model._meta.get_fields():
-                    if not isinstance(field,django.db.models.ForeignKey):
-                        fields.append(field.name)
-                                         
+                    if not (isinstance(field,django.db.models.fields.related.ForeignKey) 
+                            or isinstance(field,django.db.models.fields.reverse_related.ManyToOneRel)
+                            or isinstance(field,django.db.models.fields.AutoField)):
+                        fields[model.__name__].append(field.name)
+            
+            fields = {model:fields[model] for model in fields.keys() if not fields[model] == []}
+            
             return Response(fields, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-'''
-class GetDataView(APIView):
-    def get(self, request, *args, **kwargs):
+
+class QueryDataView(APIView):
+    """An api view used for general database querying. 
+    
+    Input a list of filters and fields and get data for requested fields that falls within the filters.
+    """
+    def post(self, request, *args, **kwargs):
         try:        
             filters    = request.data.get('filters')
             fields     = request.data.get('fields')
@@ -35,32 +51,47 @@ class GetDataView(APIView):
             if not filters or not fields:
                 return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
 
-            frdr_urls = get_frdr_urls(filters,models.trial,dtypes)
-            print(f"Fetching the following URLs from the FRDR: {frdr_urls}")
-
-            local_trials = get_local_trials(filters,models.trial,dtypes)
-            print(f"Fetching the following trials from the DB: {local_trials}")
-
-            frdr_request(frdr_urls, full_cache_path, models.timeseries, save)
-            db_request(local_trials, full_cache_path, models.timeseries)
+            data = get_data(filters, models.trial, fields)
             
-            return Response({"message":f"All files saved successfully in {cache_path}"}, status=status.HTTP_200_OK)
+            return Response(data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-'''
-class QueryDataView(APIView):
+
+class GetTimeSeriesView(APIView):
+    """An api view used to access time series data for given trials. 
+    """
+    def get(self, request, *args, **kwargs):
+        try:        
+            trials = request.GET.getlist('trials')
+
+            trials = [int(trial) for trial in trials]
+
+            print(f"Received trials: {trials}")
+
+            if not trials:
+                return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
+
+            data = get_timeseries(trials, models.trial)
+            
+            return Response(data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class FRDRQueryView(APIView):
+    """An api view used to submit filters and fetch all data covered under those filters from the frdr.
+    
+    Any data already stored in the database will not be refetched from the frdr. 
+    """
     def post(self, request, *args, **kwargs):
 
         try:        
             filters    = request.data.get('filters')
             cache_path = request.data.get('cache_path')
             dtypes     = request.data.get('dtypes','a')
-            save       = request.data.get('save',False)
 
             print(f"Received filters: {filters}")
             print(f"Received cache_path: {cache_path}")
             print(f"Received dtypes: {dtypes}")
-            print(f"Received save: {save}")
             
             if not filters or not cache_path:
                 return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
@@ -73,11 +104,8 @@ class QueryDataView(APIView):
             frdr_urls = get_frdr_urls(filters,models.trial,dtypes)
             print(f"Fetching the following URLs from the FRDR: {frdr_urls}")
 
-            local_trials = get_local_trials(filters,models.trial,dtypes)
-            print(f"Fetching the following trials from the DB: {local_trials}")
-
-            frdr_request(frdr_urls, full_cache_path, models.timeseries, save)
-            db_request(local_trials, full_cache_path, models.timeseries)
+            frdr_request(frdr_urls, full_cache_path, models.timeseries)
+            
             
             return Response({"message":f"All files saved successfully in {cache_path}"}, status=status.HTTP_200_OK)
         except Exception as e:
