@@ -23,6 +23,8 @@ class Command(BaseCommand):
     help = "Load all metadata into the database."
     
     def handle(self,*args,**kwargs):
+        # Runs with 'python3 backend/manage.py load_metadata'
+        
         # Load metadata from csv file.
         data_path = os.path.join(os.path.dirname(__file__),'..','..','..','..','database','data','FRDR_interface_20211029_SupplementaryMaterial(MetaDataTable).csv')
         data_path = os.path.abspath(data_path)

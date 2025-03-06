@@ -61,6 +61,7 @@ def get_foreign_keys(model):
     return fkeys
 
 
+
 def get_relationship(start, dest, searched = None) -> (str|None):
     """Recursive pathfinding algorithm to determine the relationship between
     a database table and some field in the database.
@@ -77,7 +78,7 @@ def get_relationship(start, dest, searched = None) -> (str|None):
     str
     Path from the starting model to the destination field.
     """
-
+    
     # Default parameter None instead of set() to avoid reuse of default set created at function definition.
     if searched == None:
         searched = set()
