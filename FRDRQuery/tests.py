@@ -1,3 +1,24 @@
+import requests
+"""
+{
+"filters":[
+        {
+            "field":"trial_id",
+            "lookup":"lt",
+            "value":110
+        }
+    ],
+"fields":["drugrx_drug1","projectdesc"]
+}
+"""
+"""
+params = {"filters":filters, "fields":fields}
+
+response = requests.post('http://127.0.0.1:8000/api/query-data/',data = params)
+print(response.status_code)
+print(response.text)
+"""
+"""
 from rest_framework.test import APIRequestFactory
 
 factory = APIRequestFactory()
@@ -11,7 +32,7 @@ request = factory.post("/api/query-data/",{"filters":
                                             "dtypes":"pt",
                                             "save":True },
                                             content_type="applicaton/json")
-#Note don't include table name for trial table
+"""
 """
 {
     "filters":[
@@ -27,9 +48,20 @@ request = factory.post("/api/query-data/",{"filters":
         }
     ],
     "cache_path":"database/data/test_data",
-    "dtypes":"pt",
-    "save":true
+    "dtypes":"pt"
 }
+{
+    "filters":[
+        {
+            "field":"trial_id",
+            "lookup":"lt",
+            "value":50
+        }
+    ],
+    "cache_path":"database/data/test_data",
+    "dtypes":"t"
+}
+
 {
     "filters":[
         {
@@ -43,8 +75,5 @@ request = factory.post("/api/query-data/",{"filters":
             "value":"empty with no objects in Activity Monitor (AM) cage"
         }
     ],
-    "cache_path":"database/data/test_data",
-    "dtypes":"pt",
-    "save":true
-}
+    "fields":["drugrx_drug1","project_desc"]
 """

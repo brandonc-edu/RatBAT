@@ -1,5 +1,15 @@
+"""
+Filename: db_helper.py
+Author(s): Daniel Locke
+Created: 2025/01/21
+Last Modified: 2025/03/05
+Description: General use functions and variables to assist with database interaction.
+"""
+
 import django
 import numpy as np
+
+# All built in django field lookup values to be used as filters.
 FIELD_LOOKUPS = ['exact',
                 'iexact',
                 'contains',
@@ -32,6 +42,18 @@ FIELD_LOOKUPS = ['exact',
                 'iregex']
 
 def get_foreign_keys(model):
+    """For a given database table model returns all foreign key fields.
+
+    Parameters
+    ----------
+    model : django.db.models.base.ModelBase
+        Django model class
+    
+    Returns
+    -------
+    List of foreign keys in the model.
+    """
+
     fkeys = []
     for col in model._meta.get_fields():
         if isinstance(col, django.db.models.ForeignKey):
@@ -39,16 +61,34 @@ def get_foreign_keys(model):
     return fkeys
 
 
-def get_relationship(start,dest,searched = None):
+
+def get_relationship(start, dest, searched = None) -> (str|None):
+    """Recursive pathfinding algorithm to determine the relationship between
+    a database table and some field in the database.
+
+    Parameters
+    ----------
+    start : django.db.models.base.ModelBase
+        Model class who's relationship to the destination field is of interest.
+    dest : str
+        Field name whos relationship to the starting model is of interest.
+    
+    Returns
+    -------
+    str
+    Path from the starting model to the destination field.
+    """
+    
     # Default parameter None instead of set() to avoid reuse of default set created at function definition.
     if searched == None:
         searched = set()
+
     searched.add(start._meta.model_name)
     next = set()
     for field in start._meta.get_fields():
         if field.name == dest:
             return f"{start._meta.model_name}__{field.name}"
-        elif isinstance(field,django.db.models.ForeignKey) and not field.name in searched:
+        elif (isinstance(field,django.db.models.ForeignKey) or isinstance(field,django.db.models.fields.reverse_related.ManyToOneRel)) and not field.name in searched:
             next.add(field.related_model)
 
     while len(next) > 0:
@@ -58,7 +98,22 @@ def get_relationship(start,dest,searched = None):
             return f"{start._meta.model_name}__{path}"
     return None
 
-def build_model(model,data,replace=False,do_async=False):
+def build_model(model, data, replace=False, do_async=False):
+    """Function to translate a pandas dataframe into a Django model to be stored in the database.
+
+    Parameters
+    ----------
+    model : django.db.models.base.ModelBase
+        Model class to store the data in.
+    data : pandas.DataFrame
+        Data to be stored in the database
+    replace : bool
+        If True all data existing data in the provided table will be deleted and replaced with given data.
+        Defaults to False.
+    do_async : bool
+        If True, data will be added to the database asynchronously.
+        Defaults to False.
+    """
     data.replace(np.nan,None, inplace = True)
     # Replace foreign key references ids with actual referenced model
     fkeys = get_foreign_keys(model)
