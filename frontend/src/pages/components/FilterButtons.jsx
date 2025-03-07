@@ -1,100 +1,87 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './FilterButtons.css';
 
-function FilterButtons({ filters, onChange, toggledButtons }) {
-
-  //Animal 
-  // lightColonyDesc
-  // lightCycleTest
-
-  //Apparatus
-  // arenaLocDesc discrete
-  // arenaTypeDesc discrete
-  // arenaObjectDesc 
-
-  //Treatment
-  // drug1 discrete
-  // dose1 discrete
-
-  
-  // Discrete Filter Options
-  // const discreteFilters = {
-  //   SUBJECTS_LightDarkCycleWhenTested: ['lights ON','lights OFF'],
-  //   SUBJECTS_LightDarkCycleInColonyRoom: ['Lights ON 7 AM to 7 PM', 'Lights OFF 7 PM to 7 AM'], 
-  //   APPARATUS_ArenaType: ['160x160 cm table surface on 60 cm high legs', 'Plexiglas box 40x40x35 cm'], 
-  //   APPARATUS_ArenaID: ['OF #1 in room U59_south', 'OF #2 in room U59_north','OF #3 in room U60_south','OF #4 in room U60_north','Circular arena in room EPM_room','Activity box in room ActivityMonitorCages_room'],
-  //   TREATMENT_DrugRx_Drug1: ['QNP', 'SAL'], 
-  //   TREATMENT_DrugRx_Dose1: ['0','0.5']
-  // };
-
-  const discreteFilters = {
-    "Light/Dark Cycle": ['lights ON', 'lights OFF'],
-    "Arena Type": ['160x160 cm table surface on 60 cm high legs', 'Plexiglas box 40x40x35 cm'],
-    "Arena ID": ['OF #1 in room U59_south', 'OF #2 in room U59_north'],
-    "Drug Treatment": ['QNP', 'SAL'],
-    "Dose": ['0', '0.5'],
-    "Date": [],
-    "Trial Duration": [],
-    "Project Label": [],
-    "Study Title": [],
-    "Room Light Condition": ['room ILLUMINATED (fluorescent lights ON)'],
-    "Body Weight": [],
-    "Trial Type": ['Standard OF trial'],
-    "What Objects": ['Trackfile+Pathplot+Video'],
-    "Track Duration": [],
-    "Experimenter": []
-};
-
-  // Discrete filter change handler
-  const handleDropdownChange = (filterKey, value) => {
-    const newFilters = { ...filters, [filterKey]: value };
-    console.log('Updated Filters:', newFilters); // Debugging log
-    onChange(newFilters);
+function FilterButtons({ initialFilters, onApply, toggledButtons }) {
+  // Combined configuration for both discrete and continuous filters.
+  const filterConfig = {
+    "Light/Dark Cycle": { type: "discrete", options: ['lights ON', 'lights OFF'] },
+    "Arena Type": { type: "discrete", options: ['160x160 cm table surface on 60 cm high legs', 'Plexiglas box 40x40x35 cm'] },
+    "Arena ID": { type: "discrete", options: ['OF #1 in room U59_south', 'OF #2 in room U59_north'] },
+    "Drug Treatment": { type: "discrete", options: ['QNP', 'SAL'] },
+    "Dose": { type: "discrete", options: ['0', '0.5'] },
+    "Date": { type: "continuous", inputType: "date" },
+    "Trial Duration": { type: "continuous", inputType: "number", placeholder: "minutes" },
+    "Project Label": { type: "discrete", options: [] },
+    "Study Title": { type: "discrete", options: [] },
+    "Room Light Condition": { type: "discrete", options: ['room ILLUMINATED (fluorescent lights ON)'] },
+    "Body Weight": { type: "continuous", inputType: "number", placeholder: "kg" },
+    "Trial Type": { type: "discrete", options: ['Standard OF trial'] },
+    "What Objects": { type: "discrete", options: ['Trackfile+Pathplot+Video'] },
+    "Track Duration": { type: "continuous", inputType: "number", placeholder: "seconds" },
+    "Experimenter": { type: "discrete", options: [] }
   };
 
-  // Typed input filter change handler
-  const handleInputChange = (filterKey, value) => {
-    const newFilters = { ...filters, [filterKey]: value };
-    console.log('Updated Filters:', newFilters); // Debugging log
-    onChange(newFilters);
+  // Use the keys (filter names) to define the order—this should match your metaButtons order.
+  const metaButtonsOrder = Object.keys(filterConfig);
+
+  // Local state to hold filter values until applied.
+  const [localFilters, setLocalFilters] = useState(initialFilters || {});
+
+  // Handlers for updating filter state.
+  const handleDiscreteChange = (filterKey, value) => {
+    setLocalFilters(prev => ({ ...prev, [filterKey]: value }));
+  };
+
+  const handleContinuousChange = (filterKey, bound, value) => {
+    const currentRange = localFilters[filterKey] || { min: '', max: '' };
+    const newRange = { ...currentRange, [bound]: value };
+    setLocalFilters(prev => ({ ...prev, [filterKey]: newRange }));
+  };
+
+  const handleApply = () => {
+    onApply(localFilters);
   };
 
   return (
-    <div>
-      {/* Dropdown Discrete Filters */}
-      {Object.entries(discreteFilters).map(([key, options], index) => {
-        // Log state for debugging
-        console.log(`Filter: ${key}, Toggled: ${toggledButtons[index]}`);
-        return toggledButtons[index] ? (
-            <div key={key}>
-                <label htmlFor={key}>{key}:</label>
-                <select
-                    id={key}
-                    className='filter'
-                    value={filters[key] || ''}
-                    onChange={(e) => handleDropdownChange(key, e.target.value)}
-                >
-                    <option value="">--Select {key}--</option>
-                    {options.map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                    ))}
-                </select>
-            </div>
-        ) : null;
-      })}
-      {/* Typed Input Filter Example
-      <div>
-        <label htmlFor="APPARATUS_ArenaType_number">APPARATUS_ArenaType_number:</label>
-        <input
-          type="number"
-          className='filter'
-          value={filters.APPARATUS_ArenaType_number || ''}
-          onChange={(e) => handleInputChange('APPARATUS_ArenaType_number', e.target.value)}
-          placeholder="Enter Value"
-          min="1" // You can adjust restrictions as needed
-        />
-      </div> */}
+    <div className="filters">
+      {metaButtonsOrder.map((filterKey, index) => {
+        // Use toggledButtons to decide whether to render this filter.
+        if (!toggledButtons[index]) return null;
+        const config = filterConfig[filterKey];
 
+        return (
+          <div key={filterKey} className="filter-item">
+            <label>{filterKey}:</label>
+            {config.type === "discrete" ? (
+              <select
+                value={localFilters[filterKey] || ''}
+                onChange={(e) => handleDiscreteChange(filterKey, e.target.value)}
+              >
+                <option value="">--Select {filterKey}--</option>
+                {config.options.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            ) : config.type === "continuous" ? (
+              <div className="continuous-inputs">
+                <input
+                  type={config.inputType}
+                  placeholder="Min"
+                  value={(localFilters[filterKey] && localFilters[filterKey].min) || ''}
+                  onChange={(e) => handleContinuousChange(filterKey, 'min', e.target.value)}
+                />
+                <input
+                  type={config.inputType}
+                  placeholder="Max"
+                  value={(localFilters[filterKey] && localFilters[filterKey].max) || ''}
+                  onChange={(e) => handleContinuousChange(filterKey, 'max', e.target.value)}
+                />
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+      <button onClick={handleApply}>Apply</button>
     </div>
   );
 }
