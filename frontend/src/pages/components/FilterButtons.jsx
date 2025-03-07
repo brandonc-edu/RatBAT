@@ -1,33 +1,26 @@
 import React, { useState } from 'react';
 import './FilterButtons.css';
 
-function FilterButtons({ initialFilters, onApply, toggledButtons }) {
-  // Combined configuration for both discrete and continuous filters.
-  const filterConfig = {
-    "Light/Dark Cycle": { type: "discrete", options: ['lights ON', 'lights OFF'] },
-    "Arena Type": { type: "discrete", options: ['160x160 cm table surface on 60 cm high legs', 'Plexiglas box 40x40x35 cm'] },
-    "Arena ID": { type: "discrete", options: ['OF #1 in room U59_south', 'OF #2 in room U59_north'] },
-    "Drug Treatment": { type: "discrete", options: ['QNP', 'SAL'] },
-    "Dose": { type: "discrete", options: ['0', '0.5'] },
-    "Date": { type: "continuous", inputType: "date" },
-    "Trial Duration": { type: "continuous", inputType: "number", placeholder: "minutes" },
-    "Project Label": { type: "discrete", options: [] },
-    "Study Title": { type: "discrete", options: [] },
-    "Room Light Condition": { type: "discrete", options: ['room ILLUMINATED (fluorescent lights ON)'] },
-    "Body Weight": { type: "continuous", inputType: "number", placeholder: "kg" },
-    "Trial Type": { type: "discrete", options: ['Standard OF trial'] },
-    "What Objects": { type: "discrete", options: ['Trackfile+Pathplot+Video'] },
-    "Track Duration": { type: "continuous", inputType: "number", placeholder: "seconds" },
-    "Experimenter": { type: "discrete", options: [] }
-  };
+function FilterButtons({ initialFilters, onApply, toggledButtons, availableFields }) {
+  // Build a configuration object based on availableFields.
+  // We assume each field object has: name, displayName, type ("discrete" or "continuous"), and optionally options.
+  const filterConfig = {};
+  availableFields.forEach(field => {
+    const key = field.displayName || field.name;
+    filterConfig[key] = {
+      type: field.type, 
+      options: field.options || [],
+      // For continuous fields, you can pass an inputType (e.g., "date" or "number").
+      inputType: field.inputType || (field.type === "continuous" ? "number" : null)
+    };
+  });
 
-  // Use the keys (filter names) to define the order—this should match your metaButtons order.
-  const metaButtonsOrder = Object.keys(filterConfig);
+  // The order of filters follows the order of availableFields.
+  const metaButtonsOrder = availableFields.map(field => field.displayName || field.name);
 
-  // Local state to hold filter values until applied.
+  // Local state to hold filter values until Apply is clicked.
   const [localFilters, setLocalFilters] = useState(initialFilters || {});
 
-  // Handlers for updating filter state.
   const handleDiscreteChange = (filterKey, value) => {
     setLocalFilters(prev => ({ ...prev, [filterKey]: value }));
   };
@@ -45,10 +38,8 @@ function FilterButtons({ initialFilters, onApply, toggledButtons }) {
   return (
     <div className="filters">
       {metaButtonsOrder.map((filterKey, index) => {
-        // Use toggledButtons to decide whether to render this filter.
         if (!toggledButtons[index]) return null;
         const config = filterConfig[filterKey];
-
         return (
           <div key={filterKey} className="filter-item">
             <label>{filterKey}:</label>
