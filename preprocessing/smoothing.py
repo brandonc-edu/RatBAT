@@ -32,10 +32,11 @@ def lowess(data:np.ndarray, deg:int, half_window:int, num_iter:int) -> np.ndarra
     n = data.shape[0]
     hw = half_window
 
-    # Initialize weight and smoothed data arrays:
+    # Initialize weight, and smoothed data and velocity arrays:
     weights = np.zeros(shape=(n, 2 * hw + 1), dtype=float)
     data_s  = np.zeros(n, dtype = float)
-    
+    vel_s   = np.zeros(n, dtype = float)
+
     # Matrix of relative sample_ids to be used for WLS to fit to 'deg' degree polynomial. 
     x = np.vander(np.array([j for j in range(-hw, hw + 1)]).T, deg + 1)
 
@@ -55,7 +56,7 @@ def lowess(data:np.ndarray, deg:int, half_window:int, num_iter:int) -> np.ndarra
         
             coef = mul(np.linalg.pinv(mul(x.T, mul(w, x))), mul(x.T, mul(w, y)))
             data_s[i] = coef[-1]
-            
+            vel_s[i] = coef[-2]
 
         # Residuals are used to adjust weights.
         # Points with large residuals have decreased weights and vice versa. 
@@ -73,15 +74,7 @@ def lowess(data:np.ndarray, deg:int, half_window:int, num_iter:int) -> np.ndarra
                 else:
                     weights[i, j-(i-hw)] = (1 - residuals[j] / 6 * med_residual) * weights[i, j-(i-hw)]
 
-    return data_s
-        
-
-
-""" 
-        # Neighbourhoods for the first and last half window of coordinates
-        # will have less entries, unused weights are initialized to 0. 
-        nbhs[i] = np.concat((np.zeros(shape=(max(hw - i, 0), 2)), coords[max(0, i - hw) : min(n, i + hw + 1)], np.zeros(shape=(max(i - n + hw + 1, 0), 2))))
-        """      
+    return data_s, vel_s   
 
 def repeated_running_medians(data:np.ndarray, half_windows:list[int], min_arr:int, tol:float) -> np.ndarray:
     """Repeated Running Medians Smoothing.
@@ -108,6 +101,41 @@ def repeated_running_medians(data:np.ndarray, half_windows:list[int], min_arr:in
     numpy.ndarray
         Data with smoothed arrests.
     """
+    
+    n = data.shape[0]
+    data_s  = np.zeros(n, dtype = float)
+    
+    # Smoothing is repeated len(half_windows) times with decreasing window widths.
+    for hw in half_windows:
+        for i in range(n):
+            data_s[i] = np.median(data[max(0, i - hw) : min(n, i + hw + 1)])
+        
+        data = data_s
+
+    arrests = []
+    i = 0
+    
+    # Iterating over data to identify arrests with length of at least min_arr.
+    # Arrests are stored as (start,end) pairs indicating the segment ids of the start and end of the arrest. 
+    while i < n:
+        start_idx = i
+        start = data_s[i]
+        seg_len = 1
+        for j in range(i+1,n):
+            if abs(start - data_s[j]) > tol:
+                if seg_len >= min_arr:
+                    arrests.append((start_idx + 1,j))
+                i = j
+                break
+            seg_len += 1
+            if j == n-1:
+                if seg_len >= min_arr:
+                    arrests.append((start_idx + 1,j+1))
+                i = n
+                
+
+    return data_s, arrests
+
 
 # Testing Code
 df = pd.read_csv("database/data/test_data/Q23U693012_12_0_0468_0002801_TrackFile.csv")
