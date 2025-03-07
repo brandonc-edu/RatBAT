@@ -180,6 +180,19 @@
   padding: 10px;
 }
 
+.precision-selector {
+  margin-bottom: 20px;
+}
+
+.precision-selector label {
+  margin-right: 10px;
+}
+
+.precision-selector select {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
 
 button {
   background-color: #007bff;

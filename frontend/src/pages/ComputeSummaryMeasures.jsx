@@ -10,6 +10,7 @@ const ComputeSummaryMeasures = () => {
   const [selectedDataFiles, setSelectedDataFiles] = useState([]);
   const [selectedResults, setSelectedResults] = useState([]);
   const [summaryMeasuresOptions, setSummaryMeasuresOptions] = useState([]);
+  const [precision, setPrecision] = useState(2);
   const [showModal, setShowModal] = useState(true); // State to control the modal visibility
   const modalRef = useRef(null);
   const offset = useRef({ x: 0, y: 0 });
@@ -92,7 +93,7 @@ const ComputeSummaryMeasures = () => {
 
   const handleDownloadSelected = () => {
     const selectedData = Object.entries(results).filter(([file]) => selectedResults.includes(file));
-
+  
     // Define CSV headers
     const csvHeaders = [
       "Data File",
@@ -110,37 +111,37 @@ const ComputeSummaryMeasures = () => {
       "Total Locales Visited",
       "Total Stops"
     ];
-
+  
     const csvContent = [
       csvHeaders.join(","),
-      ...selectedData.map(([file, measures]) => (
+      ...selectedData.map(([file, measures]) =>
         [
-          file,
-          measures['calc_homebases'] ? measures['calc_homebases'][0] : '',
-          measures['calc_homebases'] ? measures['calc_homebases'][1] : '',
-          measures['calc_HB1_cumulativeReturn'] || '',
-          measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][0] : '',
-          measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][1] : '',
-          measures['calc_HB1_meanReturn'] || '',
-          measures['calc_HB1_meanExcursionStops'] || '',
-          measures['calc_HB1_stopDuration'] || '',
-          measures['calc_HB2_stopDuration'] || '',
-          measures['calc_HB2_cumulativeReturn'] || '',
-          measures['calc_HB1_expectedReturn'] || '',
-          measures['calc_sessionTotalLocalesVisited'] || '',
-          measures['calc_sessionTotalStops'] || ''
+          `="${file}"`, // Wrap file as text as well
+          formatCSVValue(measures['calc_homebases'] ? measures['calc_homebases'][0] : '', precision, true),
+          formatCSVValue(measures['calc_homebases'] ? measures['calc_homebases'][1] : '', precision, true),
+          formatCSVValue(measures['calc_HB1_cumulativeReturn'], precision, true),
+          formatCSVValue(measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][0] : '', precision),
+          formatCSVValue(measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][1] : '', precision),
+          formatCSVValue(measures['calc_HB1_meanReturn'], precision),
+          formatCSVValue(measures['calc_HB1_meanExcursionStops'], precision),
+          formatCSVValue(measures['calc_HB1_stopDuration'], precision),
+          formatCSVValue(measures['calc_HB2_stopDuration'], precision),
+          formatCSVValue(measures['calc_HB2_cumulativeReturn'], precision, true),
+          formatCSVValue(measures['calc_HB1_expectedReturn'], precision),
+          formatCSVValue(measures['calc_sessionTotalLocalesVisited'], precision, true),
+          formatCSVValue(measures['calc_sessionTotalStops'], precision, true)
         ].join(",")
-      ))
+      )
     ].join("\n");
-
+  
     console.log("CSV Content:", csvContent); // Debugging statement
-
+  
     const encodedUri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "selected_results.csv");
     document.body.appendChild(link); // Required for Firefox
-
+  
     link.click();
     document.body.removeChild(link);
   };
@@ -167,6 +168,24 @@ const ComputeSummaryMeasures = () => {
       console.error("Error:", error.response ? error.response.data : error.message);
     }
   };
+
+  const formatValue = (value, precision, isWholeNumber = false) => {
+    if (value === null || value === undefined) return '';
+    if (isWholeNumber) {
+      return parseInt(value).toString();
+    } else {
+      return parseFloat(value).toFixed(precision);
+    }
+  };
+
+  const formatCSVValue = (value, precision, isWholeNumber = false) => {
+    if (value === null || value === undefined) return '';
+    if (isWholeNumber) {
+      return `="${parseInt(value).toString()}"`;
+    } else {
+      return `="${parseFloat(value).toFixed(precision)}"`;
+    }
+  };  
 
   const measureDisplayNames = {
     calc_homebases: 'Homebases',
@@ -218,7 +237,21 @@ const ComputeSummaryMeasures = () => {
     console.log("Formatted Results in formatResults:", formattedResults);
     return formattedResults;
   };
+  
 
+  // const formatValue = (value, precision, isWholeNumber = false) => {
+  //   if (value === null || value === undefined) return '';
+  //   if (isWholeNumber) {
+  //     return parseInt(value).toString();
+  //   } else {
+  //     const formattedValue = parseFloat(value).toFixed(precision);
+  //     // Ensure the formatted value has the correct number of decimal places
+  //     const [integerPart, decimalPart] = formattedValue.split('.');
+  //     const paddedDecimalPart = (decimalPart || '').padEnd(precision, '0');
+  //     return `${integerPart}.${paddedDecimalPart}`;
+  //   }
+  // };
+  
   const handleCloseModal = () => {
     setShowModal(false);
   };
@@ -317,6 +350,25 @@ const ComputeSummaryMeasures = () => {
 
       <div className="result-section">
         <h3>Result</h3>
+        <div className="precision-selector">
+          <label htmlFor="precision">Select Precision:</label>
+          <select
+            id="precision"
+            value={precision}
+            onChange={(e) => setPrecision(parseInt(e.target.value))}
+          >
+            <option value={1}>1 Decimal</option>
+            <option value={2}>2 Decimals</option>
+            <option value={3}>3 Decimals</option>
+            <option value={4}>4 Decimals</option>
+            <option value={5}>5 Decimals</option>
+            <option value={6}>6 Decimals</option>
+            <option value={7}>7 Decimals</option>
+            <option value={8}>8 Decimals</option>
+            <option value={9}>9 Decimals</option>
+            <option value={10}>10 Decimals</option>
+          </select>
+        </div>
         <div className="result-items">
           <table className="result-table">
           <thead>
@@ -349,19 +401,19 @@ const ComputeSummaryMeasures = () => {
                   />
                 </td>
                 <td>{file}</td>
-                <td>{measures['calc_homebases'] ? measures['calc_homebases'][0] : ''}</td>
-                <td>{measures['calc_homebases'] ? measures['calc_homebases'][1] : ''}</td>
-                <td>{measures['calc_HB1_cumulativeReturn'] || ''}</td>
-                <td>{measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][0] : ''}</td>
-                <td>{measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][1] : ''}</td>
-                <td>{measures['calc_HB1_meanReturn'] || ''}</td>
-                <td>{measures['calc_HB1_meanExcursionStops'] || ''}</td>
-                <td>{measures['calc_HB1_stopDuration'] || ''}</td>
-                <td>{measures['calc_HB2_stopDuration'] || ''}</td>
-                <td>{measures['calc_HB2_cumulativeReturn'] || ''}</td>
-                <td>{measures['calc_HB1_expectedReturn'] || ''}</td>
-                <td>{measures['calc_sessionTotalLocalesVisited'] || ''}</td>
-                <td>{measures['calc_sessionTotalStops'] || ''}</td>
+                <td>{measures['calc_homebases'] ? formatValue(measures['calc_homebases'][0], precision, true) : ''}</td>
+                <td>{measures['calc_homebases'] ? formatValue(measures['calc_homebases'][1], precision, true) : ''}</td>
+                <td>{formatValue(measures['calc_HB1_cumulativeReturn'], precision, true)}</td>
+                <td>{measures['calc_HB1_meanDurationStops'] ? formatValue(measures['calc_HB1_meanDurationStops'][0], precision) : ''}</td>
+                <td>{measures['calc_HB1_meanDurationStops'] ? formatValue(measures['calc_HB1_meanDurationStops'][1], precision) : ''}</td>
+                <td>{formatValue(measures['calc_HB1_meanReturn'], precision)}</td>
+                <td>{formatValue(measures['calc_HB1_meanExcursionStops'], precision)}</td>
+                <td>{formatValue(measures['calc_HB1_stopDuration'], precision)}</td>
+                <td>{formatValue(measures['calc_HB2_stopDuration'], precision)}</td>
+                <td>{formatValue(measures['calc_HB2_cumulativeReturn'], precision, true)}</td>
+                <td>{formatValue(measures['calc_HB1_expectedReturn'], precision)}</td>
+                <td>{formatValue(measures['calc_sessionTotalLocalesVisited'], precision, true)}</td>
+                <td>{formatValue(measures['calc_sessionTotalStops'], precision, true)}</td>
               </tr>
             ))}
           </tbody>
