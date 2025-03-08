@@ -25,6 +25,9 @@ const Header = () => {
         <li className={`tab ${activeTab === 'compute-summary-measures' ? 'active' : ''}`}>
           <Link to="/compute-summary-measures" onClick={() => handleTabClick('compute-summary-measures')}>Compute Summary Measures</Link>
         </li>
+        <li className={`tab ${activeTab === 'compile-data' ? 'active' : ''}`}>
+          <Link to="/compile-data" onClick={() => handleTabClick('compile-data')}>Compile Data</Link>
+        </li>
       </ul>
     </div>
   );

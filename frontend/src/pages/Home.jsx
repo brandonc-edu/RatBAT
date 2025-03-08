@@ -97,7 +97,7 @@ const Home = () => {
       <section className="open-source">
         <h2>Open Source Project</h2>
         <p>
-          This platform is open source, encouraging contributions from researchers, developers, and data scientists. Explore the codebase, propose improvements, or contribute directly through our <a href="https://github.com/your-repo" target="_blank" rel="noopener noreferrer">GitHub repository</a>.
+          This platform is open source, encouraging contributions from researchers, developers, and data scientists. Explore the codebase, propose improvements, or contribute directly through our <a href="https://github.com/brandonc-edu/RatBAT" target="_blank" rel="noopener noreferrer">GitHub repository</a>.
         </p>
       </section>
 
