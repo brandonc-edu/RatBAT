@@ -12,6 +12,90 @@
   margin-bottom: 15px; /* Adjust the spacing between items as needed */
 }
 
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.tooltip-container .tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #555;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  left: 35px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.info-button {
+  background-color: #97a516;
+  color: white;
+  border: none;
+  padding: 0; /* Remove default padding */
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: auto;
+  transition: background-color 0.3s ease;
+}
+
+.info-button:hover {
+  background-color: #5a630d;
+}
+
+.info-modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.info-modal-content {
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  width: 80%;
+  max-width: 500px;
+  text-align: center;
+  position: relative;
+}
+
+.info-modal-content .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.info-modal-content .close:hover {
+  color: #000;
+}
+
 .modal {
   display: block; /* Hidden by default */
   position: fixed;
@@ -49,7 +133,6 @@
 }
 
 .close::after {
-  content: " (Click to close)";
   font-size: 14px;
   color: #555;
   margin-left: 5px;
@@ -84,7 +167,10 @@
   position: relative;
   cursor: pointer;
 }
-
+.measure-item {
+  display: flex;
+  align-items: center;
+}
 .measure-item label {
   display: flex;
   align-items: center;
@@ -128,7 +214,10 @@
   border: 10px solid white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  padding: 0;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 20px;
 }
 
 .result-table {
@@ -170,14 +259,14 @@
 }
 
 .result-footer {
-  display: flex;
-  gap: 20px;
   padding-top: 10px;
-  border-top: 1px solid #ccc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px; /* Add gap between buttons */
   position: sticky;
   bottom: 0;
   background-color: #fff;
-  padding: 10px;
+  border-top: 1px solid #ccc;
 }
 
 .precision-selector {

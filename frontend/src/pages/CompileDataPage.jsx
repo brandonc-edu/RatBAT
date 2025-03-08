@@ -42,6 +42,15 @@ const CompileDataPage = () => {
     calc_sessionTotalStops: 'Total Stops',
   };
 
+  // Define measure keys that need whole-number formatting
+  const wholeNumberMeasures = [
+    "calc_homebases",
+    "calc_HB1_cumulativeReturn",
+    "calc_sessionTotalLocalesVisited",
+    "calc_sessionTotalStops",
+    "calc_HB2_cumulativeReturn"
+  ];
+
   useEffect(() => {
     // Fetch metadata variables from the backend
     const fetchMetadataVariables = async () => {
@@ -163,45 +172,31 @@ const CompileDataPage = () => {
   };  
 
   const handleDownload = () => {
+    // Create dynamic headers for CSV
     const csvHeaders = [
       "Data File",
-      "Homebases (KPname01)",
-      "Homebases (KPname02)",
-      "Cumulative Return",
-      "Mean Duration Stops (KPmeanStayTime01_s)",
-      "Mean Duration Stops (KPmeanStayTime01_s_log)",
-      "Mean Return",
-      "Mean Excursion Stops",
-      "Main Homebase Stop Duration",
-      "Secondary Homebase Stop Duration",
-      "Secondary Homebase Cumulative Return",
-      "Expected Return Frequency Main Homebase",
-      "Total Locales Visited",
-      "Total Stops"
+      ...selectedMetadataVariables,
+      ...selectedSummaryMeasures.flatMap(measure => {
+        const display = measureDisplayNames[measure] || measure;
+        return Array.isArray(display) ? display : [display];
+      })
     ];
-
+  
     const csvContent = [
       csvHeaders.join(","),
-      ...compiledData.map(({ file, metadata, measures }) => (
-        [
-          `="${file}"`, // Wrap file as text as well
-          formatCSVValue(measures['calc_homebases'] ? measures['calc_homebases'][0] : '', precision, true),
-          formatCSVValue(measures['calc_homebases'] ? measures['calc_homebases'][1] : '', precision, true),
-          formatCSVValue(measures['calc_HB1_cumulativeReturn'], precision, true),
-          formatCSVValue(measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][0] : '', precision),
-          formatCSVValue(measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][1] : '', precision),
-          formatCSVValue(measures['calc_HB1_meanReturn'], precision),
-          formatCSVValue(measures['calc_HB1_meanExcursionStops'], precision),
-          formatCSVValue(measures['calc_HB1_stopDuration'], precision),
-          formatCSVValue(measures['calc_HB2_stopDuration'], precision),
-          formatCSVValue(measures['calc_HB2_cumulativeReturn'], precision, true),
-          formatCSVValue(measures['calc_HB1_expectedReturn'], precision),
-          formatCSVValue(measures['calc_sessionTotalLocalesVisited'], precision, true),
-          formatCSVValue(measures['calc_sessionTotalStops'], precision, true)
-        ].join(",")
-      ))
+      ...compiledData.map(({ file, metadata, measures }) => {
+        const fileCell = `="${file}"`;
+        const metadataCells = metadata.map(m => m.value);
+        const summaryCells = selectedSummaryMeasures.flatMap(measure => {
+          const vals = measures[measure] || [''];
+          return Array.isArray(vals)
+            ? vals.map(v => formatCSVValue(v, precision, wholeNumberMeasures.includes(measure)))
+            : [formatCSVValue(vals, precision, wholeNumberMeasures.includes(measure))];
+        });
+        return [fileCell, ...metadataCells, ...summaryCells].join(",");
+      })
     ].join("\n");
-
+  
     const encodedUri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -209,32 +204,39 @@ const CompileDataPage = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  };  
 
   return (
     <div className="compile-data-page">
       <div className="selection-section">
+        {/* Metadata Variables Section */}
         <div className="selection-group summary-measures">
           <h3>Metadata Variables</h3>
-          {metadataVariables.map((variable, index) => (
-            <div key={index} className="measure-item">
-              <label>
-                <input
-                  type="checkbox"
-                  value={variable}
-                  checked={selectedMetadataVariables.includes(variable)}
-                  onChange={() => handleMetadataVariableToggle(variable)}
-                />
-                {variable}
-              </label>
-            </div>
-          ))}
+          <div className="selection-group-content">
+            {metadataVariables.map((variable, index) => (
+              <div key={index} className="measure-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    value={variable}
+                    checked={selectedMetadataVariables.includes(variable)}
+                    onChange={() => handleMetadataVariableToggle(variable)}
+                  />
+                  {variable}
+                </label>
+              </div>
+            ))}
+          </div>
           <div className="selection-group-footer">
             <button onClick={handleSelectAllMetadataVariables}>
-              {selectedMetadataVariables.length === metadataVariables.length ? 'Unselect All' : 'Select All'}
+              {selectedMetadataVariables.length === metadataVariables.length
+                ? 'Unselect All'
+                : 'Select All'}
             </button>
           </div>
         </div>
+
+        {/* Summary Measures Section */}
         <div className="selection-group summary-measures">
           <h3>Summary Measures</h3>
           <div className="selection-group-content">
@@ -254,10 +256,14 @@ const CompileDataPage = () => {
           </div>
           <div className="selection-group-footer">
             <button onClick={handleSelectAllSummaryMeasures}>
-              {selectedSummaryMeasures.length === summaryMeasures.length ? 'Unselect All' : 'Select All'}
+              {selectedSummaryMeasures.length === summaryMeasures.length
+                ? 'Unselect All'
+                : 'Select All'}
             </button>
           </div>
         </div>
+
+        {/* Loaded Data Files Section */}
         <div className="selection-group data-file">
           <h3>Loaded Data Files</h3>
           <div className="selection-group-content">
@@ -277,7 +283,9 @@ const CompileDataPage = () => {
           </div>
           <div className="selection-group-footer">
             <button onClick={handleSelectAllDataFiles}>
-              {selectedDataFiles.length === dataFiles.length ? 'Unselect All' : 'Select All'}
+              {selectedDataFiles.length === dataFiles.length
+                ? 'Unselect All'
+                : 'Select All'}
             </button>
           </div>
         </div>
@@ -291,6 +299,7 @@ const CompileDataPage = () => {
             value={precision}
             onChange={(e) => setPrecision(parseInt(e.target.value))}
           >
+            <option value={0}>0 Decimal</option>
             <option value={1}>1 Decimal</option>
             <option value={2}>2 Decimals</option>
             <option value={3}>3 Decimals</option>
@@ -308,40 +317,34 @@ const CompileDataPage = () => {
             <thead>
               <tr>
                 <th>Data File</th>
-                {selectedMetadataVariables.map((variable, index) => (
-                  <th key={index}>{variable}</th>
+                {selectedMetadataVariables.map((variable, i) => (
+                  <th key={i}>{variable}</th>
                 ))}
-                {selectedSummaryMeasures.flatMap(measure => measureDisplayNames[measure] || measure).map((name, index) => (
-                  <th key={index}>{name}</th>
-                ))}
+                {selectedSummaryMeasures.map((measure) => {
+                  const display = measureDisplayNames[measure] || measure;
+                  return Array.isArray(display)
+                    ? display.map((d, i) => <th key={`${measure}-${i}`}>{d}</th>)
+                    : <th key={measure}>{display}</th>;
+                })}
               </tr>
             </thead>
             <tbody>
-              {compiledData.map(({ file, metadata, measures }, index) => (
-                <tr key={index}>
+              {compiledData.map(({ file, metadata, measures }, rowIndex) => (
+                <tr key={rowIndex}>
                   <td>{file}</td>
                   {metadata.map((m, i) => (
                     <td key={i}>{m.value}</td>
                   ))}
-                  {/* Homebases */}
-                  <td>{formatValue(measures['calc_homebases'] ? measures['calc_homebases'][0] : '', precision, true)}</td>
-                  <td>{formatValue(measures['calc_homebases'] ? measures['calc_homebases'][1] : '', precision, true)}</td>
-                  {/* Cumulative Return */}
-                  <td>{formatValue(measures['calc_HB1_cumulativeReturn'] ? measures['calc_HB1_cumulativeReturn'][0] : '', precision, true)}</td>
-                  {/* Other measures using decimal formatting */}
-                  <td>{formatValue(measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][0] : '', precision)}</td>
-                  <td>{formatValue(measures['calc_HB1_meanDurationStops'] ? measures['calc_HB1_meanDurationStops'][1] : '', precision)}</td>
-                  <td>{formatValue(measures['calc_HB1_meanReturn'], precision)}</td>
-                  <td>{formatValue(measures['calc_HB1_meanExcursionStops'], precision)}</td>
-                  <td>{formatValue(measures['calc_HB1_stopDuration'], precision)}</td>
-                  <td>{formatValue(measures['calc_HB2_stopDuration'], precision)}</td>
-                  {/* Secondary Cumulative Return */}
-                  <td>{formatValue(measures['calc_HB2_cumulativeReturn'] ? measures['calc_HB2_cumulativeReturn'][0] : '', precision, true)}</td>
-                  <td>{formatValue(measures['calc_HB1_expectedReturn'], precision)}</td>
-                  {/* Total Locales Visited */}
-                  <td>{formatValue(measures['calc_sessionTotalLocalesVisited'] ? measures['calc_sessionTotalLocalesVisited'][0] : '', precision, true)}</td>
-                  {/* Total Stops */}
-                  <td>{formatValue(measures['calc_sessionTotalStops'] ? measures['calc_sessionTotalStops'][0] : '', precision, true)}</td>
+                  {selectedSummaryMeasures.map((measure) => {
+                    const values = measures[measure] || [''];
+                    return Array.isArray(values)
+                      ? values.map((v, i) => (
+                          <td key={`${measure}-${i}`}>
+                            {formatValue(v, precision, wholeNumberMeasures.includes(measure))}
+                          </td>
+                        ))
+                      : <td>{formatValue(values, precision, wholeNumberMeasures.includes(measure))}</td>;
+                  })}
                 </tr>
               ))}
             </tbody>
