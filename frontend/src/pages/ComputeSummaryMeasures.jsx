@@ -20,7 +20,7 @@ const ComputeSummaryMeasures = () => {
     // Fetch available data files from the backend
     const fetchDataFiles = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/data-files/');
+        const response = await axios.get('/api/data-files/');
         console.log("Fetched data files:", response.data);
         setDataFiles(response.data);
       } catch (error) {
@@ -31,7 +31,7 @@ const ComputeSummaryMeasures = () => {
     // Fetch summary measures options from the backend
     const fetchSummaryMeasures = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/summary-measures/');
+        const response = await axios.get('/api/summary-measures/');
         console.log("Fetched summary measures:", response.data);
         setSummaryMeasuresOptions(response.data);
       } catch (error) {
@@ -154,7 +154,7 @@ const ComputeSummaryMeasures = () => {
     }
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/compute-summary-measures/', {
+      const response = await axios.post('/api/compute-summary-measures/', {
         data_file_paths: selectedDataFiles,
         summary_measures: selectedSummaryMeasures,
         environment: 'common', // or 'q20s' / 'q17'

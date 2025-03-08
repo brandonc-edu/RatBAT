@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-wxc@uh@&j%c-!yml93a16hwyic_+-nocmckim1@+(hs%kc)#!^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['ratbat.cas.mcmaster.ca', 'localhost']
 import os
 import sys
 

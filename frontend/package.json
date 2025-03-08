@@ -23,7 +23,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "CI=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -31,7 +31,12 @@
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+  "rule":{
+    "linebreak-style":0,
+    "react/function-component-definition": 0,
+    "eol-last": 0
+   }
   },
   "browserslist": {
     "production": [

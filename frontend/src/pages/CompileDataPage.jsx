@@ -65,7 +65,7 @@ const CompileDataPage = () => {
     // Fetch data files from the backend
     const fetchDataFiles = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/data-files/');
+        const response = await axios.get('/api/data-files/');
         setDataFiles(response.data);
       } catch (error) {
         console.error("Error fetching data files:", error);
