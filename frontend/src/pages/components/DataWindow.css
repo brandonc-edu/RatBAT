@@ -1,14 +1,31 @@
 .data-window input {
-  margin: 10px;
-  padding: 5px;
-  width: 100%;
-  max-width: 300px;
-  box-sizing: border-box;
+    margin: 10px;
+    padding: 5px;
+    width: 100%;
+    max-width: 300px;
+    box-sizing: border-box;
+  }
+  
+  .data-window .download {
+    background-color: #007bff; /* Blue background */
+    color: white; /* White text */
+    border: none; /* Remove border */
+    border-radius: 5px; /* Rounded corners */
+    padding: 10px 20px; /* Add padding for better sizing */
+    font-size: 14px; /* Adjust font size */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.data-window .download {
-  position: absolute;
-  right: 0;
-  margin-top: 10px;
-  margin-right: 50px;
+.download:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow effect */
+}
+
+
+.no-matching-entries {
+    text-align: center; /* Center the message horizontally */
+    color: #888; /* Optional: Add a subtle gray color for the message */
+    font-size: 16px; /* Optional: Adjust the font size */
+    padding-top: 10px; /* Optional: Add some space above the message */
 }

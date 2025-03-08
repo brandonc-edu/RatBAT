@@ -1,5 +1,3 @@
-/* src/ComputeSummaryMeasures.css */
-
 /* Adding space between each item and its checkbox */
 .measure-item label input,
 .data-item label input,
@@ -11,7 +9,142 @@
 .measure-item,
 .data-item,
 .result-item {
-  margin-bottom: 10px; /* Adjust the spacing between items as needed */
+  margin-bottom: 15px; /* Adjust the spacing between items as needed */
+}
+
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.tooltip-container .tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #555;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  left: 35px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.info-button {
+  background-color: #97a516;
+  color: white;
+  border: none;
+  padding: 0; /* Remove default padding */
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: auto;
+  transition: background-color 0.3s ease;
+}
+
+.info-button:hover {
+  background-color: #5a630d;
+}
+
+.info-modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.info-modal-content {
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  width: 80%;
+  max-width: 500px;
+  text-align: center;
+  position: relative;
+}
+
+.info-modal-content .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.info-modal-content .close:hover {
+  color: #000;
+}
+
+.modal {
+  display: block; /* Hidden by default */
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  top: 50%;
+  
+  width: 80%;
+  max-width: 600px;
+  background-color: #fefefe;
+  border: 2px solid #888;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  cursor: move; /* Change cursor to move */
+}
+
+.modal-content {
+  position: relative;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.close::after {
+  font-size: 14px;
+  color: #555;
+  margin-left: 5px;
+}
+
+.close:hover::after {
+  color: #000;
+}
+
+/* Draggable styles */
+.draggable {
+  cursor: move;
 }
 
 .compute-summary-measures {
@@ -21,7 +154,7 @@
   height: 100vh;
   box-sizing: border-box;
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: #a5a8aa3a;
 }
 
 .top-section {
@@ -30,21 +163,17 @@
   flex: 1;
 }
 
-.summary-measures,
-.selected-data,
-.result-section {
-  background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.measure-item {
+  position: relative;
+  cursor: pointer;
 }
-
-.summary-measures,
-.selected-data {
-  flex: 1;
-  max-height: 250px; /* Set a fixed height */
-  overflow-y: auto; /* Enable scrolling */
+.measure-item {
+  display: flex;
+  align-items: center;
+}
+.measure-item label {
+  display: flex;
+  align-items: center;
 }
 
 .data-items {
@@ -52,10 +181,28 @@
   overflow-y: auto;
 }
 
-.data-footer {
+.summary-measures,
+.selected-data {
+  background-color: white;
+  border: 10px solid white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  flex: 1;
+  max-height: 250px; /* Set a fixed height */
+  overflow-y: auto; /* Enable scrolling */
+  padding: 0;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 20px;
+}
+
+.data-footer,
+.measure-footer {
   padding-top: 10px;
   display: flex;
   justify-content: flex-end;
+  gap: 20px; /* Add gap between buttons */
   position: sticky;
   bottom: 0;
   background-color: #fff;
@@ -63,11 +210,47 @@
 }
 
 .result-section {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 250px);
-  box-sizing: border-box;
-  overflow: hidden;
+  background-color: white;
+  border: 10px solid white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 20px;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+/* Data file rows */
+.result-table .data-file-row {
+  background-color: #8db4db; /* Light grey */
+}
+
+/* Measure and value header rows */
+.result-table .measure-header-row {
+  background-color: #e0e0e0; /* Slightly darker grey */
+}
+
+/* Ensure alternating row colors do not affect specific rows */
+.result-table tr:not(.data-file-row):not(.measure-header-row):nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Actual value rows */
+.result-table .value-row {
+  background-color: #ffffff; /* Default background color */
 }
 
 .result-items {
@@ -76,12 +259,28 @@
 }
 
 .result-footer {
-  display: flex;
-  gap: 20px;
   padding-top: 10px;
-  border-top: 1px solid #ccc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px; /* Add gap between buttons */
   position: sticky;
-  bottom: 35px;
+  bottom: 0;
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+}
+
+.precision-selector {
+  margin-bottom: 20px;
+}
+
+.precision-selector label {
+  margin-right: 10px;
+}
+
+.precision-selector select {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
 }
 
 button {
