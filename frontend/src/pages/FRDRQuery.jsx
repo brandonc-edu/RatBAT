@@ -164,26 +164,12 @@ const FRDRQuery = () => {
     <div>
       {/* FILTERBOX */}
       <h2>Filters</h2>
-      <div className='filterBox'>
-        <div className='parameters'>
-          <FilterButtons
-            filters={filters}
-            onApply={applyFilters} 
-            toggledButtons={toggledButtons}
-          />
-        </div>
-        <div className='metaVariables'>
-          {metaButtons.map((btn, index) => (
-            <button
-              key={index}
-              className={`metaVar ${toggledButtons[index] ? 'toggled' : ''}`}
-              onClick={() => handleToggle(index)}
-            >    
-              {btn}
-            </button>
-          ))}
-        </div>
-      </div>
+      <FilterButtons
+        filters={filters}
+        onApply={applyFilters} 
+        toggledButtons={toggledButtons}
+      />
+
 
       <h2>Filtered Data Entries</h2>
       <div className='dataEntries'>
