@@ -1,7 +1,5 @@
-import pandas as pd
 import numpy  as np
 from numpy.linalg import matmul as mul
-import matplotlib.pyplot as plt
 
 def lowess(data:np.ndarray, deg:int, half_window:int, num_iter:int) -> np.ndarray:
     """Locally Weighted Scatter Plot Smothing.
@@ -14,7 +12,7 @@ def lowess(data:np.ndarray, deg:int, half_window:int, num_iter:int) -> np.ndarra
     Parameters
     ----------
     data : numpy.ndarray
-        nx1 array of raw x or y movement data.
+        length n array of raw x or y movement data.
     deg : int
         The degree of polynomial to be fitted to windows of data.
     half_window : int
@@ -87,7 +85,7 @@ def repeated_running_medians(data:np.ndarray, half_windows:list[int], min_arr:in
     Parameters
     ----------
     data : numpy.ndarray
-        nx1 array of raw x and y movement data.
+        length n array of raw x or y movement data.
     half_windows : list[int]
         A list of half-window lengths to be used by each iteration of the algorithm.
         For iteration i, each window has width: 2*half_windows[i] + 1 
@@ -135,15 +133,3 @@ def repeated_running_medians(data:np.ndarray, half_windows:list[int], min_arr:in
                 
 
     return data_s, arrests
-
-
-# Testing Code
-df = pd.read_csv("database/data/test_data/Q23U693012_12_0_0468_0002801_TrackFile.csv")
-df = df['x'].to_numpy(np.float64)
-df_s = lowess(df,3,10,2)
-
-x = [i for i in range(len(df))]
-
-plt.scatter(x,df)
-plt.scatter(x,df_s)
-plt.show()
