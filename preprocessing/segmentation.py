@@ -19,6 +19,8 @@ def segment_path(data, tol, half_width, log_transform, num_guesses, num_iters, s
     ----------
     data : numpy.ndarray
         array of log modified max standard deviations for each segment.
+    tol : float
+        Tolerance level for classifying arrests.
     num_guesses : int
         Number of times EM will be run using different initial guesses.   
     num_iters : int
