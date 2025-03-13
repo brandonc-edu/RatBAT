@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import './DataWindow.css';
 
 const DataWindow = ({ data }) => {
+  console.log("DataWindow received data:", data);
   const handleDownload = () => {
     if (!data || data.length === 0) {
       alert("No data available to download.");
