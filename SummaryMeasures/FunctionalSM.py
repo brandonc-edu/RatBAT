@@ -5,7 +5,7 @@ This module contains all of the required functionality in regards to Summary Mea
 
 Authors: Brandon Carrasco
 Created on: 07-11-2024
-Modified on: 16-11-2024
+Modified on: 07-03-2025
 """
 
 # Imports
@@ -35,11 +35,14 @@ SM_MAPPING = {
     "calc_sessionReturnTimeMean" : "Calculate_Mean_Return_Time_All_Locales",
     "calc_sessionTotalLocalesVisited" : "Calculate_Total_Locales_Visited",
     "calc_sessionTotalStops" : "Calculate_Total_Stops",
-    "calc_expectedMainHomeBaseReturn" : "Expected_Return_Time_Main_Homebase"
+    "calc_expectedMainHomeBaseReturn" : "Expected_Return_Time_Main_Homebase",
+    "calc_distanceTravelled" : "Calculate_Distance_Travelled",
+    "calc_boutsOfChecking" : "Calculate_Bouts"
 }
 
 DATA_MAPPING = {
-    "locale_stops_calc" : "CalculateStops"
+    "locale_stops_calc" : "CalculateStops",
+    "distances_calc" : "CalcuateDistances",
 }
 
 
@@ -57,7 +60,8 @@ SM_DEPENDENCIES = {
     "calc_HB2_cumulativeReturn" : ["calc_homebases"],
     "calc_HB1_expectedReturn" : ["calc_homebases"],
     "calc_sessionReturnTimeMean" : ["calc_homebases"],
-    "calc_expectedMainHomeBaseReturn" : ["calc_homebases", "calc_HB1_meanReturn", "calc_sessionReturnTimeMean"]
+    "calc_expectedMainHomeBaseReturn" : ["calc_homebases", "calc_HB1_meanReturn", "calc_sessionReturnTimeMean"],
+    "calc_boutsOfChecking" : ["calc_homebases", "calc_HB1_meanReturn"],
 }
 
 ## Data Dependencies
@@ -75,6 +79,7 @@ DATA_DEPENDENCIES = {
     "calc_sessionReturnTimeMean" : ["locale_stops_calc"],
     "calc_sessionTotalLocalesVisited" : ["locale_stops_calc"],
     "calc_sessionTotalStops" : ["locale_stops_calc"],
+    "calc_distanceTravelled" : ["distances_calc"]
 }
 
 
@@ -149,7 +154,7 @@ def CalculateStops(data, env: fsm.Environment):
     return stopLocales, stopFrames
 
 
-def CalcuateDistanceTravelled(data, env: fsm.Environment):
+def CalcuateDistances(data, env: fsm.Environment):
     """
         Given the raw time-series data and environment, calculates the distance travelled from one frame to the next.
 
@@ -163,6 +168,8 @@ def CalcuateDistanceTravelled(data, env: fsm.Environment):
         curFrameY = data[i][2]
         dist = np.sqrt(np.square(curFrameX - prevFrameX) + np.square(curFrameY - prevFrameY))
         distanceFrames.append(dist)
+        prevFrameX = curFrameX
+        prevFrameY = curFrameY
     return distanceFrames
         
         
@@ -572,7 +579,107 @@ def Calculate_Total_Stops(data, env: fsm.Environment, requiredSummaryMeasures, p
 
 ###  Distance & Locomotion Summary Measures ###
 
-def 
+def Calculate_Distance_Travelled(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates all distances travelled metrics. Returns a tuple of (total distance for progression segments only, total distance for all segments),
+        total distance travelled, speed of progression, 
+        and a tuple of two lists of travelled distances in five minute intervals from start to finish,
+        with the first list corresponding to the use of only the progression statements, and
+        the second corresponding to the use of all segements.
+
+        See Checking_parameters_Definitions_Oct30_2024 for full list of variables.
+
+        Reference ID is: calc_distanceTravelled
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_distanceTravelled', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_distanceTravelled"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    distanceData = desiredCalcs['distances_calc']
+    # Get chunk length (in terms of frames) for five minutes worth of time
+    chunkLength = 5 * 60 * FRAMES_PER_SECOND
+    chunk = 0
+    distancesProgression = [0 for i in range(55 / 5)]
+    distancesAll = [0 for i in range(55 / 5)]
+    totalDurationOfProgression = 0
+
+    for i in range(len(data)):
+        # Update chunks if necessary
+        if i == (chunk + 1) * chunkLength:
+            chunk += 1
+        frame = data[i]
+        # Add distance to all distances list
+        distancesAll[chunk] += distanceData[i]
+        if frame[4] == 1: # If it's a progression segment, add it to the progression distances list
+            distancesProgression[chunk] += distanceData
+            totalDurationOfProgression += 1 # Add 1 frame to the total duration of progressions
+    totalDurationSeconds = totalDurationOfProgression / FRAMES_PER_SECOND
+    # Divide all distances by 100 to get distance in metres
+    distancesAll = [distance / 100 for distance in distancesAll]
+    distancesProgression = [distance / 100 for distance in distancesProgression]
+    # Calculate total distance travelled for all & progression
+    totalDistanceAll = sum(distancesAll)
+    totalDistanceProgression = sum(distancesProgression)
+    return (totalDistanceProgression, totalDistanceAll), totalDurationSeconds, totalDistanceProgression / (totalDurationSeconds), (distancesProgression, distancesAll)
+
+def Calculate_Bouts(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates the bouts of checking. Not sure of what to return yet
+
+        Reference ID is: calc_boutsOfChecking
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_boutsOfChecking', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_boutsOfChecking"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    mainHomeBase = requiredSummaryMeasures["calc_homebases"][0]
+    mainHomeBaseReturn = requiredSummaryMeasures["calc_HB1_meanReturn"]
+
+    # Find mean time + IQR of lingering episodes
+    allLing = []
+    ling = False
+    currentLing = []
+
+    # Get all lingering episodes
+    for i in range(len(data)):
+        frame = data[i]
+        if frame[4] == 0:
+            ling = True
+            currentLing.append(frame)
+        elif frame[4] == 1 and ling == True:
+            ling = False
+            allLing.append(currentLing)
+            currentLing = []
+    if len(currentLing) != 0: # In case the loop ends on a lingering episode
+        allLing.append(currentLing)
+
+    # Calculate means for lingering episode duration
+    timeForEpi = [len(epi) for epi in allLing]
+    meanTimeLing = sum(timeForEpi) / len(allLing)
+    q75Mean, q25Mean = np.percentile(timeForEpi, [75, 25])
+    iqrMean = q75Mean - q25Mean
+    
+    # Calculate means for lingering episodes return times
+
+    # Get outlier lingering episodes (time of epi is >= mean + iqr)
+    outlierIndices = np.array(timeForEpi)
+    outlierIndices = [outlierIndices >= (meanTimeLing + iqrMean)]
+    outliers = []
+    for x in range(len(timeForEpi)): # Get all outlier lingering episodes
+        if outlierIndices[x]:
+            outliers.append(allLing[x])
+
+    # Filter out lingering episodes that don't start and end in homebase
+    outliers = list(filter(lambda x : env.SpecimenLocation(x[0][1], x[0][2]) == mainHomeBase and env.SpecimenLocation(x[-1][1], x[-1][2]) == mainHomeBase, outliers))
+
+    # Dunno :)
+
 
 
 ### TESTING ###
