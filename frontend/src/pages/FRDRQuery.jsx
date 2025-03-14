@@ -15,36 +15,29 @@ const FRDRQuery = () => {
   const emptyFilters = [{field: "trial_id", lookup: "gte", value: "0"}];
 
   //TESTING, what filters I want
-  const defaultFields = ["trial_id", "dateandtime", "drugrx_drug1", "duration"];
+  const defaultFields = [  "trial_id",
+    "dateandtime",
+    "drugrx_drug1",
+    "animalweight",
+    "injectionnumber",
+    "oftestnumber",
+    "drugrxnumber",
+    "experimenter",
+    "duration",
+    "fallsduringtest",
+    "lightconditionsdesc",
+    "notes"
+  ];
   
   // Function to call the QueryDataView API and pull data from the database.
   const fetchQueryData = async (filters) => {
-    console.log("Filters received:", filters);
-    //Transform filters array format expected by API
-    const filtersArray = [];
-    if (filters == undefined || filters.length == 0){
-      filtersArray.push({field: "trial_id", lookup: "gte", value: "0"});
-    }
-    else{
-      for (const category in filters) {
-        const fieldsObj = filters[category];
-        for (const field in fieldsObj) {
-          const value = fieldsObj[field];
-          filtersArray.push({
-            field: field,
-            lookup: "exact", //Implement dynamic lookup later.
-            value: value
-          });
-        }
-      }
-    };
-    
-    console.log("Formated filters:", filtersArray);
     try {
       const requestBody = {
-        filters: filtersArray,
+        filters: filters,
         fields: defaultFields
       };
+
+      console.log("requestBody", requestBody);
 
       const response = await fetch('http://ratbat.cas.mcmaster.ca/api/query-data/', {
         method: 'POST',

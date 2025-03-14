@@ -1,7 +1,12 @@
+button {
+    margin-left: 10px;
+}
+
 div {
     margin-top: 10px;
     margin-bottom: 20px;
 }
+
 .filterBox {
     border-radius: 10px;
     margin-left: 10px;
@@ -43,7 +48,7 @@ div {
     gap: 10px; /* Spacing between buttons */
     padding: 10px;
     margin: 10px; /* Centers the box horizontally */
-    border: 2px solid black;
+    border: 1px solid black;
     border-radius: 5px;
     background-color: white;
     height: 350px; /* Fixed height */
@@ -66,9 +71,11 @@ div {
     text-align: center; /* Text alignment */
     line-height: normal; /* Prevents line-height issues */
 }
+
 .metaVar:hover {
     background-color: #f0f0f0; /* Add hover effect */
 }
+
 .metaVar.toggled {
     background-color: #0056b3; /* Blue background for toggled state */
     border-color: #004085;
