@@ -7,20 +7,42 @@ const FRDRQuery = () => {
   // State to hold the database data returned by the API.
   const [data, setData] = useState([]);
 
-  // For testing, we use some default filters.
+  //TESTING, default filters
   const defaultFilters = [
     { field: "trial_id", lookup: "lt", value: 110 },
     { field: "drugrx_drug1", lookup: "exact", value: "QNP" }
   ];
+  const emptyFilters = [{field: "trial_id", lookup: "gte", value: "0"}];
 
-  //Specify the fields you want returned. Temp.
+  //TESTING, what filters I want
   const defaultFields = ["trial_id", "dateandtime", "drugrx_drug1", "duration"];
   
   // Function to call the QueryDataView API and pull data from the database.
-  const fetchDatabaseData = async () => {
+  const fetchQueryData = async (filters) => {
+    console.log("Filters received:", filters);
+    //Transform filters array format expected by API
+    const filtersArray = [];
+    if (filters == undefined || filters.length == 0){
+      filtersArray.push({field: "trial_id", lookup: "gte", value: "0"});
+    }
+    else{
+      for (const category in filters) {
+        const fieldsObj = filters[category];
+        for (const field in fieldsObj) {
+          const value = fieldsObj[field];
+          filtersArray.push({
+            field: field,
+            lookup: "exact", //Implement dynamic lookup later.
+            value: value
+          });
+        }
+      }
+    };
+    
+    console.log("Formated filters:", filtersArray);
     try {
       const requestBody = {
-        filters: defaultFilters,
+        filters: filtersArray,
         fields: defaultFields
       };
 
@@ -46,13 +68,13 @@ const FRDRQuery = () => {
 
   // Call the API once when the component mounts.
   useEffect(() => {
-    fetchDatabaseData();
+    fetchQueryData();
   }, []);
 
   return (
     <div>
       <h2>Filters</h2>
-      <FilterButtons/>
+      <FilterButtons onApply={fetchQueryData}/>
 
       <h2>Filtered Data Entries</h2>
       <div className="dataEntries">

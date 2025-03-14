@@ -151,6 +151,7 @@ function FilterButtons({ onApply }) {
     }
   ]
 
+  
   // New discrete filters configuration (not used here but kept for reference)
   const discreteFilters = {
     "Light/Dark Cycle": ['lights ON', 'lights OFF'],
@@ -195,13 +196,21 @@ function FilterButtons({ onApply }) {
 
   // Update the filter value for a specific category and field.
   const handleFieldChange = (category, field, value) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [field]: value
+    setLocalFilters (prev => {
+      //Copy previous filters for category or empty
+      const categoryFilters = {...(prev[category] || {})};
+
+      //If new value is empty then remove the field entirely
+      if (value.trim() == ""){
+        delete categoryFilters[field];
+      }else{
+        categoryFilters[field] = value;
       }
-    }));
+      return{
+        ...prev,
+        [category]: categoryFilters
+      };
+    });
   };
 
   // When the user clicks Apply, pass the filter criteria to the parent.
