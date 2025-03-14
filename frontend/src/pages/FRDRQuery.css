@@ -3,6 +3,10 @@ h2 {
     margin-left: 5px;
 }
 
+.background {
+    background-color: #f9f9f9;
+}
+
 .filterBox {
     border-radius: 10px;
     margin-left: 10px;

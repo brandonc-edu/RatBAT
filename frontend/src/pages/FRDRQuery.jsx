@@ -65,7 +65,7 @@ const FRDRQuery = () => {
   }, []);
 
   return (
-    <div>
+    <div className = "background">
       <h2>Filters</h2>
       <FilterButtons onApply={fetchQueryData}/>
 

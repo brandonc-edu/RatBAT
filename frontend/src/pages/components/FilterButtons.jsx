@@ -203,8 +203,28 @@ function FilterButtons({ onApply }) {
         [category]: categoryFilters
       };
     });
-};
+  };
 
+  const handleRangeChange = (category, field, bound, newValue) => {
+    // bound is either 'min' or 'max'
+    setLocalFilters(prev => {
+      const categoryFilters = { ...(prev[category] || {}) };
+      const existingField = categoryFilters[field] || { lookup: 'range', value: { min: '', max: '' } };
+      
+      // Always ensure we store { lookup, value: { min, max } }
+      const updatedValue = { ...(existingField.value || { min: '', max: '' }) };
+      updatedValue[bound] = newValue; // set the min or max
+  
+      categoryFilters[field] = {
+        lookup: 'range',
+        value: updatedValue
+      };
+      return {
+        ...prev,
+        [category]: categoryFilters
+      };
+    });
+  };
 
   const handleLookupChange = (category, field, lookup) => {
     setLocalFilters(prev => {
@@ -218,7 +238,7 @@ function FilterButtons({ onApply }) {
         }
       };
     });
-  };
+  };  
 
   // When the user clicks Apply, pass the filter criteria to the parent.
   const handleApply = () => {
@@ -227,19 +247,33 @@ function FilterButtons({ onApply }) {
     for (const category in localFilters){
       for (const field in localFilters[category]){
         const { lookup, value } = localFilters[category][field];
-        if (value.trim() == '') continue;
-        filtersArray.push({
-          field: field,
-          lookup, lookup,
-          value: value
-        });
+        if (lookup === 'range') {
+          // if min or max is empty, skip them
+          const min = value.min?.trim();
+          const max = value.max?.trim();
+          if (!min && !max) continue; // both empty => skip
+          // Example: push an object with "range" or two separate objects
+          filtersArray.push({
+            field: field,
+            lookup: 'range',
+            value: { min, max }
+          });
+        } else {
+          // Non-range: skip if empty
+          if (value.trim() === '') continue;
+          filtersArray.push({
+            field: field,
+            lookup: lookup,
+            value: value
+          });
+        }
       }
     }
     
     console.log("handleApply", filtersArray);
     onApply(filtersArray);
   };
-  
+
   return (
     <div>
       <div className="filterBox">
@@ -256,6 +290,7 @@ function FilterButtons({ onApply }) {
                   return (
                     <div key={field.name} className="filter-item">
                       <label>{field.name}:</label>
+                      {/* The dropdown for selecting lookup (exact, gt, gte, range, etc.) */}
                       <select
                         value={fieldData.lookup}
                         onChange={(e) => handleLookupChange(group.category, field.name, e.target.value)}
@@ -264,11 +299,31 @@ function FilterButtons({ onApply }) {
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
                       </select>
-                      <input 
-                        type={field.type === "number" ? "number" : "text"}
-                        value={fieldData.value}
-                        onChange={(e) => handleFieldChange(group.category, field.name, e.target.value)}
-                      />
+
+                      {/* If the user picked "range", render two inputs for min & max */}
+                      {fieldData.lookup === 'range' ? (
+                        <div>
+                          <input
+                            type="number"
+                            placeholder="Min"
+                            value={fieldData.value?.min || ''}
+                            onChange={(e) => handleRangeChange(group.category, field.name, 'min', e.target.value)}
+                          />
+                          <input
+                            type="number"
+                            placeholder="Max"
+                            value={fieldData.value?.max || ''}
+                            onChange={(e) => handleRangeChange(group.category, field.name, 'max', e.target.value)}
+                          />
+                        </div>
+                      ) : (
+                        // Otherwise, a single input for "exact", "gt", "lte", etc.
+                        <input
+                          type={field.type === "number" ? "number" : "text"}
+                          value={typeof fieldData.value === 'string' ? fieldData.value : ''}
+                          onChange={(e) => handleFieldChange(group.category, field.name, e.target.value)}
+                        />
+                      )}
                     </div>
                   );
                 })}
