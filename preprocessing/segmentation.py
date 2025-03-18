@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import scipy.stats as stats
+from types import FunctionType
 
 
 # Indices for parameters within parameter matrices.
@@ -8,7 +9,7 @@ MEAN = 0 # Mean
 SD   = 1 # Standard deviation
 PROP = 2 # Proportion
 
-def segment_path(data, tol, half_width, log_transform, num_guesses, num_iters, significance, k = None):
+def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:FunctionType, num_guesses:int, num_iters:int, significance:float, k:int = None):
     """Path segmentation algorithm to categorize smoothed time-series data into segments of lingering and progression.
 
     Based on: Drai D., Benjamini Y., Golani I.
@@ -21,8 +22,12 @@ def segment_path(data, tol, half_width, log_transform, num_guesses, num_iters, s
         array of log modified max standard deviations for each segment.
     tol : float
         Tolerance level for classifying arrests.
+    half_width : int
+        Half window length to be used to calculate standard deviations of movement.
+    log_transform : FunctionType
+        Function (Float -> Float) used to map SDs onto a logarithmic scale for segmentation.
     num_guesses : int
-        Number of times EM will be run using different initial guesses.   
+        Number of times EM will be run using different initial guesses.
     num_iters : int
         Number of iterations for the underlying EM algorithm for each initial guess. 
     significance : float
@@ -42,7 +47,7 @@ def segment_path(data, tol, half_width, log_transform, num_guesses, num_iters, s
     # initializing variables
     n = data.shape[0]
     sd = np.zeros(n)
-    hw = half_width
+    hw = half_window
     arrests = []
     segments = []
 
@@ -53,11 +58,11 @@ def segment_path(data, tol, half_width, log_transform, num_guesses, num_iters, s
         if sd[i] < tol: arrests.append(i)
     
     # Define segments as intervals between arrests:
-    for i in range(len(arrests)):
-        if i + 1 < n and arrests[i+1] - arrests[i] > 1:
-            segments.append([arrests[i] + 1,arrests[i+1] - 1])
+    for i in range(len(arrests) - 1):
+        if arrests[i+1] - arrests[i] > 1:
+            segments.append([arrests[i] + 1, arrests[i+1] - 1])
     if arrests[-1] < n-1:
-        segments.append([arrests[i] + 1, n-1])
+        segments.append([arrests[-1] + 1, n - 1])
    
     segments = np.array(segments)
     m = segments.shape[0]
@@ -67,7 +72,7 @@ def segment_path(data, tol, half_width, log_transform, num_guesses, num_iters, s
 
     for i in range(m):
         max_sd[i] = log_transform(max(sd[segments[i,0] : segments[i,1] + 1]))
-
+    
     # Run EM either with fixed number of gaussians or automatic calculation of optimal value.
     if k == None:
         params, log_likelihood = em_full_auto(max_sd, num_guesses, num_iters, significance)
@@ -81,7 +86,7 @@ def segment_path(data, tol, half_width, log_transform, num_guesses, num_iters, s
     mode = 0
 
     for sd in np.sort(max_sd):
-        if gauss_pdf(sd, params[mode,MEAN], params[mode,SD]) < gauss_pdf(sd, params[mode,MEAN], params[mode,SD]):
+        if gauss_pdf(sd, params[mode,MEAN], params[mode,SD]) < gauss_pdf(sd, params[mode + 1,MEAN], params[mode + 1,SD]):
             threshold[mode] = sd
             mode += 1
         if mode >= k-1:
@@ -98,7 +103,7 @@ def segment_path(data, tol, half_width, log_transform, num_guesses, num_iters, s
             if j == k-1:
                 seg_modes[i] = k-1
                 break
-            elif max_sd < threshold[j]:
+            elif max_sd[i] < threshold[j]:
                 seg_modes[i] = j 
                 break
     
@@ -146,29 +151,24 @@ def em(data:np.ndarray, k:int, init_guesses:np.ndarray, num_iters:int):
     float
         final log likelihood.
     """
-
+    
     params = init_guesses
     n = data.shape[0]
-    gamma = np.zeros(n,k)
-    
+    gamma = np.zeros(shape = (n,k))
 
     for _ in range(num_iters):
         # Expectation step:
         for i in range(n):
-            for j in range(k-1):
+            for j in range(k):
                 # Use Bayes theorem to compute the likelyhood that data point i belongs to gaussian j:
                 gamma[i,j] = ((params[j,PROP] * gauss_pdf(data[i], params[j,MEAN], params[j,SD])) /
                                np.sum([params[z,PROP] * gauss_pdf(data[i], params[z,MEAN], params[z,SD]) for z in range(k)]))
-
-            # gamma (responsibility of each gaussian) values must sum to 1 for each data point. 
-            gamma[i,k-1] = 1 - np.sum(gamma[i,:k-1])
-
         # Maximization step:
         for j in range(k):
             # For each gaussian update mean, SD, and proportions based on expected responsibilities
             resp = np.sum(gamma[:,j])
             params[j,MEAN] = np.sum([gamma[i,j] * data[i] for i in range(n)]) / resp
-            params[j,SD]   = np.sum([gamma[i,j] * (data[i] - params[j,MEAN])**2 for i in range(n)]) / resp
+            params[j,SD]   = np.sqrt(np.sum([gamma[i,j] * (data[i] - params[j,MEAN])**2 for i in range(n)]) / resp)
             params[j,PROP] = resp / n
  
     # The log likelihood of the dataset given the parameters estimated is an indicator for
@@ -204,13 +204,14 @@ def em_auto(data:np.ndarray, k:int, num_guesses:int, num_iters:int):
 
     n = data.shape[0]
     opt_params = None
-    opt_likelihood = 0
+    opt_likelihood = -np.inf
 
     for _ in range(num_guesses):
         params = np.zeros(shape = (k,3))
         
         # Generate a random set of proportions for the GMM such that the sum(props) = 1.
-        rand_props = [random.random() for _ in range(k)]
+        # offset proportions slightly to avoid zero division.
+        rand_props = [random.random() + 0.000001 for _ in range(k)]
         prop_sum = np.sum(rand_props)
         params[:,PROP] = [(p / prop_sum) for p in rand_props]
 
@@ -220,11 +221,11 @@ def em_auto(data:np.ndarray, k:int, num_guesses:int, num_iters:int):
         start = 0
 
         for j in range(k):
-            end = max(start + int(params[j,PROP] * n), n)
-
+            end = min(start + int(params[j,PROP] * n), n)
+            
             params[j,MEAN] = np.mean(sorted_data[start : end])
             params[j,SD]   = np.std(sorted_data[start : end])
-
+            
             start = end
 
         # Run EM with generated parameters.
@@ -259,8 +260,9 @@ def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:f
         final log likelihood of the best EM iteration.
     """
     
-    k = 2
-    prev_likelihood = 0
+    k = 1
+    prev_likelihood = -np.inf
+    prev_params = None
 
     # Test on increasing numbers of gaussians until little improvment is seen.
     while True:
@@ -268,21 +270,13 @@ def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:f
 
         # Use log likelihood test to determine whether improvements from
         # increasing k are statistically significant.
-        if stats.chi2.cdf(log_likelihood - prev_likelihood, 2) < significance:
-            return params, log_likelihood
+        if 1 - stats.chi2.cdf(log_likelihood - prev_likelihood, 2) > significance:
+            return prev_params, prev_likelihood
         
         k += 1
+        prev_params = params
         prev_likelihood = log_likelihood
 
 def gauss_pdf(x:float, mean:float, sd:float):
     # pdf for gaussian distribution.
-    return (1 / np.sqrt(2 * np.pi * sd)) * np.exp(-(x - mean)**2 / (2 * sd))
-
-a = [[1,2],
-     [3,4],
-     [5,6]]
-
-a = np.array(a)
-print(sd_move(a))
-
-print(gauss_pdf(50,50,5))
+    return (1 / np.sqrt(2 * np.pi * sd**2)) * np.exp(-(x - mean)**2 / (2 * sd**2))
