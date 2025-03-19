@@ -42,22 +42,26 @@ class Preprocessor:
 
         # Create the partial functions for the preprocessor to run
         self.lowess_func = partial(lowess, deg=self.lowess_params["deg"], half_window=self.lowess_params["half_window"], num_iter=self.lowess_params["num_iter"])
-        self.rrm_func = partial(repeated_running_medians, half_window=self.lowess_params["half_window"], min_arr=self.lowess_params["min_arr"], tol=self.lowess_params["tol"])
-        self.em_func = partial(segment_path, tol=self.lowess_params["tol"], half_window=self.lowess_params["half_window"], log_transform=self.lowess_params["log_transform"],
-                               num_guesses=self.lowess_params["num_guesses"], num_iters=self.lowess_params["num_iters"], significance=self.lowess_params["significance"], 
-                               k=self.lowess_params["k"])
+        self.rrm_func = partial(repeated_running_medians, half_windows=self.rrm_params["half_windows"], min_arr=self.rrm_params["min_arr"], tol=self.rrm_params["tol"])
+        self.em_func = partial(segment_path, tol=self.em_params["tol"], half_window=self.em_params["half_window"], log_transform=self.em_params["log_transform"],
+                               num_guesses=self.em_params["num_guesses"], num_iters=self.em_params["num_iters"], significance=self.em_params["significance"], 
+                               k=self.em_params["k"])
 
     def preprocess_data(self, data):
         """
             Preprocesses the incoming data.
+
+            Data is of the form: [frame, x-coordinates, y-coordinates]
         """
         ## Should the backend pass all the data files to my interface, or just do it one at a time.
         ## Personally, I think one at a time. Our RAM will be limited, and loading everything into memory might be unideal.
-        # Run LOWESS (lowess)
-        transformed_data = self.lowess_func(data)
 
+        # Run LOWESS (lowess)
+        transformed_data = self.smooth_dataset(data)
+        
         # Run RRM (repeated_running_medians)
-        _, arrests = self.rrm_func(data)
+        arrests = self.identify_arrests(data)
+        # arrests = [(10, 150), (600, 650), (1200, 12000)]
 
         # Calculate interpolations & velocity
         transformed_data = self.interpolate_and_velocity(transformed_data, arrests)
@@ -66,6 +70,62 @@ class Preprocessor:
         transformed_data = self.em_func(transformed_data)
 
         return transformed_data
+    
+    def smooth_dataset(self, data):
+        """
+            Given a dataset of the form [frame, x, y], smooth it and calculate the velocities.
+        """
+        transformed_data = data
+
+        # Run LOWESS (lowess)
+        transformed_X, vel_X = self.lowess_func(transformed_data[:, 1])
+        transformed_Y, vel_Y = self.lowess_func(transformed_data[:, 2])
+
+        ## Apply smoothed data changes
+        transformed_data[:, 1] = transformed_X
+        transformed_data[:, 2] = transformed_Y
+
+        ## Calculate and concatenate velocities to the transformed dataset
+        velocities = np.sqrt(np.square(vel_X) + np.square(vel_Y)).reshape((-1, 1))
+        transformed_data = np.hstack((transformed_data, velocities))
+        
+        return transformed_data
+
+    
+    def identify_arrests(self, data):
+        """
+            Given a dataset of the form [frame, x, y], determine the arrests using RRM.
+        """
+        # Find arrests for both x & y coords
+        _, arrests_X = self.rrm_func(data[:, 1])
+        _, arrests_Y = self.rrm_func(data[:, 2])
+
+        # Get mask of shared arrests
+        x_mask = np.zeros((len(data)), dtype=bool)
+        y_mask = np.zeros((len(data)), dtype=bool)
+        for xArrest_start, xArrest_end in arrests_X:
+            x_mask[xArrest_start - 1 : xArrest_end] = True
+        for yArrest_start, yArrest_end in arrests_Y:
+            y_mask[yArrest_start - 1 : yArrest_end] = True
+
+        arrest_mask = np.bitwise_and(x_mask, y_mask)
+        arrest_mask_length = len(data)
+
+        # From the shared arrests, add their start and end points to the final arrest list
+        arrests = []
+        in_interval = False
+        start = None
+        for i in range(len(arrest_mask)):
+            if not in_interval and arrest_mask[i]:
+                start = i + 1
+                in_interval = True
+            elif in_interval and not arrest_mask[i]:
+                arrests.append((start, i))
+                in_interval = False
+            elif in_interval and i == arrest_mask_length - 1:
+                arrests.append((start, i + 1))
+
+        return arrests
 
     def interpolate_and_velocity(self, data, arrests):
         """
@@ -97,3 +157,4 @@ class Preprocessor:
         if parameter_dict != None and len(parameter_dict) != 0:
             for param, val in parameter_dict["EM"].items():
                 self.em_params[param] = val
+
