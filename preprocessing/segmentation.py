@@ -9,7 +9,7 @@ MEAN = 0 # Mean
 SD   = 1 # Standard deviation
 PROP = 2 # Proportion
 
-def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:FunctionType, num_guesses:int, num_iters:int, significance:float, k:int = None):
+def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:FunctionType, num_guesses:int, num_iters:int, significance:float, max_k:int, k:int = None):
     """Path segmentation algorithm to categorize smoothed time-series data into segments of lingering and progression.
 
     Based on: Drai D., Benjamini Y., Golani I.
@@ -32,7 +32,11 @@ def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:Func
         Number of iterations for the underlying EM algorithm for each initial guess. 
     significance : float
         Alpha value used for a chi squared test to determine the convergence of likelihood improvements.
-        If using set number of gaussian movement clusters (k), value is ignored
+        If using set number of gaussian movement clusters (k), value is ignored.
+    max_k : int
+        When using automated calculations of optimal number of movement modes (k),
+        function will raise error if no convergence is found after max_k modes.
+        If using set number of gaussian movement clusters (k), value is ignored.
     k : int
         Number of movement modes (gaussians) in the gaussian mixture model (GMM).
         For automatic calculation of the optimal k value, use k = None 
@@ -58,12 +62,14 @@ def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:Func
         if sd[i] < tol: arrests.append(i)
     
     # Define segments as intervals between arrests:
-    for i in range(len(arrests) - 1):
-        if arrests[i+1] - arrests[i] > 1:
-            segments.append([arrests[i] + 1, arrests[i+1] - 1])
-    if arrests[-1] < n-1:
-        segments.append([arrests[-1] + 1, n - 1])
-   
+    if len(arrests) > 0 and len(arrests) < n:
+        for i in range(len(arrests) - 1):
+            if arrests[i+1] - arrests[i] > 1:
+                segments.append([arrests[i] + 1, arrests[i+1] - 1])
+        if arrests[-1] < n-1:
+            segments.append([arrests[-1] + 1, n - 1])
+    else: return np.array([[0, n-1, 0]]) # If there are no arrests or only arrests then there is only 1 segment/movment type.
+    
     segments = np.array(segments)
     m = segments.shape[0]
 
@@ -75,7 +81,7 @@ def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:Func
     
     # Run EM either with fixed number of gaussians or automatic calculation of optimal value.
     if k == None:
-        params, log_likelihood = em_full_auto(max_sd, num_guesses, num_iters, significance)
+        params, log_likelihood = em_full_auto(max_sd, num_guesses, num_iters, significance, max_k)
     else:
         params, log_likelihood = em_auto(max_sd, k, num_guesses, num_iters)
     
@@ -237,7 +243,7 @@ def em_auto(data:np.ndarray, k:int, num_guesses:int, num_iters:int):
     
     return opt_params, opt_likelihood
 
-def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:float):
+def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:float, max_k:int):
     """Fully automated version of EM algorithm. 
     Tests em_auto for increasing numbers of gaussians (k) until a requested likelihood is reached. 
 
@@ -251,6 +257,8 @@ def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:f
         Number of iterations for the underlying EM algorithm for each initial guess. 
     significance : float
         Alpha value used for a chi squared test to determine the convergence of likelihood improvements.
+    max_k : int
+        Function will raise error if no convergence is found after k = max_k modes.
     
     Returns
     -------
@@ -260,22 +268,24 @@ def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:f
         final log likelihood of the best EM iteration.
     """
     
-    k = 1
     prev_likelihood = -np.inf
     prev_params = None
 
-    # Test on increasing numbers of gaussians until little improvment is seen.
-    while True:
+    # Test on increasing numbers of gaussians until little improvment is seen or max_k is reached.
+    # Note: the algorithm must test on k + 1 to determine if k is optimal so function will test
+    # max_k + 1 before timing out.
+    for k in range(1, max_k + 2):
         params, log_likelihood = em_auto(data, k, num_guesses, num_iters)
 
         # Use log likelihood test to determine whether improvements from
         # increasing k are statistically significant.
         if 1 - stats.chi2.cdf(log_likelihood - prev_likelihood, 2) > significance:
             return prev_params, prev_likelihood
-        
-        k += 1
+
         prev_params = params
         prev_likelihood = log_likelihood
+
+    raise ValueError(f"Optimal number of movement modes not found within {max_k} for given parameters.")
 
 def gauss_pdf(x:float, mean:float, sd:float):
     # pdf for gaussian distribution.
