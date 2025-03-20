@@ -20,9 +20,11 @@ DEFAULT_PARAMS = {
         "half_window" : 12,    # TODO: Get actual defaults from Anna
         "log_transform" : np.log10, # TODO: Get actual defaults from Anna
         "num_guesses" : 2,   # TODO: Get actual defaults from Anna. Note: Just pure guesses as I wasn't actually able to locate a default in the actual segmentation paper. It calculates its num_guesses while calculating k.
-        "num_iters" : 2,     # TODO: Get actual defaults from Anna. Note: Just pure guesses as I wasn't actually able to locate a default in the actual segmentation paper. It calculates its num_guesses while calculating k.
-        "significance" : None,  # TODO: Get actual defaults from Anna. Note: since we're using k, we don't need to specify significance.
-        "k" : 2
+        "num_iters" : 2000,     # TODO: Get actual defaults from Anna. Note: Just pure guesses as I wasn't actually able to locate a default in the actual segmentation paper. It calculates its num_guesses while calculating k.
+        "significance" : 0.01,  # TODO: Get actual defaults from Anna. Note: since we're using k, we don't need to specify significance.
+        "max_k" : 4, 
+        "k" : 2,
+        "arrest_mode" : 0
     }
 }
 
@@ -45,7 +47,7 @@ class Preprocessor:
         self.rrm_func = partial(repeated_running_medians, half_windows=self.rrm_params["half_windows"], min_arr=self.rrm_params["min_arr"], tol=self.rrm_params["tol"])
         self.em_func = partial(segment_path, tol=self.em_params["tol"], half_window=self.em_params["half_window"], log_transform=self.em_params["log_transform"],
                                num_guesses=self.em_params["num_guesses"], num_iters=self.em_params["num_iters"], significance=self.em_params["significance"], 
-                               k=self.em_params["k"])
+                               max_k=self.em_params["max_k"], k=self.em_params["k"])
 
     def preprocess_data(self, data):
         """
@@ -58,6 +60,7 @@ class Preprocessor:
 
         # Run LOWESS (lowess)
         transformed_data = self.smooth_dataset(data)
+        # print(transformed_data[:5])
         
         # Run RRM (repeated_running_medians)
         arrests = self.identify_arrests(data)
@@ -65,9 +68,10 @@ class Preprocessor:
 
         # Calculate interpolations & velocity
         transformed_data = self.interpolate_and_velocity(transformed_data, arrests)
+        # print(transformed_data[:5])
 
         # Run EM (segment_path)
-        transformed_data = self.em_func(transformed_data)
+        transformed_data = self.find_movement_types(transformed_data)
 
         return transformed_data
     
@@ -142,6 +146,22 @@ class Preprocessor:
             data[start - 1 : end, 3] = 0 
 
         return data
+    
+    def find_movement_types(self, data):
+        """
+            Takes in smoothed data and returns data with movement type concatenated to it.
+            
+        """
+        # Run the EM algorithm and find the segments of movement type
+        segments = self.em_func(data)
+
+        # Create array of movement type data
+        movement_types = np.repeat(self.em_params["arrest_mode"], len(data))
+        for start, end, move_type in segments:
+            movement_types[start : end + 1] = move_type
+
+        return np.hstack((data, movement_types.reshape(-1, 1)))
+
 
     def set_lowess_params(self, parameter_dict):
         if parameter_dict != None and len(parameter_dict) != 0:
