@@ -7,24 +7,24 @@ function FilterButtons({ onApply }) {
         category: "lightcyclecolony",
         displayName: "Light Cycle Colony",
         fields: [
-          { name: "lightcyclecolony_id", type: "number" },
-          { name: "lightcyclecolonydesc", type: "text" }
+          { name: "lightcyclecolony_id", displayName: "light cycle colony id", type: "number" },
+          { name: "lightcyclecolonydesc", displayName: "light cycle colony desc", type: "text" }
         ]
     },
     {
         category: "lightcycletest",
         displayName: "Light Cycle Test",
         fields: [
-          { name: "lightcycletest_id", type: "number" },
-          { name: "lightcycletestdesc", type: "text" }
+          { name: "lightcycletest_id", displayName: "light cycle test id", type: "number" },
+          { name: "lightcycletestdesc", displayName: "light cycle test desc", type: "text" }
         ]
     },
     {
         category: "arenatype",
         displayName: "Arena Type",
         fields: [
-          { name: "arenatype_id", type: "number" },
-          { name: "arenatypedesc", type: "discrete",
+          { name: "arenatype_id", displayName: "arena type id", type: "number" },
+          { name: "arenatypedesc", displayName: "arena type desc", type: "discrete",
             options: ["Option A", "Option B", "Option C"]
            }
         ]
@@ -33,140 +33,141 @@ function FilterButtons({ onApply }) {
         category: "arenaloc",
         displayName: "Arena Location",
         fields: [
-          { name: "arenaloc_id", type: "number" },
-          { name: "arenalocdesc", type: "text" }
+          { name: "arenaloc_id", displayName: "arena location id", type: "number" },
+          { name: "arenalocdesc", displayName: "arena location desc", type: "text" }
         ]
     },
     {
         category: "arenaobjects",
         displayName: "Arena Objects",
         fields: [
-          { name: "arenaobjects_id", type: "number" },
-          { name: "arenaobjectsdesc", type: "text" }
+          { name: "arenaobjects_id", displayName: "arena objects id", type: "number" },
+          { name: "arenaobjectsdesc", displaytName: "arena object desc", type: "text" }
         ]
     },
     {
         category: "lightconditions",
         displayName: "Light Conditions",
         fields: [
-          { name: "lightconditions_id", type: "number" },
-          { name: "lightconditionsdesc", type: "text" }
+          { name: "lightconditions_id", displayName: "light conditions id", type: "number" },
+          { name: "lightconditionsdesc", displayName: "light condition desc", type: "text" }
         ]
     },
     {
         category: "surgerymanipulation",
         displayName: "Surgery Manipulation",
         fields: [
-          { name: "surgerymanipulation_id", type: "number" },
-          { name: "surgerymanipulationdesc", type: "text" }
+          { name: "surgerymanipulation_id", displayName: "surgery manipulation id", type: "number" },
+          { name: "surgerymanipulationdesc", displayName: "surgerymanipulation desc", type: "text" }
         ]
     },
     {
         category: "surgeryoutcome",
         displayName: "Surgery Outcome",
         fields: [
-          { name: "surgeryoutcome_id", type: "number" },
-          { name: "surgeryoutcomedesc", type: "text" }
+          { name: "surgeryoutcome_id", displayName: "surgery outcome id", type: "number" },
+          { name: "surgeryoutcomedesc", displayName: "surgery outcome desc", type: "text" }
         ]
     },
     {
         category: "eventtype",
         displayName: "Event Type",
         fields: [
-          { name: "eventtype_id", type: "number" },
-          { name: "eventtypedesc", type: "text" }
+          { name: "eventtype_id", displayName: "event type id", type: "number" },
+          { name: "eventtypedesc", displayName: "event type desc", type: "text" }
+
         ]
     },
     {
         category: "animal",
         displayName: "Animal",
         fields: [
-          { name: "animal_id", type: "number" }
+          { name: "animal_id",displayName: "animal id", type: "number" }
         ]
     },
     {
         category: "apparatus",
         displayName: "Apparatus",
         fields: [
-          { name: "apparatus_id", type: "number" }
+          { name: "apparatus_id", displayName: "apparatus id", type: "number" }
         ]
     },
     {
         category: "treatment",
         displayName: "Treatment",
         fields: [
-          { name: "treatment_id", type: "number" },
-          { name: "drugrx_drug1", type: "text" },
-          { name: "drugrx_dose1", type: "number" },
-          { name: "drugrx_drug2", type: "text" },
-          { name: "drugrx_dose2", type: "number" },
-          { name: "drugrx_drug3", type: "text" },
-          { name: "drugrx_dose3", type: "number" }
+          { name: "treatment_id", displayName: "treatment id", type: "number" },
+          { name: "drugrx_drug1", displayName: "drugrx drug 1", type: "text" },
+          { name: "drugrx_dose1", displayName: "drugrx dose 1", type: "number" },
+          { name: "drugrx_drug2", displayName: "drugrx drug 2", type: "text" },
+          { name: "drugrx_dose2", displayName: "drugrx dose 2", type: "number" },
+          { name: "drugrx_drug3", displayName: "drugrx drug 3", type: "text" },
+          { name: "drugrx_dose3", displayName: "drugrx dose 3", type: "number" }
         ]
     },
     {
         category: "trial",
         displayName: "Trial",
         fields: [
-          { name: "trial_id", type: "number" },
-          { name: "dateandtime", type: "datetime" },
-          { name: "animalweight", type: "number" },
-          { name: "injectionnumber", type: "number" },
-          { name: "oftestnumber", type: "number" },
-          { name: "drugrxnumber", type: "number" },
-          { name: "experimenter", type: "text" },
-          { name: "duration", type: "number" },
-          { name: "fallsduringtest", type: "boolean" },
-          { name: "notes", type: "text" },
-          { name: "trackfile", type: "text" },
-          { name: "pathplot", type: "text" },
-          { name: "video", type: "text" },
-          { name: "video_id", type: "number" }
+          { name: "trial_id", displayName: "trial id", type: "number" },
+          { name: "dateandtime", displayName: "date and time", type: "datetime" },
+          { name: "animalweight", displayName: "animal weight", type: "number" },
+          { name: "injectionnumber", displayName: "injection number", type: "number" },
+          { name: "oftestnumber", displayName: "oftest number", type: "number" },
+          { name: "drugrxnumber", displayName: "drugrx number", type: "number" },
+          { name: "experimenter", displayName: "experimenter", type: "text" },
+          { name: "duration", displayName: "duration", type: "number" },
+          { name: "fallsduringtest", displayName: "falls during test", type: "boolean" },
+          { name: "notes", displayName: "notes", type: "text" },
+          { name: "trackfile", displayName: "track file", type: "text" },
+          { name: "pathplot", displayName: "path plot", type: "text" },
+          { name: "video", displayName: "video", type: "text" },
+          { name: "video_id", displayName: "video id", type: "number" }
         ]
     },
     {
         category: "fall",
         displayName: "Fall",
         fields: [
-          { name: "timewhenfell", type: "number" }
+          { name: "timewhenfell", displayName: "time when fell", type: "number" }
         ]
     },
     {
         category: "experiment",
         displayName: "Experiment",
         fields: [
-          { name: "experiment_id", type: "number" },
-          { name: "experimentdesc", type: "text" }
+          { name: "experiment_id", displayName: "experiment id", type: "number" },
+          { name: "experimentdesc", displayName: "experiment desc", type: "text" }
         ]
     },
     {
         category: "study",
         displayName: "Study",
         fields: [
-          { name: "study_id", type: "number" },
-          { name: "studydesc", type: "text" }
+          { name: "study_id", displayName: "study id", type: "number" },
+          { name: "studydesc", displayName: "study desc", type: "text" }
         ]
     },
     {
         category: "project",
         displayName: "Project",
         fields: [
-          { name: "project_id", type: "number" },
-          { name: "projectdesc", type: "text" }
+          { name: "project_id", displayName: "project id", type: "number" },
+          { name: "projectdesc", displayName: "project desc", type: "text" }
         ]
     },
     {
         category: "timeseries",
         displayName: "Time Series",
         fields: [
-          { name: "sample_id", type: "number" },
-          { name: "t", type: "time" },
-          { name: "x", type: "number" },
-          { name: "y", type: "number" },
-          { name: "x_s", type: "number" },
-          { name: "y_s", type: "number" },
-          { name: "v_s", type: "number" },
-          { name: "movementtype_s", type: "text" }
+          { name: "sample_id", displayName: "sample id", type: "number" },
+          { name: "t", displayName: "t", type: "time" },
+          { name: "x", displayName: "x", type: "number" },
+          { name: "y", displayName: "y", type: "number" },
+          { name: "x_s", displayName: "x_s", type: "number" },
+          { name: "y_s", displayName: "y_s", type: "number" },
+          { name: "v_s", displayName: "v_s", type: "number" },
+          { name: "movementtype_s", displayName: "movement type_s", type: "text" }
         ]
     }
   ]
@@ -174,6 +175,23 @@ function FilterButtons({ onApply }) {
   const lookupForText = [
     'exact', 'iexact', 'contains', 'icontains', 'startswith', 'istartswith', 'endswith', 'iendswith'
   ];
+
+  const lookupDisplayMapping = {
+    exact: "exact",
+    iexact: "iexact",
+    contains: "contains",
+    icontains: "contains",
+    gt: ">",
+    gte: ">=",
+    lt: "<",
+    lte: "<=",
+    range: "range",
+    startswith: "starts with",
+    istartswith: "starts with",
+    endswith: "ends with",
+    iendswith: "ends with"
+  };
+
   const lookupForNumber = [
     'exact', 'gt', 'gte', 'lt', 'lte', 'range'
   ];
@@ -363,13 +381,15 @@ function FilterButtons({ onApply }) {
                     const fieldData = localFilters[group.category]?.[field.name] || { lookup: 'exact', value: '' };
                     return (
                       <div key={field.name} className="filter-item">
-                        <label>{field.name}:</label>
+                        <label>{field.displayName || field.name}:</label>
                         <select
                           value={fieldData.lookup}
                           onChange={(e) => handleLookupChange(group.category, field.name, e.target.value)}
                         >
                           {lookupOptions.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
+                            <option key={opt} value={opt}>
+                              {lookupDisplayMapping[opt] || opt}
+                            </option>
                           ))}
                         </select>
                         {fieldData.lookup === 'range' ? (

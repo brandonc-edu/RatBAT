@@ -14,11 +14,18 @@ input {
 
 /* Apply a border around the table, table headers, and table cells */
 .data-table, .data-table th, .data-table td {
-    border: 1px solid #ccc;
+    border: 1px solid #cccccc;
 }
-
+/* Make the header row sticky */
+.data-table thead th {
+    position: sticky;
+    top: 0;         /* sticks to the top of the container */
+    background: #fff;  /* ensure the header cells don’t become transparent when sticky */
+    z-index: 2;        /* keep header above table cells when scrolling */
+  }
 /*Alternating colours*/
 .data-table th, .data-table td {
+    border: 1px solid #ccc;
     padding: 8px;
     text-align: left;
 }
@@ -30,6 +37,15 @@ input {
 .data-table tbody tr:nth-child(even) {
     background-color: #ffffff;
 }
+
+/* New container for scrolling */
+.table-container {
+    max-height: 1000px;  /* Adjust the height as needed */
+    max-width: 2800px;
+    overflow: auto;
+    border: 1px solid #ccc;  /* Optional: border around the container */
+    position: relative;
+  }
 
 .download {
     background-color: #007bff; /* Blue background */

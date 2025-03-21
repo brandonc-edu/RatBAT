@@ -25,28 +25,27 @@ const DataWindow = ({ data }) => {
 
   return (
     <div>
-      <button className="download" onClick={handleDownload}>
-        Download Filtered Data
-      </button>
       {data && data.length > 0 ? (
-        <table className="data-table">
-          <thead>
-            <tr>
-              {headers.map(header => (
-                <th key={header}>{header}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((item, index) => (
-              <tr key={index}>
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
                 {headers.map(header => (
-                  <td key={header}>{item[header]}</td>
+                  <th key={header}>{header}</th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map((item, index) => (
+                <tr key={index}>
+                  {headers.map(header => (
+                    <td key={header}>{item[header]}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <p className="no-matching-entries">No matching entries found.</p>
       )}
