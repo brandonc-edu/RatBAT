@@ -226,11 +226,17 @@
   margin-top: 20px;
 }
 
-.result-table th,
-.result-table td {
+.result-table th {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
+}
+
+.result-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  padding-right: 10px;
+  text-align: right;
 }
 
 /* Data file rows */

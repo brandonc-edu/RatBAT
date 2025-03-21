@@ -55,13 +55,17 @@ const CompileDataPage = () => {
     // Fetch metadata variables from the backend
     const fetchMetadataVariables = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/metadata-variables/');
-        setMetadataVariables(response.data);
+        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/get-fields/');
+        // Define the fields you want to remove
+        const unwantedFields = ["sample_id", "t", "x", "y", "x_s", "y_s", "v_s", "movementtype_s"];
+        // Flatten the response and filter out unwanted fields
+        const allFields = Object.values(response.data).flat();
+        setMetadataVariables(allFields.filter(field => !unwantedFields.includes(field)));
       } catch (error) {
         console.error("Error fetching metadata variables:", error);
       }
     };
-
+  
     // Fetch data files from the backend
     const fetchDataFiles = async () => {
       try {
@@ -71,10 +75,10 @@ const CompileDataPage = () => {
         console.error("Error fetching data files:", error);
       }
     };
-
+  
     fetchMetadataVariables();
     fetchDataFiles();
-  }, []);
+  }, []);  
 
   useEffect(() => {
     // Update summary measures based on the results from ComputeSummaryMeasures
@@ -83,27 +87,58 @@ const CompileDataPage = () => {
   }, [results]);
 
   useEffect(() => {
+    // Fetch metadata values for each selected data file
+    const fetchMetadataValues = async (file) => {
+      try {
+        // Extract the trial id from the file name.
+        // Example: "Q405HT1003_01_0_0299_0015708_smoothed.xlsx" -> "0015708" -> 15708
+        const extractTrialId = (fileName) => {
+          const parts = fileName.split('_');
+          // Assuming the trial id is always the second-to-last part:
+          const trialIdStr = parts[parts.length - 2];
+          return parseInt(trialIdStr, 10);
+        };
+        const trialId = extractTrialId(file);
+        const payload = {
+          filters: [{ field: 'trial_id', lookup: 'exact', value: trialId }],
+          fields: selectedMetadataVariables,
+        };
+        console.log("Sending request to query-data with payload:", JSON.stringify(payload, null, 2));
+        const response = await axios.post('http://ratbat.cas.mcmaster.ca/api/query-data/', payload);
+        console.log(`Metadata response for ${file}:`, response.data);
+        return response.data;
+      } catch (error) {
+        console.error(`Error fetching metadata values for file ${file}:`, error);
+        return [];
+      }
+    };           
+  
     // Update compiled data whenever selections change
-    const compiled = selectedDataFiles.map(file => {
-      const metadata = metadataVariables.filter(variable => selectedMetadataVariables.includes(variable));
-      const measuresObj = {};
-      selectedSummaryMeasures.forEach(measure => {
-        if (results[file] && results[file][measure]) {
-          measuresObj[measure] = Array.isArray(results[file][measure])
-            ? results[file][measure]
-            : [results[file][measure]];
-        } else {
-          measuresObj[measure] = [''];
-        }
-      });
-      return {
-        file,
-        metadata,
-        measures: measuresObj
-      };
-    });
-
-    setCompiledData(compiled);
+    const updateCompiledData = async () => {
+      const compiled = await Promise.all(selectedDataFiles.map(async (file) => {
+        const metadataResponse = await fetchMetadataValues(file);
+        // Assume the first returned record holds the metadata
+        const metadataRecord = metadataResponse[0] || {};
+        const measuresObj = {};
+        selectedSummaryMeasures.forEach(measure => {
+          if (results[file] && results[file][measure]) {
+            measuresObj[measure] = Array.isArray(results[file][measure])
+              ? results[file][measure]
+              : [results[file][measure]];
+          } else {
+            measuresObj[measure] = [''];
+          }
+        });
+        return {
+          file,
+          metadata: metadataRecord,
+          measures: measuresObj
+        };
+      }));
+      setCompiledData(compiled);
+    };    
+  
+    updateCompiledData();
   }, [selectedMetadataVariables, selectedDataFiles, selectedSummaryMeasures, metadataVariables, summaryMeasures, results]);
 
   const handleMetadataVariableToggle = (variable) => {
@@ -186,7 +221,7 @@ const CompileDataPage = () => {
       csvHeaders.join(","),
       ...compiledData.map(({ file, metadata, measures }) => {
         const fileCell = `="${file}"`;
-        const metadataCells = metadata.map(m => m.value);
+        const metadataCells = selectedMetadataVariables.map(variable => metadata[variable] || '');
         const summaryCells = selectedSummaryMeasures.flatMap(measure => {
           const vals = measures[measure] || [''];
           return Array.isArray(vals)
@@ -208,6 +243,7 @@ const CompileDataPage = () => {
 
   return (
     <div className="compile-data-page">
+
       <div className="selection-section">
         {/* Metadata Variables Section */}
         <div className="selection-group summary-measures">
@@ -290,8 +326,20 @@ const CompileDataPage = () => {
           </div>
         </div>
       </div>
+      
       <div className="preview-section">
         <h3>Preview</h3>
+        <div className="info-sheet-container">
+          <span className="info-icon" title="This info sheet provides definitions and alternate names for all summary measures and metadata variables">
+            i
+          </span>
+          <button
+            className="download-info-sheet"
+            onClick={() => window.location.href = '/info_sheet.xlsx'}
+          >
+            Download Info Sheet
+          </button>
+        </div>
         <div className="precision-selector">
           <label htmlFor="precision">Select Precision:</label>
           <select
@@ -332,8 +380,8 @@ const CompileDataPage = () => {
               {compiledData.map(({ file, metadata, measures }, rowIndex) => (
                 <tr key={rowIndex}>
                   <td>{file}</td>
-                  {metadata.map((m, i) => (
-                    <td key={i}>{m.value}</td>
+                  {selectedMetadataVariables.map((variable, i) => (
+                    <td key={i}>{metadata[variable]}</td>
                   ))}
                   {selectedSummaryMeasures.map((measure) => {
                     const values = measures[measure] || [''];
