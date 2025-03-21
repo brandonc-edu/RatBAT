@@ -11,20 +11,20 @@ DEFAULT_PARAMS = {
         "num_iter" : 2
     },
     "RRM" : {
-        "half_windows" : [3, 2, 1, 1], # TODO: Get actual defaults from Anna
-        "min_arr" : 5,        # TODO: Get actual defaults from Anna
-        "tol" : 0.0001        # TODO: Get actual defaults from Anna (especially this one, as it specifically mentions that rats needs a larger parameter)
+        "half_windows" : [7, 5, 3, 3], 
+        "min_arr" : 5,        
+        "tol" : 0.000001        
     },
     "EM" : {
-        "tol" : 0.0001,           # TODO: Get actual defaults from Anna
-        "half_window" : 12,    # TODO: Get actual defaults from Anna
-        "log_transform" : np.log10, # TODO: Get actual defaults from Anna
-        "num_guesses" : 2,   # TODO: Get actual defaults from Anna. Note: Just pure guesses as I wasn't actually able to locate a default in the actual segmentation paper. It calculates its num_guesses while calculating k.
-        "num_iters" : 2000,     # TODO: Get actual defaults from Anna. Note: Just pure guesses as I wasn't actually able to locate a default in the actual segmentation paper. It calculates its num_guesses while calculating k.
-        "significance" : 0.01,  # TODO: Get actual defaults from Anna. Note: since we're using k, we don't need to specify significance.
+        "tol" : 0.000001,           
+        "half_window" : 4,    
+        "log_transform" : np.cbrt, 
+        "num_guesses" : 5,   
+        "num_iters" : 200,    
+        "significance" : 0.05,  
         "max_k" : 4, 
         "k" : 2,
-        "arrest_mode" : 0
+        "segment_constrain" : True # Specifies if the segment types should be constrained to 0 (lingering episodes) and 1 (progression episodes). False = more movement types than just two.
     }
 }
 
@@ -60,20 +60,17 @@ class Preprocessor:
 
         # Run LOWESS (lowess)
         transformed_data = self.smooth_dataset(data)
-        # print(transformed_data[:5])
         
         # Run RRM (repeated_running_medians)
         arrests = self.identify_arrests(data)
-        # arrests = [(10, 150), (600, 650), (1200, 12000)]
 
         # Calculate interpolations & velocity
         transformed_data = self.interpolate_and_velocity(transformed_data, arrests)
-        # print(transformed_data[:5])
 
         # Run EM (segment_path)
         transformed_data = self.find_movement_types(transformed_data)
 
-        return transformed_data
+        return transformed_data     # Return numpy array of form: [frame, x-coordinates, y-coordinates, velocity, segment_type]
     
     def smooth_dataset(self, data):
         """
@@ -156,9 +153,11 @@ class Preprocessor:
         segments = self.em_func(data)
 
         # Create array of movement type data
-        movement_types = np.repeat(self.em_params["arrest_mode"], len(data))
+        movement_types = np.zeros((len(data)))
         for start, end, move_type in segments:
             movement_types[start : end + 1] = move_type
+            if self.em_params["segment_constrain"]: # Constrains movement types to 0 (lingering episode) or 1 (progression episode)
+                movement_types = np.where(movement_types > 1, 1, movement_types)
 
         return np.hstack((data, movement_types.reshape(-1, 1)))
 
