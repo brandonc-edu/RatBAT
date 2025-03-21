@@ -5,6 +5,7 @@ function FilterButtons({ onApply }) {
   const categories = [
     {
         category: "lightcyclecolony",
+        displayName: "Light Cycle Colony",
         fields: [
           { name: "lightcyclecolony_id", type: "number" },
           { name: "lightcyclecolonydesc", type: "text" }
@@ -12,6 +13,7 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "lightcycletest",
+        displayName: "Light Cycle Test",
         fields: [
           { name: "lightcycletest_id", type: "number" },
           { name: "lightcycletestdesc", type: "text" }
@@ -19,13 +21,17 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "arenatype",
+        displayName: "Arena Type",
         fields: [
           { name: "arenatype_id", type: "number" },
-          { name: "arenatypedesc", type: "text" }
+          { name: "arenatypedesc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"]
+           }
         ]
     },
     {
         category: "arenaloc",
+        displayName: "Arena Location",
         fields: [
           { name: "arenaloc_id", type: "number" },
           { name: "arenalocdesc", type: "text" }
@@ -33,6 +39,7 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "arenaobjects",
+        displayName: "Arena Objects",
         fields: [
           { name: "arenaobjects_id", type: "number" },
           { name: "arenaobjectsdesc", type: "text" }
@@ -40,6 +47,7 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "lightconditions",
+        displayName: "Light Conditions",
         fields: [
           { name: "lightconditions_id", type: "number" },
           { name: "lightconditionsdesc", type: "text" }
@@ -47,6 +55,7 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "surgerymanipulation",
+        displayName: "Surgery Manipulation",
         fields: [
           { name: "surgerymanipulation_id", type: "number" },
           { name: "surgerymanipulationdesc", type: "text" }
@@ -54,6 +63,7 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "surgeryoutcome",
+        displayName: "Surgery Outcome",
         fields: [
           { name: "surgeryoutcome_id", type: "number" },
           { name: "surgeryoutcomedesc", type: "text" }
@@ -61,6 +71,7 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "eventtype",
+        displayName: "Event Type",
         fields: [
           { name: "eventtype_id", type: "number" },
           { name: "eventtypedesc", type: "text" }
@@ -68,18 +79,21 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "animal",
+        displayName: "Animal",
         fields: [
           { name: "animal_id", type: "number" }
         ]
     },
     {
         category: "apparatus",
+        displayName: "Apparatus",
         fields: [
           { name: "apparatus_id", type: "number" }
         ]
     },
     {
         category: "treatment",
+        displayName: "Treatment",
         fields: [
           { name: "treatment_id", type: "number" },
           { name: "drugrx_drug1", type: "text" },
@@ -92,6 +106,7 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "trial",
+        displayName: "Trial",
         fields: [
           { name: "trial_id", type: "number" },
           { name: "dateandtime", type: "datetime" },
@@ -111,12 +126,14 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "fall",
+        displayName: "Fall",
         fields: [
-          { name: "timewhenfell", type: "time" }
+          { name: "timewhenfell", type: "number" }
         ]
     },
     {
         category: "experiment",
+        displayName: "Experiment",
         fields: [
           { name: "experiment_id", type: "number" },
           { name: "experimentdesc", type: "text" }
@@ -124,6 +141,7 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "study",
+        displayName: "Study",
         fields: [
           { name: "study_id", type: "number" },
           { name: "studydesc", type: "text" }
@@ -131,6 +149,7 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "project",
+        displayName: "Project",
         fields: [
           { name: "project_id", type: "number" },
           { name: "projectdesc", type: "text" }
@@ -138,6 +157,7 @@ function FilterButtons({ onApply }) {
     },
     {
         category: "timeseries",
+        displayName: "Time Series",
         fields: [
           { name: "sample_id", type: "number" },
           { name: "t", type: "time" },
@@ -240,6 +260,34 @@ function FilterButtons({ onApply }) {
     });
   };  
 
+  // For discrete fields, update the value from the select.
+  const handleDiscreteChange = (category, field, value) => {
+    setLocalFilters(prev => {
+      const current = prev[category] || {};
+      // Store the chosen option as the value.
+      return {
+        ...prev,
+        [category]: {
+          ...current,
+          [field]: { lookup: 'exact', value } // For discrete, lookup might be fixed or configurable separately.
+        }
+      };
+    });
+  };
+  // Handle custom input if "Other" is selected.
+  const handleDiscreteCustomChange = (category, field, value) => {
+    setLocalFilters(prev => {
+      const current = prev[category] || {};
+      return {
+        ...prev,
+        [category]: {
+          ...current,
+          [field]: { lookup: 'exact', value }
+        }
+      };
+    });
+  };
+
   // When the user clicks Apply, pass the filter criteria to the parent.
   const handleApply = () => {
     //Before passing, transform filters into an array format for API call
@@ -275,57 +323,80 @@ function FilterButtons({ onApply }) {
   };
 
   return (
-    <div>
+    <div className="filters">
       <div className="filterBox">
         <div className="parameters">
           {categories.map((group, index) => (
             toggledButtons[index] && (
               <div key={group.category} className="filter-group">
-                <h3>{group.category}</h3>
+                <h3>{group.displayName || group.category}</h3>
                 {group.fields.map(field => {
-                  const lookupOptions = field.type === "number" || field.type === "time"
-                    ? lookupForNumber 
-                    : lookupForText;
-                  const fieldData = localFilters[group.category]?.[field.name] || { lookup: 'exact', value: '' };
-                  return (
-                    <div key={field.name} className="filter-item">
-                      <label>{field.name}:</label>
-                      {/* The dropdown for selecting lookup (exact, gt, gte, range, etc.) */}
-                      <select
-                        value={fieldData.lookup}
-                        onChange={(e) => handleLookupChange(group.category, field.name, e.target.value)}
-                      >
-                        {lookupOptions.map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-
-                      {/* If the user picked "range", render two inputs for min & max */}
-                      {fieldData.lookup === 'range' ? (
-                        <div>
+                  // For discrete fields, render a select with preset options and an "Other" option.
+                  if (field.type === "discrete") {
+                    const fieldData = localFilters[group.category]?.[field.name] || { value: '' };
+                    return (
+                      <div key={field.name} className="filter-item">
+                        <label>{field.name}:</label>
+                        <select
+                          value={fieldData.value}
+                          onChange={(e) => handleDiscreteChange(group.category, field.name, e.target.value)}
+                        >
+                          {field.options.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                          <option value="other">Other</option>
+                        </select>
+                        {fieldData.value === 'other' && (
                           <input
-                            type="number"
-                            placeholder="Min"
-                            value={fieldData.value?.min || ''}
-                            onChange={(e) => handleRangeChange(group.category, field.name, 'min', e.target.value)}
+                            type="text"
+                            placeholder="Enter custom value"
+                            onChange={(e) => handleDiscreteCustomChange(group.category, field.name, e.target.value)}
                           />
+                        )}
+                      </div>
+                    );
+                  } else {
+                    // For non-discrete fields, render a lookup dropdown and an input.
+                    const lookupOptions = (field.type === "number" || field.type === "time")
+                      ? lookupForNumber
+                      : lookupForText;
+                    const fieldData = localFilters[group.category]?.[field.name] || { lookup: 'exact', value: '' };
+                    return (
+                      <div key={field.name} className="filter-item">
+                        <label>{field.name}:</label>
+                        <select
+                          value={fieldData.lookup}
+                          onChange={(e) => handleLookupChange(group.category, field.name, e.target.value)}
+                        >
+                          {lookupOptions.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                        {fieldData.lookup === 'range' ? (
+                          <div>
+                            <input
+                              type="number"
+                              placeholder="Min"
+                              value={fieldData.value?.min || ''}
+                              onChange={(e) => handleRangeChange(group.category, field.name, 'min', e.target.value)}
+                            />
+                            <input
+                              type="number"
+                              placeholder="Max"
+                              value={fieldData.value?.max || ''}
+                              onChange={(e) => handleRangeChange(group.category, field.name, 'max', e.target.value)}
+                            />
+                          </div>
+                        ) : (
                           <input
-                            type="number"
-                            placeholder="Max"
-                            value={fieldData.value?.max || ''}
-                            onChange={(e) => handleRangeChange(group.category, field.name, 'max', e.target.value)}
+                            type={field.type === "number" ? "number" : "text"}
+                            value={typeof fieldData.value === 'string' ? fieldData.value : ''}
+                            onChange={(e) => handleFieldChange(group.category, field.name, e.target.value)}
                           />
-                        </div>
-                      ) : (
-                        // Otherwise, a single input for "exact", "gt", "lte", etc.
-                        <input
-                          type={field.type === "number" ? "number" : "text"}
-                          value={typeof fieldData.value === 'string' ? fieldData.value : ''}
-                          onChange={(e) => handleFieldChange(group.category, field.name, e.target.value)}
-                        />
-                      )}
-                    </div>
-                  );
+                        )}
+                      </div>
+                    );
+                  }
                 })}
               </div>
             )
@@ -338,7 +409,7 @@ function FilterButtons({ onApply }) {
               className={`metaVar ${toggledButtons[index] ? 'toggled' : ''}`}
               onClick={() => toggleCategory(index)}
             >
-              {group.category}
+              {group.displayName || group.category}
             </button>
           ))}
         </div>

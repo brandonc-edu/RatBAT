@@ -4,6 +4,7 @@ import './DataWindow.css';
 
 const DataWindow = ({ data }) => {
   console.log("DataWindow received data:", data);
+
   const handleDownload = () => {
     if (!data || data.length === 0) {
       alert("No data available to download.");
@@ -19,23 +20,33 @@ const DataWindow = ({ data }) => {
     URL.revokeObjectURL(url);
   };
 
+  // Determine headers from the keys of the first data object
+  const headers = data && data.length > 0 ? Object.keys(data[0]) : [];
+
   return (
     <div>
       <button className="download" onClick={handleDownload}>
         Download Filtered Data
       </button>
       {data && data.length > 0 ? (
-        <ol>
-          {data.map((item, index) => (
-            <li key={index}>
-              {Object.entries(item).map(([key, value]) => (
-                <span key={key}>
-                  <strong>{key}</strong>: {value?.toString()} <br />
-                </span>
+        <table className="data-table">
+          <thead>
+            <tr>
+              {headers.map(header => (
+                <th key={header}>{header}</th>
               ))}
-            </li>
-          ))}
-        </ol>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((item, index) => (
+              <tr key={index}>
+                {headers.map(header => (
+                  <td key={header}>{item[header]}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       ) : (
         <p className="no-matching-entries">No matching entries found.</p>
       )}

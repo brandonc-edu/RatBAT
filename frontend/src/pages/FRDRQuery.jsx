@@ -26,7 +26,8 @@ const FRDRQuery = () => {
     "duration",
     "fallsduringtest",
     "lightconditionsdesc",
-    "notes"
+    "notes",
+    "arenatypedesc"
   ];
   
   // Function to call the QueryDataView API and pull data from the database.

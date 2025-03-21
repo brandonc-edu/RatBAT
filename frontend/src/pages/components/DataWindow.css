@@ -6,6 +6,31 @@ input {
     box-sizing: border-box;
 }
 
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+/* Apply a border around the table, table headers, and table cells */
+.data-table, .data-table th, .data-table td {
+    border: 1px solid #ccc;
+}
+
+/*Alternating colours*/
+.data-table th, .data-table td {
+    padding: 8px;
+    text-align: left;
+}
+
+.data-table tbody tr:nth-child(odd) {
+    background-color: #c0c0c0;
+}
+  
+.data-table tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
 .download {
     background-color: #007bff; /* Blue background */
     color: white; /* White text */
