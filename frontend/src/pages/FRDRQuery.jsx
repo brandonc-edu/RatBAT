@@ -1,88 +1,84 @@
-// src/pages/FRDRQuery.jsx
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './FRDRQuery.css';
 import DataWindow from './components/DataWindow';
 import FilterButtons from './components/FilterButtons';
-import * as XLSX from 'xlsx';
 
 const FRDRQuery = () => {
-    const [data, setData] = useState([]);
-    const metaButtons = ['TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD','TBD'];
+  // State to hold the database data returned by the API.
+  const [data, setData] = useState([]);
 
+  //TESTING, default filters
+  const defaultFilters = [
+    { field: "trial_id", lookup: "lt", value: 110 },
+    { field: "drugrx_drug1", lookup: "exact", value: "QNP" }
+  ];
+  const emptyFilters = [{field: "trial_id", lookup: "gte", value: "0"}];
 
-    // Data filtering states
-    const [filters, setFilters] = useState({});
-    const [filteredData, setFilteredData] = useState([]);
-
-     // State to track toggled buttons (using an array of boolean values)
-    const [toggledButtons, setToggledButtons] = useState([]);
-
-
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const response = await fetch('/formatted_data_copy.json'); // Path to file in `public`
-          const jsonData = await response.json();
-          console.log('Fetched data:', jsonData);
-          setData(jsonData);
-        } catch (error) {
-          console.error('Error loading the JSON data:', error);
-        }
-      };
+  //TESTING, what filters I want
+  const defaultFields = [  "trial_id",
+    "dateandtime",
+    "drugrx_drug1",
+    "animalweight",
+    "injectionnumber",
+    "oftestnumber",
+    "drugrxnumber",
+    "experimenter",
+    "duration",
+    "fallsduringtest",
+    "lightconditionsdesc",
+    "notes",
+    "arenatypedesc",
+    "projectdesc"
+  ];
   
-      fetchData();
-    }, []);
+  // Function to call the QueryDataView API and pull data from the database.
+  const fetchQueryData = async (filters) => {
+    try {
+      const requestBody = {
+        filters: filters,
+        fields: defaultFields
+      };
 
-    useEffect(() => {
-      const filteredEntries = data.filter(item =>
-        Object.entries(filters).every(([key, value]) =>
-          value ? item[key]?.toString().toLowerCase().includes(value.toLowerCase()) : true
-        )
-      );
-      setFilteredData(filteredEntries);
-    }, [data, filters]);
+      console.log("requestBody", requestBody);
 
+      const response = await fetch('http://ratbat.cas.mcmaster.ca/api/query-data/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API responded with status ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log("Database data received:", result);
+      
+      setData(result);
+      
+    } catch (error) {
+      console.error("Error fetching database data:", error);
+    }
+  };
 
-    // Toggle button state
-    const handleToggle = (index) => {
-        setToggledButtons((prevState) => {
-        const newToggledButtons = [...prevState];
-        newToggledButtons[index] = !newToggledButtons[index]; // Toggle state
-        return newToggledButtons;
-        });
-    };
+  // Call the API once when the component mounts.
+  useEffect(() => {
+    fetchQueryData();
+  }, []);
 
-    // Handle filtering logic for data (filters -> aug data -> show data)
-    const applyFilters = (newFilters) => {
-      setFilters(newFilters);
-    };
-
-    return (
-    <div>
-        {/* FILTERBOX */}
+  return (
+    <div className="frdr-query">
+      <div className="background">
         <h2>Filters</h2>
-        <div className = 'filterBox'>
-            <div className = 'parameters'>
-                <FilterButtons filters={filters} onChange={applyFilters} />
-            </div>
-            <div className = 'metaVariables'>
-                {metaButtons.map((btn, index) => (
-                    <button 
-                        key = {index}
-                        className={`metaVar ${toggledButtons[index] ? 'toggled' : ''}`}
-                        onClick={() => handleToggle(index)}
-                    >    
-                    {btn}</button>
-                ))}
-            </div>
-        </div>
+        <FilterButtons onApply={fetchQueryData} />
+
         <h2>Filtered Data Entries</h2>
-        <div className = 'dataEntries'>
-            <DataWindow data={filteredData} />
+        <div className="dataEntries">
+          <DataWindow data={data} />
         </div>
-    
+      </div>
     </div>
-    )
+  );
 };
 
 export default FRDRQuery;
