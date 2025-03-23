@@ -76,7 +76,7 @@ class Preprocessor:
         """
             Given a dataset of the form [frame, x, y], smooth it and calculate the velocities.
         """
-        transformed_data = data
+        transformed_data = data.copy()
 
         # Run LOWESS (lowess)
         transformed_X, vel_X = self.lowess_func(transformed_data[:, 1])
@@ -97,9 +97,10 @@ class Preprocessor:
         """
             Given a dataset of the form [frame, x, y], determine the arrests using RRM.
         """
+        data_copy = data.copy()
         # Find arrests for both x & y coords
-        _, arrests_X = self.rrm_func(data[:, 1])
-        _, arrests_Y = self.rrm_func(data[:, 2])
+        _, arrests_X = self.rrm_func(data_copy[:, 1])
+        _, arrests_Y = self.rrm_func(data_copy[:, 2])
 
         # Get mask of shared arrests
         x_mask = np.zeros((len(data)), dtype=bool)
@@ -112,18 +113,18 @@ class Preprocessor:
         arrest_mask = np.bitwise_and(x_mask, y_mask)
         arrest_mask_length = len(data)
 
-        # From the shared arrests, add their start and end points to the final arrest list
+        # From the shared arrests, add their start and end points (in frame numbers - indexed from 1) to the final arrest list
         arrests = []
         in_interval = False
         start = None
         for i in range(len(arrest_mask)):
-            if not in_interval and arrest_mask[i]:
+            if not in_interval and arrest_mask[i]: # First frame that is an arrest (after a non-arrest)
                 start = i + 1
                 in_interval = True
-            elif in_interval and not arrest_mask[i]:
+            elif in_interval and not arrest_mask[i]: # First frame that isn't an arrest (after an arrest)
                 arrests.append((start, i))
                 in_interval = False
-            elif in_interval and i == arrest_mask_length - 1:
+            elif in_interval and i == arrest_mask_length - 1: # Arrest continues until end of experiment.
                 arrests.append((start, i + 1))
 
         return arrests
@@ -132,17 +133,18 @@ class Preprocessor:
         """
             Takes in LOWESS data and arrest intervals. Returns data with interpolated coordinates and velocity.
         """
+        transformed_data = data.copy()
         # arrest mask
         for start, end in arrests:
             arrest_length = end - (start - 1) 
             # Linear interpolation of the x, y coordinates during the arrests
-            data[start - 1 : end, 1] = np.linspace(data[start - 1, 1], data[end - 1, 1], arrest_length) # X
-            data[start - 1 : end, 2] = np.linspace(data[start - 1, 2], data[end - 1, 2], arrest_length) # Y
+            transformed_data[start - 1 : end, 1] = np.linspace(data[start - 1, 1], data[end - 1, 1], arrest_length) # X
+            transformed_data[start - 1 : end, 2] = np.linspace(data[start - 1, 2], data[end - 1, 2], arrest_length) # Y
 
             # Velocity setting -> set velocity equal to 0 for all arrests
-            data[start - 1 : end, 3] = 0 
+            transformed_data[start - 1 : end, 3] = 0 
 
-        return data
+        return transformed_data
     
     def find_movement_types(self, data):
         """
