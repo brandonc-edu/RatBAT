@@ -31,6 +31,7 @@ import sys
 
 # Add the project root to sys.path
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 sys.path.append(os.path.join(BASE_DIR, '..'))
 
 
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'db_connector',
     'frdr_query',
+    'data_preprocessing',
 ]
 
 MIDDLEWARE = [

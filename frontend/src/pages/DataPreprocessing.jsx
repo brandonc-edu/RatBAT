@@ -1,20 +1,32 @@
-// src/pages/DataPreprocessing.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './DataPreprocessing.css';
+import axios from 'axios';
 
 const DataPreprocessing = () => {
   const [selectedMethods, setSelectedMethods] = useState([]);
   const [selectedDataFile, setSelectedDataFile] = useState('');
   const [selectedResults, setSelectedResults] = useState([]);
-
-  const dataFiles = ['Loaded Data 1', 'Loaded Data 2'];
+  const [dataFiles, setDataFiles] = useState([]);
   const preprocessingMethods = ['Method 1', 'Method 2'];
-  const results = ['...................', '.......................'];
+  const results = ['Result 1', 'Result 2'];
+
+  useEffect(() => {
+    const fetchDataFiles = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/data-preprocessing/data-files/');
+        setDataFiles(response.data);
+      } catch (error) {
+        console.error('Error fetching data files:', error);
+      }
+    };
+
+    fetchDataFiles();
+  }, []);
 
   const handleMethodToggle = (method) => {
-    setSelectedMethods(prevSelected =>
+    setSelectedMethods((prevSelected) =>
       prevSelected.includes(method)
-        ? prevSelected.filter(item => item !== method)
+        ? prevSelected.filter((item) => item !== method)
         : [...prevSelected, method]
     );
   };
@@ -24,9 +36,9 @@ const DataPreprocessing = () => {
   };
 
   const handleResultToggle = (result) => {
-    setSelectedResults(prevSelected =>
+    setSelectedResults((prevSelected) =>
       prevSelected.includes(result)
-        ? prevSelected.filter(item => item !== result)
+        ? prevSelected.filter((item) => item !== result)
         : [...prevSelected, result]
     );
   };
@@ -37,24 +49,24 @@ const DataPreprocessing = () => {
 
   const handleApply = () => {
     if (!selectedDataFile) {
-      alert("Please select a data file.");
+      alert('Please select a data file.');
       return;
     }
 
-    alert("Apply button clicked. This is a static page.");
+    alert('Apply button clicked. This is a static page.');
   };
 
   const handleDownloadSelected = () => {
-    alert("Download button clicked. This is a static page.");
+    alert('Download button clicked. This is a static page.');
   };
 
   return (
-    <div className="compute-summary-measures">
+    <div className="data-preprocessing-page">
       <div className="top-section">
-        <div className="summary-measures">
+        <div className="preprocessing-methods">
           <h3>Preprocessing Methods</h3>
           {preprocessingMethods.map((method, index) => (
-            <div key={index} className="measure-item">
+            <div key={index} className="method-item">
               <label>
                 <input
                   type="checkbox"
@@ -67,7 +79,7 @@ const DataPreprocessing = () => {
           ))}
         </div>
 
-        <div className="selected-data">
+        <div className="data-selection">
           <h3>Data File</h3>
           <div className="data-items">
             {dataFiles.map((file, index) => (
@@ -91,8 +103,8 @@ const DataPreprocessing = () => {
         </div>
       </div>
 
-      <div className="result-section">
-        <h3>Result</h3>
+      <div className="results-section">
+        <h3>Results</h3>
         <div className="result-items">
           {results.map((result, index) => (
             <div key={index} className="result-item">
@@ -107,7 +119,7 @@ const DataPreprocessing = () => {
             </div>
           ))}
         </div>
-        <div className="result-footer">
+        <div className="results-footer">
           <button onClick={handleSelectAllResults}>Select All</button>
           <button onClick={handleDownloadSelected}>Download Selected</button>
         </div>
