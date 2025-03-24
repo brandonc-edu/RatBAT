@@ -28,6 +28,16 @@ DEFAULT_PARAMS = {
     }
 }
 
+LOG_TRANSFORM_FUNCTIONS = {
+    "cbrt": np.cbrt,
+    "log": np.log,
+    "sqrt": np.sqrt,
+    "log10": np.log10,
+    "log2": np.log2,
+    "log1p": np.log1p,
+    "None": None,
+}
+
 class Preprocessor:
     def __init__(self, function_params=None):
         """
@@ -163,6 +173,14 @@ class Preprocessor:
 
         return np.hstack((data, movement_types.reshape(-1, 1)))
 
+    def set_function_or_value(self, parameter, value):
+        """
+            Returns the appropriate value depending on the parameters. Basically used just in case we need to return functions.
+        """
+        if parameter == "log_transform":
+            return LOG_TRANSFORM_FUNCTIONS[value]
+        else:
+            return value
 
     def set_lowess_params(self, parameter_dict):
         if parameter_dict != None and len(parameter_dict) != 0:
@@ -177,5 +195,5 @@ class Preprocessor:
     def set_em_params(self, parameter_dict):
         if parameter_dict != None and len(parameter_dict) != 0:
             for param, val in parameter_dict["EM"].items():
-                self.em_params[param] = val
+                self.em_params[param] = self.set_function_or_value(param, val)
 
