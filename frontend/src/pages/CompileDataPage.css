@@ -8,6 +8,42 @@
   background-color: #a5a8aa3a;
 }
 
+.compile-data-page .info-sheet-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px; /* Spacing from rest of page */
+}
+
+.compile-data-page .download-info-sheet {
+  padding: 10px 20px;
+  background-color: #97a516;
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.compile-data-page .download-info-sheet:hover {
+  background-color: #5a630d;
+}
+
+.compile-data-page .info-icon {
+  color: white;
+  margin-right: 10px;
+  background-color: #97a516;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  line-height: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.compile-data-page .info-button:hover {
+  background-color: #5a630d;
+}
+
 .compile-data-page .selection-section {
   display: flex;
   gap: 20px;
@@ -77,11 +113,17 @@
   margin-top: 20px;
 }
 
-.compile-data-page .preview-section th,
-.compile-data-page .preview-section td {
+.compile-data-page .preview-section th {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
+}
+
+.compile-data-page .preview-section td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  padding-right: 10px;
+  text-align: right;
 }
 
 /* Adding space between each item and its checkbox */

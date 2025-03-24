@@ -220,17 +220,30 @@
   padding-top: 20px;
 }
 
+.result-section {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 250px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
 .result-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
 }
 
-.result-table th,
-.result-table td {
+.result-table th {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
+}
+
+.result-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  padding-right: 10px;
+  text-align: right;
 }
 
 /* Data file rows */

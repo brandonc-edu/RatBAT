@@ -1,68 +1,59 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import './DataWindow.css';
 
 const DataWindow = ({ data }) => {
-    const [searchTerm, setSearchTerm] = useState('');
+  console.log("DataWindow received data:", data);
 
-    // Function to handle changes to the search bar
-    const handleSearchChange = (event) => {
-        setSearchTerm(event.target.value);
-    };
+  const handleDownload = () => {
+    if (!data || data.length === 0) {
+      alert("No data available to download.");
+      return;
+    }
+    const dataStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'filtered_data_entries.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
-    // Filtered data based on search term.
-    const filteredData = Array.isArray(data) ? data.filter(item =>
-        Object.values(item).some(value =>
-            value !== null && 
-            !Number.isNaN(value) &&
-            value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        )
-    ) : [];
+  const headers = data && data.length > 0 ? Object.keys(data[0]) : [];
 
-    const handleDownload = () => {
-        const dataStr = JSON.stringify(data, null, 2); // Convert data to string with pretty-printing
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'data.json';
-        link.click();
-        URL.revokeObjectURL(url);
-      };
-
-    return (
-        <div className="data-window">
-            <input 
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-            />
-            <button className='download'
-                onClick={handleDownload}
-            >
-                download</button>
-            {filteredData.length > 0 ? (
-                <ol>
-                    {filteredData.map((item, index) => (
-                        <li key={index}>
-                            {Object.entries(item).map(([key, value]) => (
-                                <span key={key}>
-                                    <strong>{key}</strong>: {value?.toString()} <br />
-                                </span>
-                            ))}
-                        </li>
-                    ))}
-                </ol>
-            ) : (
-                <p>No matching entries found.</p>
-            )}
+  return (
+    <div className="data-window">
+      {data && data.length > 0 ? (
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                {headers.map(header => (
+                  <th key={header}>{header}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((item, index) => (
+                <tr key={index}>
+                  {headers.map(header => (
+                    <td key={header}>{item[header]}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-    );
+      ) : (
+        <p className="no-matching-entries">No matching entries found.</p>
+      )}
+    </div>
+  );
 };
 
 DataWindow.propTypes = {
-    data: PropTypes.arrayOf(PropTypes.object).isRequired,
+  data: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default DataWindow;
