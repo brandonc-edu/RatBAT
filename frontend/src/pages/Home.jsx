@@ -6,8 +6,8 @@ const Home = () => {
     <div className="home-container">
       {/* Header */}
       <header className="home-header">
-        <h1>OCD Animal Model Data Portal</h1>
-        <p> Access and analyze behavioral data from the quinpirole sensitization rat model of OCD.</p>
+        <h1>RatBAT</h1>
+        <p> Rat Behavioral Analysis Tool</p>
       </header>
 
       {/* Project Overview Section */}

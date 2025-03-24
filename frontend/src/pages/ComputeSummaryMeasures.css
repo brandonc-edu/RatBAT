@@ -220,6 +220,13 @@
   padding-top: 20px;
 }
 
+.result-section {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 250px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
 .result-table {
   width: 100%;
   border-collapse: collapse;
