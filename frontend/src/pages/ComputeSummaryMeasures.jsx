@@ -20,7 +20,7 @@ const ComputeSummaryMeasures = () => {
     // Fetch available data files from the backend
     const fetchDataFiles = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/data-files/');
+        const response = await axios.get('http://127.0.0.1:8000/api/summary-measures/data-files/');
         console.log("Fetched data files:", response.data);
         setDataFiles(response.data);
       } catch (error) {
@@ -31,7 +31,7 @@ const ComputeSummaryMeasures = () => {
     // Fetch summary measures options from the backend
     const fetchSummaryMeasures = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/summary-measures/');
+        const response = await axios.get('http://127.0.0.1:8000/api/summary-measures/summary-measures/');
         console.log("Fetched summary measures:", response.data);
         setSummaryMeasuresOptions(response.data);
       } catch (error) {
@@ -154,7 +154,7 @@ const ComputeSummaryMeasures = () => {
     }
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/compute-summary-measures/', {
+      const response = await axios.post('http://127.0.0.1:8000/api/summary-measures/compute-summary-measures/', {
         data_file_paths: selectedDataFiles,
         summary_measures: selectedSummaryMeasures,
         environment: 'common', // or 'q20s' / 'q17'
@@ -221,10 +221,10 @@ const ComputeSummaryMeasures = () => {
     calc_homebases: 'The primary and secondary homebases of the specimen.',
     calc_HB1_cumulativeReturn: 'Cumulative number of stops within the first home base',
     calc_HB1_meanDurationStops: 'The mean duration of staying in home base by dividing cumulative duration of stops within the first home base by the number of stops within the first home base',
-    calc_HB1_meanReturn: 'Gives the mean return time to the first home base (durations of excursions) in frames.',
+    calc_HB1_meanReturn: 'Gives the mean return time to the first home base (durations of excursions) in seconds.',
     calc_HB1_meanExcursionStops: 'Gives the mean number of stops during the excursions from the first home base; the algorithm does not take into account the last stop before exiting the home base and the first stop after entering the home base.',
-    calc_HB1_stopDuration: 'Cumulative duration of stops within the first home base (number of frames within the first homebase).',
-    calc_HB2_stopDuration: 'Cumulative duration of stops within the second home base (number of frames within the second home base).',
+    calc_HB1_stopDuration: 'Cumulative duration of stops within the first home base (number of seconds within the first homebase).',
+    calc_HB2_stopDuration: 'Cumulative duration of stops within the second home base (number of seconds within the second home base).',
     calc_HB2_cumulativeReturn: 'Cumulative number of stops within the second home base.',
     calc_HB1_expectedReturn: 'Gives the number of stops within the first home base multiplied by number of locales visited during the session (a part of the session) divided by the total number of stops during the session (part of the session)',
     calc_sessionTotalLocalesVisited: 'Gives the number of different locales visited during the session.',

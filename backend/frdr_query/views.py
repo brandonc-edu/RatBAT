@@ -62,14 +62,11 @@ class GetTimeSeriesView(APIView):
     """
     def get(self, request, *args, **kwargs):
         try:        
-            trials = request.GET.getlist('trials')
-
+            trials = request.GET.getlist("trials",request.session.get("filtered_trials",[]))
+            print(trials)
             trials = [int(trial) for trial in trials]
 
             print(f"Received trials: {trials}")
-
-            if not trials:
-                return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
 
             data = get_timeseries(trials, models.trial)
             
@@ -106,7 +103,12 @@ class FRDRQueryView(APIView):
 
             frdr_request(frdr_urls, full_cache_path, models.timeseries)
             
-            
+            trial_ids = get_data(filters,models.trial,['trial_id'])
+            trial_ids = [trial['trial_id'] for trial in trial_ids]
+ 
+            request.session["filtered_trials"] = trial_ids
+            request.session.modified = True
+
             return Response({"message":f"All files saved successfully in {cache_path}"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
