@@ -13,7 +13,7 @@ DEFAULT_PARAMS = {
     "RRM" : {
         "half_windows" : [7, 5, 3, 3], 
         "min_arr" : 5,        
-        "tol" : 0.000001        
+        "tol" : 1.3        
     },
     "EM" : {
         "tol" : 0.000001,           
@@ -23,7 +23,7 @@ DEFAULT_PARAMS = {
         "num_iters" : 200,    
         "significance" : 0.05,  
         "max_k" : 4, 
-        "k" : 2,
+        "k" : None,
         "segment_constrain" : True # Specifies if the segment types should be constrained to 0 (lingering episodes) and 1 (progression episodes). False = more movement types than just two.
     }
 }
