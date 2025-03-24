@@ -12,7 +12,7 @@ DEFAULT_PARAMS = {
     },
     "RRM" : {
         "half_windows" : [7, 5, 3, 3], 
-        "min_arr" : 5,        
+        "min_arr" : 12,        
         "tol" : 1.3        
     },
     "EM" : {
