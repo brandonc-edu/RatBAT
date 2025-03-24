@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 import os
 import pandas as pd
+import numpy as np
 from preprocessing.Preprocessor import Preprocessor
 
 class ListDataFilesView(APIView):
@@ -24,6 +25,7 @@ class PreprocessDataView(APIView):
             # Get the selected data files and parameters from the request
             selected_files = request.data.get('selectedFiles', [])
             parameters = request.data.get('parameters', {})
+            determine_k_automatically = request.data.get('determineKAutomatically', False)
 
             if not selected_files or not parameters:
                 return Response({"error": "Missing selectedFiles or parameters"}, status=status.HTTP_400_BAD_REQUEST)
@@ -44,6 +46,29 @@ class PreprocessDataView(APIView):
                 return params
 
             parameters = convert_parameters(parameters)
+
+            # Handle "Determine k Automatically"
+            if determine_k_automatically:
+                parameters["EM"]["k"] = None
+
+            # Map log_transform options to Python functions
+            log_transform_mapping = {
+                "cbrt": np.cbrt,
+                "log": np.log,
+                "sqrt": np.sqrt,
+                "log10": np.log10,
+                "log2": np.log2,
+                "log1p": np.log1p,
+                "None": None,
+            }
+
+            # Apply the mapping to the EM parameters
+            if "log_transform" in parameters["EM"]:
+                log_transform_option = parameters["EM"]["log_transform"]
+                parameters["EM"]["log_transform"] = log_transform_mapping.get(log_transform_option, np.cbrt)  # Default to np.cbrt
+
+            # Debug: Print the parameters to verify that "k" is set to None and log_transform is mapped
+            print("Updated parameters after handling 'Determine k Automatically' and 'log_transform':", parameters)
 
             # Directory paths
             data_files_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'preprocessing')

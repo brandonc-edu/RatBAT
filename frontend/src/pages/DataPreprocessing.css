@@ -63,9 +63,23 @@
 }
 
 .data-preprocessing-page .parameter-item label {
-  margin-right: 10px;
+  flex: 1; /* Ensures labels take consistent space */
+  min-width: 150px; /* Set a fixed width for labels */
+  margin-right: 10px; /* Add spacing between label and input */
   font-weight: bold;
-  flex: 1;
+}
+
+.data-preprocessing-page .parameter-item input[type="checkbox"] {
+  margin-left: 0; /* Remove auto margin to align checkboxes consistently */
+}
+
+.data-preprocessing-page .parameter-item select {
+  flex: 2; /* Match the width of input fields */
+  padding: 5px; /* Same padding as input fields */
+  border: 1px solid #ccc; /* Same border as input fields */
+  border-radius: 4px; /* Same border radius as input fields */
+  background-color: white; /* Ensure consistent background */
+  font-size: 14px; /* Match font size with input fields */
 }
 
 .data-preprocessing-page .parameter-item input {
