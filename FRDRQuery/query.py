@@ -200,7 +200,7 @@ def get_timeseries(trials:list[int], trial_model) -> pd.DataFrame:
     
     for trial in trials:
         ts_data = trial_model.objects.filter(trial_id = trial).values(*ts_fields).distinct()
-        ts_tables[trial] = read_frame(ts_data).rename((lambda x: x.replace("timeseries__","")),axis = "columns").set_index("sample_id")
+        ts_tables[trial] = read_frame(ts_data).rename((lambda x: x.replace("timeseries__","")),axis = "columns")
     return ts_tables
 
 def get_trackfile(trial_id:int, url:str):

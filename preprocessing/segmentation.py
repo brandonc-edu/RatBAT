@@ -60,7 +60,7 @@ def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:Func
         sd[i] = sd_move(data[max(0, i - hw) : min(n, i + hw + 1)])
         # Movement segments are separated by arrests (windows with SD < tol)
         if sd[i] < tol: arrests.append(i)
-    
+
     # Define segments as intervals between arrests:
     if len(arrests) > 0 and len(arrests) < n:
         for i in range(len(arrests) - 1):
@@ -81,9 +81,9 @@ def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:Func
     
     # Run EM either with fixed number of gaussians or automatic calculation of optimal value.
     if k == None:
-        params, log_likelihood = em_full_auto(max_sd, num_guesses, num_iters, significance, max_k)
+        params, _ = em_full_auto(max_sd, num_guesses, num_iters, significance, max_k)
     else:
-        params, log_likelihood = em_auto(max_sd, k, num_guesses, num_iters)
+        params, _ = em_auto(max_sd, k, num_guesses, num_iters)
     
     k = params.shape[0]
 
@@ -280,6 +280,8 @@ def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:f
         # Use log likelihood test to determine whether improvements from
         # increasing k are statistically significant.
         if 1 - stats.chi2.cdf(log_likelihood - prev_likelihood, 2) > significance:
+            print(f"Optimal model found with {k} gaussians:")
+            print(f"Optimal parameters are: {params}")
             return prev_params, prev_likelihood
 
         prev_params = params
