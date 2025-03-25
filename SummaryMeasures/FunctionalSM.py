@@ -121,6 +121,7 @@ def CalculateStops(data, env: fsm.Environment):
     stopLocales = [0 for x in range(25)]
     stopFrames = [0 for x in range(25)]
     stopped = False
+    locDur = [0 for x in range(25)]
     
     for i in range(len(data)):
         frame = data[i]
@@ -141,6 +142,13 @@ def CalculateStops(data, env: fsm.Environment):
             stopFrames[maxLocale] += sum(locDur) 
             # Reset local locale stop durations (for a stop episode)
             locDur = [0 for x in range(25)]
+
+    if stopped: # if the search for stops ends on a stop, then sum it up and calculate the necessary stuff
+        maxLocale = np.argmax(locDur)
+        stopLocales[maxLocale] += 1
+        # Add stop frames to total stop durations
+        # stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
+        stopFrames[maxLocale] += sum(locDur) 
     return stopLocales, stopFrames
 
 ### NEW Functions to Calculate Summary Measures

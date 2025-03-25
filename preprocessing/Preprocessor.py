@@ -75,10 +75,10 @@ class Preprocessor:
         arrests = self.identify_arrests(data)
 
         # Calculate interpolations & velocity
-        transformed_data = self.interpolate_and_velocity(transformed_data, arrests)
+        transformed_data, fixed_data = self.interpolate_and_velocity(transformed_data, arrests)
 
         # Run EM (segment_path)
-        transformed_data = self.find_movement_types(transformed_data)
+        transformed_data = self.find_movement_types(transformed_data, fixed_data)
 
         return transformed_data     # Return numpy array of form: [frame, x-coordinates, y-coordinates, velocity, segment_type]
     
@@ -144,6 +144,7 @@ class Preprocessor:
             Takes in LOWESS data and arrest intervals. Returns data with interpolated coordinates and velocity.
         """
         transformed_data = data.copy()
+        fixed_data = data.copy()
         # arrest mask
         for start, end in arrests:
             arrest_length = end - (start - 1) 
@@ -151,18 +152,23 @@ class Preprocessor:
             transformed_data[start - 1 : end, 1] = np.linspace(data[start - 1, 1], data[end - 1, 1], arrest_length) # X
             transformed_data[start - 1 : end, 2] = np.linspace(data[start - 1, 2], data[end - 1, 2], arrest_length) # Y
 
+            fixed_data[start - 1 : end, 1] = (data[start - 1, 1] + data[end - 1, 1]) / 2 # Fixed midpoint X
+            fixed_data[start - 1 : end, 2] = (data[start - 1, 2] + data[end - 1, 2]) / 2 # Fixed midpoint Y
+
             # Velocity setting -> set velocity equal to 0 for all arrests
             transformed_data[start - 1 : end, 3] = 0 
+            fixed_data[start - 1 : end, 3] = 0 
 
-        return transformed_data
+        return transformed_data, fixed_data
     
-    def find_movement_types(self, data):
+    def find_movement_types(self, data, fixed_data):
         """
             Takes in smoothed data and returns data with movement type concatenated to it.
             
         """
-        # Run the EM algorithm and find the segments of movement type
-        segments = self.em_func(data)
+        # Run the EM algorithm and find the segments of movement type. Run the EM algorithm on fixed data so that it properly recognizes arrests.
+        print(fixed_data[:50])
+        segments = self.em_func(fixed_data)
 
         # Create array of movement type data
         movement_types = np.zeros((len(data)))
