@@ -158,6 +158,32 @@ const DataPreprocessing = () => {
       max_k: { displayName: 'Max Movement Modes', type: 'int', range: '>= 1' },
       k: { displayName: '# of Modes', type: 'int', range: '>= 1' },
       segment_constrain: { displayName: 'Binary Movement Modes', type: 'bool', range: 'True/False' },
+      determine_k_automatically: { displayName: 'Set # of Modes Automatically', type: 'bool', range: 'True/False' },
+    },
+  };
+  
+  const parameterDefinitions = {
+    LOWESS: {
+      deg: 'The degree of the polynomial that will be fit to each window of data in order to smooth it.',
+      half_window: 'The width of the window of data used to smooth each point.',
+      num_iter: 'Number of iterations of the LOWESS algorithm.',
+    },
+    RRM: {
+      half_windows: 'A list of shrinking half window widths to use for each subsequent iteration of the RRM algorithm.',
+      min_arr: 'The minimum number of frames that the rodent must be motionless to qualify as an arrest.',
+      tol: 'The movement tolerance under which a rodent can be considered motionless (in arrest).',
+    },
+    EM: {
+      tol: 'The movement tolerance under which a rodent can be considered motionless (in arrest).',
+      half_window: 'The width of the window of data used to calculate approximate velocity around each point.',
+      log_transform: 'Transformation function to be applied to maximum velocity estimate for each movement segment.',
+      num_guesses: 'Number of times the EM algorithm will be run with different initial guesses.',
+      num_iters: 'Number of iterations of the EM algorithm per execution.',
+      significance: 'The significance level at which improvements in model fitting will be deemed insignificant.',
+      max_k: 'The maximum number of modes of movement that will be tested.',
+      k: 'The number of movement modes that will be used to model the rodent\'s motion.',
+      segment_constrain: 'Label each data point as either progression (1) or lingering (0).',
+      determine_k_automatically: 'Automatically determine the optimal number of modes to use in order to optimize model fitting.',
     },
   };
 
@@ -172,8 +198,13 @@ const DataPreprocessing = () => {
                 <h4>{algorithmTitles[method]}</h4>
                 {Object.keys(parameters[method]).map((param) => {
                   const metadata = parameterMetadata[method][param];
+                  const definition = parameterDefinitions[method]?.[param] || 'No definition available.';
                   return (
                     <div key={param} className="parameter-item">
+                      <div className="tooltip-container">
+                        <button className="info-button">i</button>
+                        <span className="tooltip-text">{definition}</span>
+                      </div>
                       <label>{metadata.displayName}:</label>
                       {param === 'half_windows' ? (
                         <input
@@ -221,7 +252,15 @@ const DataPreprocessing = () => {
                 })}
                 {method === 'EM' && (
                   <div className="parameter-item">
-                    <label style={{ marginRight: '10px' }}>Determine k Automatically:</label>
+                    <div className="tooltip-container">
+                      <button className="info-button">i</button>
+                      <span className="tooltip-text">
+                        {parameterDefinitions.EM.determine_k_automatically}
+                      </span>
+                    </div>
+                    <label style={{ marginRight: '10px' }}>
+                      {parameterMetadata.EM.determine_k_automatically.displayName}:
+                    </label>
                     <input
                       type="checkbox"
                       checked={determineKAutomatically}
