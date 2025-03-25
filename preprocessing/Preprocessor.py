@@ -15,8 +15,7 @@ DEFAULT_PARAMS = {
         "min_arr" : 12,        
         "tol" : 1.3        
     },
-    "EM" : {
-        "tol" : 0.000001,           
+    "EM" : {         
         "half_window" : 4,    
         "log_transform" : np.cbrt, 
         "num_guesses" : 5,   
@@ -57,7 +56,7 @@ class Preprocessor:
         # Create the partial functions for the preprocessor to run
         self.lowess_func = partial(lowess, deg=self.lowess_params["deg"], half_window=self.lowess_params["half_window"], num_iter=self.lowess_params["num_iter"])
         self.rrm_func = partial(repeated_running_medians, half_windows=self.rrm_params["half_windows"], min_arr=self.rrm_params["min_arr"], tol=self.rrm_params["tol"])
-        self.em_func = partial(segment_path, tol=self.em_params["tol"], half_window=self.em_params["half_window"], log_transform=self.em_params["log_transform"],
+        self.em_func = partial(segment_path, half_window=self.em_params["half_window"], log_transform=self.em_params["log_transform"],
                                num_guesses=self.em_params["num_guesses"], num_iters=self.em_params["num_iters"], significance=self.em_params["significance"], 
                                max_k=self.em_params["max_k"], k=self.em_params["k"])
 
@@ -77,10 +76,10 @@ class Preprocessor:
         arrests = self.identify_arrests(data)
 
         # Calculate interpolations & velocity
-        transformed_data, fixed_data = self.interpolate_and_velocity(transformed_data, arrests)
+        transformed_data = self.interpolate_and_velocity(transformed_data, arrests)
 
         # Run EM (segment_path)
-        transformed_data = self.find_movement_types(transformed_data, fixed_data)
+        transformed_data = self.find_movement_types(transformed_data, arrests)
 
         return transformed_data     # Return numpy array of form: [frame, x-coordinates, y-coordinates, velocity, segment_type]
     
@@ -146,7 +145,6 @@ class Preprocessor:
             Takes in LOWESS data and arrest intervals. Returns data with interpolated coordinates and velocity.
         """
         transformed_data = data.copy()
-        fixed_data = data.copy()
         # arrest mask
         for start, end in arrests:
             arrest_length = end - (start - 1) 
@@ -154,23 +152,21 @@ class Preprocessor:
             transformed_data[start - 1 : end, 1] = np.linspace(data[start - 1, 1], data[end - 1, 1], arrest_length) # X
             transformed_data[start - 1 : end, 2] = np.linspace(data[start - 1, 2], data[end - 1, 2], arrest_length) # Y
 
-            fixed_data[start - 1 : end, 1] = (data[start - 1, 1] + data[end - 1, 1]) / 2 # Fixed midpoint X
-            fixed_data[start - 1 : end, 2] = (data[start - 1, 2] + data[end - 1, 2]) / 2 # Fixed midpoint Y
-
             # Velocity setting -> set velocity equal to 0 for all arrests
             transformed_data[start - 1 : end, 3] = 0 
-            fixed_data[start - 1 : end, 3] = 0 
 
-        return transformed_data, fixed_data
+        return transformed_data
     
-    def find_movement_types(self, data, fixed_data):
+    def find_movement_types(self, data: np.ndarray, arrests: list):
         """
             Takes in smoothed data and returns data with movement type concatenated to it.
             
         """
         # Run the EM algorithm and find the segments of movement type. Run the EM algorithm on fixed data so that it properly recognizes arrests.
         # print(fixed_data[:50])
-        segments = self.em_func(fixed_data[:, 1:3]).astype(int)
+        ## Create list of zero-indexed arrests (instead of one-indexed arrests accounting for frame values)
+        zero_indexed_arrests = [(start - 1, end - 1) for (start, end) in arrests]
+        segments = self.em_func(data[:, 1:3], zero_indexed_arrests).astype(int)
 
         # Create array of movement type data
         movement_types = np.zeros((len(data)))
