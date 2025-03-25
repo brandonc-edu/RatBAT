@@ -7,6 +7,7 @@ import numpy as np
 import requests
 from preprocessing.Preprocessor import Preprocessor
 from django.http import FileResponse
+from preprocessing.Preprocessor import LOG_TRANSFORM_FUNCTIONS
 
 class DownloadFileView(APIView):
     def get(self, request, filename, *args, **kwargs):
@@ -42,7 +43,6 @@ class PreprocessDataView(APIView):
 
             print(f"Using provided trial IDs: {selected_trials}")
 
-            # Convert parameters to the correct types
             def convert_parameters(params):
                 for method, method_params in params.items():
                     for key, value in method_params.items():
@@ -55,6 +55,21 @@ class PreprocessDataView(APIView):
                                     params[method][key] = float(value)
                                 except ValueError:
                                     pass
+
+                        # Validate RRM parameters
+                        if method == "RRM":
+                            if key == "min_arr" and (value < 1 or value > 1000):
+                                params[method][key] = 5  # Default value
+                            if key == "tol" and (value <= 0 or value > 100):
+                                params[method][key] = 0.000001  # Default value
+
+                        # Validate EM parameters
+                        if method == "EM":
+                            if key == "k" and value is None:
+                                params[method][key] = 2  # Default value if not set
+                            if key == "log_transform" and value not in LOG_TRANSFORM_FUNCTIONS.keys():
+                                params[method][key] = "cbrt"  # Default to "cbrt" if invalid
+
                 return params
 
             parameters = convert_parameters(parameters)
@@ -63,21 +78,9 @@ class PreprocessDataView(APIView):
             if determine_k_automatically:
                 parameters["EM"]["k"] = None
 
-            # Map log_transform options to Python functions
-            log_transform_mapping = {
-                "cbrt": np.cbrt,
-                "log": np.log,
-                "sqrt": np.sqrt,
-                "log10": np.log10,
-                "log2": np.log2,
-                "log1p": np.log1p,
-                "None": None,
-            }
-
-            # Apply the mapping to the EM parameters
-            if "log_transform" in parameters["EM"]:
-                log_transform_option = parameters["EM"]["log_transform"]
-                parameters["EM"]["log_transform"] = log_transform_mapping.get(log_transform_option, np.cbrt)  # Default to np.cbrt
+            # Ensure log_transform is a valid string
+            if "log_transform" in parameters["EM"] and parameters["EM"]["log_transform"] not in LOG_TRANSFORM_FUNCTIONS.keys():
+                parameters["EM"]["log_transform"] = "cbrt"  # Default to "cbrt"
 
             # Debug: Print the parameters to verify that "k" is set to None and log_transform is mapped
             print("Updated parameters after handling 'Determine k Automatically' and 'log_transform':", parameters)

@@ -6,10 +6,10 @@ const DataPreprocessing = () => {
   const [selectedDataFiles, setSelectedDataFiles] = useState([]);
   const [dataFiles, setDataFiles] = useState([]);
   const [preprocessedFiles, setPreprocessedFiles] = useState([]);
-  const [determineKAutomatically, setDetermineKAutomatically] = useState(false); // State for "Determine k Automatically"
+  const [determineKAutomatically, setDetermineKAutomatically] = useState(true); // State for "Determine k Automatically"
   const [parameters, setParameters] = useState({
     LOWESS: { deg: 2, half_window: 24, num_iter: 2 },
-    RRM: { half_windows: [7, 5, 3, 3], min_arr: 5, tol: 0.000001 },
+    RRM: { half_windows: [7, 5, 3, 3], min_arr: 12, tol: 1.3 },
     EM: {
       tol: 0.000001,
       half_window: 4,
@@ -18,7 +18,7 @@ const DataPreprocessing = () => {
       num_iters: 200,
       significance: 0.05,
       max_k: 4,
-      k: 2,
+      k: null, // Updated to match backend default
       segment_constrain: true,
     },
   });
@@ -110,7 +110,7 @@ const DataPreprocessing = () => {
     console.log('Payload:', payload); // Log the payload for debugging
   
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/data-preprocessing/preprocess/', payload);
+      const response = await axios.post('/api/data-preprocessing/preprocess/', payload);
       setPreprocessedFiles(response.data);
     } catch (error) {
       console.error('Error during preprocessing:', error);

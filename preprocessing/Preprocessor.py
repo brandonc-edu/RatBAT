@@ -12,8 +12,8 @@ DEFAULT_PARAMS = {
     },
     "RRM" : {
         "half_windows" : [7, 5, 3, 3], 
-        "min_arr" : 5,        
-        "tol" : 0.000001        
+        "min_arr" : 12,        
+        "tol" : 1.3        
     },
     "EM" : {
         "tol" : 0.000001,           
@@ -23,9 +23,19 @@ DEFAULT_PARAMS = {
         "num_iters" : 200,    
         "significance" : 0.05,  
         "max_k" : 4, 
-        "k" : 2,
+        "k" : None,
         "segment_constrain" : True # Specifies if the segment types should be constrained to 0 (lingering episodes) and 1 (progression episodes). False = more movement types than just two.
     }
+}
+
+LOG_TRANSFORM_FUNCTIONS = {
+    "cbrt": np.cbrt,
+    "log": np.log,
+    "sqrt": np.sqrt,
+    "log10": np.log10,
+    "log2": np.log2,
+    "log1p": np.log1p,
+    "None": None,
 }
 
 class Preprocessor:
@@ -65,10 +75,10 @@ class Preprocessor:
         arrests = self.identify_arrests(data)
 
         # Calculate interpolations & velocity
-        transformed_data = self.interpolate_and_velocity(transformed_data, arrests)
+        transformed_data, fixed_data = self.interpolate_and_velocity(transformed_data, arrests)
 
         # Run EM (segment_path)
-        transformed_data = self.find_movement_types(transformed_data)
+        transformed_data = self.find_movement_types(transformed_data, fixed_data)
 
         return transformed_data     # Return numpy array of form: [frame, x-coordinates, y-coordinates, velocity, segment_type]
     
@@ -134,6 +144,7 @@ class Preprocessor:
             Takes in LOWESS data and arrest intervals. Returns data with interpolated coordinates and velocity.
         """
         transformed_data = data.copy()
+        fixed_data = data.copy()
         # arrest mask
         for start, end in arrests:
             arrest_length = end - (start - 1) 
@@ -141,18 +152,23 @@ class Preprocessor:
             transformed_data[start - 1 : end, 1] = np.linspace(data[start - 1, 1], data[end - 1, 1], arrest_length) # X
             transformed_data[start - 1 : end, 2] = np.linspace(data[start - 1, 2], data[end - 1, 2], arrest_length) # Y
 
+            fixed_data[start - 1 : end, 1] = (data[start - 1, 1] + data[end - 1, 1]) / 2 # Fixed midpoint X
+            fixed_data[start - 1 : end, 2] = (data[start - 1, 2] + data[end - 1, 2]) / 2 # Fixed midpoint Y
+
             # Velocity setting -> set velocity equal to 0 for all arrests
             transformed_data[start - 1 : end, 3] = 0 
+            fixed_data[start - 1 : end, 3] = 0 
 
-        return transformed_data
+        return transformed_data, fixed_data
     
-    def find_movement_types(self, data):
+    def find_movement_types(self, data, fixed_data):
         """
             Takes in smoothed data and returns data with movement type concatenated to it.
             
         """
-        # Run the EM algorithm and find the segments of movement type
-        segments = self.em_func(data)
+        # Run the EM algorithm and find the segments of movement type. Run the EM algorithm on fixed data so that it properly recognizes arrests.
+        # print(fixed_data[:50])
+        segments = self.em_func(fixed_data[:, 1:3]).astype(int)
 
         # Create array of movement type data
         movement_types = np.zeros((len(data)))
@@ -163,6 +179,14 @@ class Preprocessor:
 
         return np.hstack((data, movement_types.reshape(-1, 1)))
 
+    def set_function_or_value(self, parameter, value):
+        """
+            Returns the appropriate value depending on the parameters. Basically used just in case we need to return functions.
+        """
+        if parameter == "log_transform":
+            return LOG_TRANSFORM_FUNCTIONS[value]
+        else:
+            return value
 
     def set_lowess_params(self, parameter_dict):
         if parameter_dict != None and len(parameter_dict) != 0:
@@ -177,5 +201,4 @@ class Preprocessor:
     def set_em_params(self, parameter_dict):
         if parameter_dict != None and len(parameter_dict) != 0:
             for param, val in parameter_dict["EM"].items():
-                self.em_params[param] = val
-
+                self.em_params[param] = self.set_function_or_value(param, val)
