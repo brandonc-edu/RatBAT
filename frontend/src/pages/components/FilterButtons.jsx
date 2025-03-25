@@ -8,7 +8,8 @@ function FilterButtons({ onApply }) {
         displayName: "Light Cycle Colony",
         fields: [
           { name: "lightcyclecolony_id", displayName: "light cycle colony id", type: "number" },
-          { name: "lightcyclecolonydesc", displayName: "light cycle colony desc", type: "text" }
+          { name: "lightcyclecolonydesc", displayName: "light cycle colony desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] }
         ]
     },
     {
@@ -16,7 +17,9 @@ function FilterButtons({ onApply }) {
         displayName: "Light Cycle Test",
         fields: [
           { name: "lightcycletest_id", displayName: "light cycle test id", type: "number" },
-          { name: "lightcycletestdesc", displayName: "light cycle test desc", type: "text" }
+          { name: "lightcycletestdesc", displayName: "light cycle test desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"]
+           }
         ]
     },
     {
@@ -34,7 +37,8 @@ function FilterButtons({ onApply }) {
         displayName: "Arena Location",
         fields: [
           { name: "arenaloc_id", displayName: "arena location id", type: "number" },
-          { name: "arenalocdesc", displayName: "arena location desc", type: "text" }
+          { name: "arenalocdesc", displayName: "arena location desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] }
         ]
     },
     {
@@ -42,7 +46,8 @@ function FilterButtons({ onApply }) {
         displayName: "Arena Objects",
         fields: [
           { name: "arenaobjects_id", displayName: "arena objects id", type: "number" },
-          { name: "arenaobjectsdesc", displaytName: "arena object desc", type: "text" }
+          { name: "arenaobjectsdesc", displaytName: "arena object desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] }
         ]
     },
     {
@@ -50,7 +55,8 @@ function FilterButtons({ onApply }) {
         displayName: "Light Conditions",
         fields: [
           { name: "lightconditions_id", displayName: "light conditions id", type: "number" },
-          { name: "lightconditionsdesc", displayName: "light condition desc", type: "text" }
+          { name: "lightconditionsdesc", displayName: "light condition desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] }
         ]
     },
     {
@@ -58,7 +64,8 @@ function FilterButtons({ onApply }) {
         displayName: "Surgery Manipulation",
         fields: [
           { name: "surgerymanipulation_id", displayName: "surgery manipulation id", type: "number" },
-          { name: "surgerymanipulationdesc", displayName: "surgerymanipulation desc", type: "text" }
+          { name: "surgerymanipulationdesc", displayName: "surgerymanipulation desc",type: "discrete",
+            options: ["Option A", "Option B", "Option C"] }
         ]
     },
     {
@@ -66,7 +73,8 @@ function FilterButtons({ onApply }) {
         displayName: "Surgery Outcome",
         fields: [
           { name: "surgeryoutcome_id", displayName: "surgery outcome id", type: "number" },
-          { name: "surgeryoutcomedesc", displayName: "surgery outcome desc", type: "text" }
+          { name: "surgeryoutcomedesc", displayName: "surgery outcome desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] }
         ]
     },
     {
@@ -74,7 +82,8 @@ function FilterButtons({ onApply }) {
         displayName: "Event Type",
         fields: [
           { name: "eventtype_id", displayName: "event type id", type: "number" },
-          { name: "eventtypedesc", displayName: "event type desc", type: "text" }
+          { name: "eventtypedesc", displayName: "event type desc",type: "discrete",
+            options: ["Option A", "Option B", "Option C"] }
 
         ]
     },
@@ -125,13 +134,13 @@ function FilterButtons({ onApply }) {
           { name: "video_id", displayName: "video id", type: "number" }
         ]
     },
-    {
-        category: "fall",
-        displayName: "Fall",
-        fields: [
-          { name: "timewhenfell", displayName: "time when fell", type: "number" }
-        ]
-    },
+    // {
+    //     category: "fall",
+    //     displayName: "Fall",
+    //     fields: [
+    //       { name: "timewhenfell", displayName: "time when fell", type: "number" }
+    //     ]
+    // },
     {
         category: "experiment",
         displayName: "Experiment",
@@ -156,20 +165,20 @@ function FilterButtons({ onApply }) {
           { name: "projectdesc", displayName: "project desc", type: "text" }
         ]
     },
-    {
-        category: "timeseries",
-        displayName: "Time Series",
-        fields: [
-          { name: "sample_id", displayName: "sample id", type: "number" },
-          { name: "t", displayName: "t", type: "time" },
-          { name: "x", displayName: "x", type: "number" },
-          { name: "y", displayName: "y", type: "number" },
-          { name: "x_s", displayName: "x_s", type: "number" },
-          { name: "y_s", displayName: "y_s", type: "number" },
-          { name: "v_s", displayName: "v_s", type: "number" },
-          { name: "movementtype_s", displayName: "movement type_s", type: "text" }
-        ]
-    }
+    // {
+    //     category: "timeseries",
+    //     displayName: "Time Series",
+    //     fields: [
+    //       { name: "sample_id", displayName: "sample id", type: "number" },
+    //       { name: "t", displayName: "t", type: "time" },
+    //       { name: "x", displayName: "x", type: "number" },
+    //       { name: "y", displayName: "y", type: "number" },
+    //       { name: "x_s", displayName: "x_s", type: "number" },
+    //       { name: "y_s", displayName: "y_s", type: "number" },
+    //       { name: "v_s", displayName: "v_s", type: "number" },
+    //       { name: "movementtype_s", displayName: "movement type_s", type: "text" }
+    //     ]
+    // }
   ]
 
   const lookupForText = [
@@ -178,7 +187,7 @@ function FilterButtons({ onApply }) {
 
   const lookupDisplayMapping = {
     exact: "exact",
-    iexact: "iexact",
+    iexact: "exact",
     contains: "contains",
     icontains: "contains",
     gt: ">",
