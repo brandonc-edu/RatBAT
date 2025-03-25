@@ -109,6 +109,6 @@ class FRDRQueryView(APIView):
             request.session["filtered_trials"] = trial_ids
             request.session.modified = True
 
-            return Response({"message":f"All files saved successfully in {cache_path}"}, status=status.HTTP_200_OK)
+            return Response({"message":f"Files successfully saved for trials: {trial_ids}","urls":str(frdr_urls)}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

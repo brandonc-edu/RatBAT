@@ -26,10 +26,19 @@ const DataPreprocessing = () => {
   useEffect(() => {
     const fetchDataFiles = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/data-preprocessing/data-files/');
-        setDataFiles(response.data);
+        // Use the correct endpoint URL
+        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/get-timeseries/');
+        const trials = response.data;
+    
+        // Assuming the response contains a dictionary of trial IDs and their metadata
+        const trialList = Object.keys(trials).map((trialId) => ({
+          id: trialId,
+          metadata: trials[trialId], // Include any metadata associated with the trial
+        }));
+    
+        setDataFiles(trialList); // Update the state with the list of trials
       } catch (error) {
-        console.error('Error fetching data files:', error);
+        console.error('Error fetching trials:', error);
       }
     };
 
@@ -93,12 +102,13 @@ const DataPreprocessing = () => {
 
   const handlePreprocess = async () => {
     const payload = {
-      selectedFiles: selectedDataFiles,
+      selectedTrials: selectedDataFiles, // Use selected trials instead of files
       parameters,
-      determineKAutomatically, // Include the checkbox state in the payload
+      determineKAutomatically,
     };
-    console.log('Payload:', payload); // Log the payload to verify its structure
-
+  
+    console.log('Payload:', payload); // Log the payload for debugging
+  
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/data-preprocessing/preprocess/', payload);
       setPreprocessedFiles(response.data);
@@ -109,7 +119,7 @@ const DataPreprocessing = () => {
 
   const handleDownload = (file) => {
     const link = document.createElement('a');
-    link.href = `http://127.0.0.1:8000/api/data-preprocessing/download/${file}`;
+    link.href = `http://ratbat.cas.mcmaster.ca/api/data-preprocessing/download/${file}`;
     link.download = file;
     link.click();
   };
@@ -225,17 +235,17 @@ const DataPreprocessing = () => {
         </div>
 
         <div className="data-selection">
-          <h3>Data Files</h3>
+          <h3>Available Trials</h3>
           <div className="data-items">
-            {dataFiles.map((file) => (
-              <div key={file} className="data-item">
+            {dataFiles.map((trial) => (
+              <div key={trial.id} className="data-item">
                 <label>
                   <input
                     type="checkbox"
-                    checked={selectedDataFiles.includes(file)}
-                    onChange={() => handleDataFileToggle(file)}
+                    checked={selectedDataFiles.includes(trial.id)}
+                    onChange={() => handleDataFileToggle(trial.id)}
                   />
-                  {file}
+                  Trial ID: {trial.id} {/* Display the trial ID */}
                 </label>
               </div>
             ))}
