@@ -80,7 +80,7 @@ const FRDRQuery = () => {
       const requestBody = {
         filters: filters, 
         cache_path: "database/data", 
-        dtypes: "pt" //p: path plot data, t: track file data
+        dtypes: "t" //p: path plot data, t: track file data
         
       };
       console.log("FRDR requestBody", requestBody);
