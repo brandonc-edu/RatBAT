@@ -38,6 +38,8 @@ LOG_TRANSFORM_FUNCTIONS = {
     "None": None,
 }
 
+FRAMES_PER_SECOND = 29.97
+
 class Preprocessor:
     def __init__(self, function_params=None):
         """
@@ -97,7 +99,7 @@ class Preprocessor:
         transformed_data[:, 2] = transformed_Y
 
         ## Calculate and concatenate velocities to the transformed dataset
-        velocities = np.sqrt(np.square(vel_X) + np.square(vel_Y)).reshape((-1, 1))
+        velocities = np.sqrt(np.square(vel_X * FRAMES_PER_SECOND) + np.square(vel_Y * FRAMES_PER_SECOND)).reshape((-1, 1))
         transformed_data = np.hstack((transformed_data, velocities))
         
         return transformed_data
