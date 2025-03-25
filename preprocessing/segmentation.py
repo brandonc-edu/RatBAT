@@ -9,7 +9,7 @@ MEAN = 0 # Mean
 SD   = 1 # Standard deviation
 PROP = 2 # Proportion
 
-def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:FunctionType, num_guesses:int, num_iters:int, significance:float, max_k:int, k:int = None):
+def segment_path(data:np.ndarray, arrests:list, half_window:int, log_transform:FunctionType, num_guesses:int, num_iters:int, significance:float, max_k:int, k:int = None):
     """Path segmentation algorithm to categorize smoothed time-series data into segments of lingering and progression.
 
     Based on: Drai D., Benjamini Y., Golani I.
@@ -19,9 +19,7 @@ def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:Func
     Parameters
     ----------
     data : numpy.ndarray
-        array of log modified max standard deviations for each segment.
-    tol : float
-        Tolerance level for classifying arrests.
+        n x 2 array containing smoothed x,y coordinates.
     half_width : int
         Half window length to be used to calculate standard deviations of movement.
     log_transform : FunctionType
@@ -51,27 +49,27 @@ def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:Func
     # initializing variables
     n = data.shape[0]
     sd = np.zeros(n)
+    is_arrest = np.zeros(n)
     hw = half_window
-    arrests = []
-    segments = []
+    
+    for start,end in arrests:
+        is_arrest[start:end+1] = 1
 
     # Calculate standard deviation for windows centered around each data point.
     for i in range(n):
-        sd[i] = sd_move(data[max(0, i - hw) : min(n, i + hw + 1)])
-        # Movement segments are separated by arrests (windows with SD < tol)
-        if sd[i] < tol: arrests.append(i)
+        if not is_arrest[i]:
+            sd[i] = sd_move(data[max(0, i - hw) : min(n, i + hw + 1)])
 
     # Define segments as intervals between arrests:
-    if len(arrests) > 0 and len(arrests) < n:
-        for i in range(len(arrests) - 1):
-            if arrests[i+1] - arrests[i] > 1:
-                segments.append([arrests[i] + 1, arrests[i+1] - 1])
-        if arrests[-1] < n-1:
-            segments.append([arrests[-1] + 1, n - 1])
-    else: return np.array([[0, n-1, 0]]) # If there are no arrests or only arrests then there is only 1 segment/movment type.
-    
-    segments = np.array(segments)
+    segment_borders = np.diff(np.concatenate(([1],is_arrest,[1])))
+    starts = np.array(np.where(segment_borders == -1))
+    ends = np.array(np.where(segment_borders == 1))
+    segments = np.hstack((starts.T, ends.T - 1))
+    print(segments)
     m = segments.shape[0]
+
+    # If there are no arrests or only arrests then there is only 1 segment/movment type.    
+    if m < 2: return np.array([[0, n-1, 0]]) 
 
     # For each segment we track the maximum standard deviation of all points transformed by a given log function. 
     max_sd = np.zeros(m)
@@ -86,6 +84,10 @@ def segment_path(data:np.ndarray, tol:float, half_window:int, log_transform:Func
         params, _ = em_auto(max_sd, k, num_guesses, num_iters)
     
     k = params.shape[0]
+
+    # Edge case for only one movement mode.
+    if k == 1:
+        return np.append(segments, np.zeros(shape = (m,1)), axis = 1)
 
     # Using EM generated parameters, determine the threshold values that separate modes of movement.
     threshold = np.zeros(k-1)
@@ -280,8 +282,8 @@ def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:f
         # Use log likelihood test to determine whether improvements from
         # increasing k are statistically significant.
         if 1 - stats.chi2.cdf(log_likelihood - prev_likelihood, 2) > significance:
-            print(f"Optimal model found with {k} gaussians:")
-            print(f"Optimal parameters are: {params}")
+            print(f"Optimal model found with {k - 1} gaussians:")
+            print(f"Optimal parameters are: {prev_params}")
             return prev_params, prev_likelihood
 
         prev_params = params
