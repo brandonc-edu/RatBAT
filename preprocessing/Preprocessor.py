@@ -167,8 +167,8 @@ class Preprocessor:
             
         """
         # Run the EM algorithm and find the segments of movement type. Run the EM algorithm on fixed data so that it properly recognizes arrests.
-        print(fixed_data[:50])
-        segments = self.em_func(fixed_data)
+        # print(fixed_data[:50])
+        segments = self.em_func(fixed_data[:, 1:3]).astype(int)
 
         # Create array of movement type data
         movement_types = np.zeros((len(data)))
