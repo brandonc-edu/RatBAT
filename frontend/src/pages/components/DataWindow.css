@@ -1,71 +1,72 @@
-.data-window {
-  input {
-    margin: 10px;
-    padding: 5px;
-    width: 100%;
-    max-width: 300px;
-    box-sizing: border-box;
-  }
+.data-window input {
+  margin: 10px;
+  padding: 5px;
+  width: 100%;
+  max-width: 300px;
+  box-sizing: border-box;
+}
 
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-  }
+.data-window .data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
 
-  .data-table, .data-table th, .data-table td {
-    border: 1px solid #cccccc;
-  }
+.data-window .data-table,
+.data-window .data-table th,
+.data-window .data-table td {
+  border: 1px solid #cccccc;
+}
 
-  .data-table thead th {
-    position: sticky;
-    top: 0;
-    background: #fff;
-    z-index: 2;
-  }
+.data-window .data-table thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
+}
 
-  .data-table th, .data-table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-  }
+.data-window .data-table th,
+.data-window .data-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
 
-  .data-table tbody tr:nth-child(odd) {
-    background-color: #c0c0c0;
-  }
+.data-window .data-table tbody tr:nth-child(odd) {
+  background-color: #c0c0c0;
+}
 
-  .data-table tbody tr:nth-child(even) {
-    background-color: #ffffff;
-  }
+.data-window .data-table tbody tr:nth-child(even) {
+  background-color: #ffffff;
+}
 
-  .table-container {
-    max-height: 1000px;
-    max-width: 2800px;
-    overflow: auto;
-    border: 1px solid #ccc;
-    position: relative;
-  }
+.data-window .table-container {
+  max-height: 1000px;
+  max-width: 2800px;
+  overflow: auto;
+  border: 1px solid #ccc;
+  position: relative;
+}
 
-  .download {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  }
+.data-window .download {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
 
-  .download:hover {
-    background-color: #0056b3;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  }
+.data-window .download:hover {
+  background-color: #0056b3;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
 
-  .no-matching-entries {
-    text-align: center;
-    color: #888;
-    font-size: 16px;
-    padding-top: 10px;
-  }
+.data-window .no-matching-entries {
+  text-align: center;
+  color: #888;
+  font-size: 16px;
+  padding-top: 10px;
 }

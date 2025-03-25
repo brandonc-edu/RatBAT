@@ -357,42 +357,44 @@ const CompileDataPage = () => {
           </select>
         </div>
         <div className="result-items">
-          <table className="preview-section-table">
-            <thead>
-              <tr>
-                <th>Data File</th>
-                {selectedMetadataVariables.map((variable, i) => (
-                  <th key={i}>{variable}</th>
-                ))}
-                {selectedSummaryMeasures.map((measure) => {
-                  const display = measureDisplayNames[measure] || measure;
-                  return Array.isArray(display)
-                    ? display.map((d, i) => <th key={`${measure}-${i}`}>{d}</th>)
-                    : <th key={measure}>{display}</th>;
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {compiledData.map(({ file, metadata, measures }, rowIndex) => (
-                <tr key={rowIndex}>
-                  <td>{file}</td>
+          <div className="preview-section-table-container">
+            <table className="preview-section-table">
+              <thead>
+                <tr>
+                  <th>Data File</th>
                   {selectedMetadataVariables.map((variable, i) => (
-                    <td key={i}>{metadata[variable]}</td>
+                    <th key={i}>{variable}</th>
                   ))}
                   {selectedSummaryMeasures.map((measure) => {
-                    const values = measures[measure] || [''];
-                    return Array.isArray(values)
-                      ? values.map((v, i) => (
-                          <td key={`${measure}-${i}`}>
-                            {formatValue(v, precision, wholeNumberMeasures.includes(measure))}
-                          </td>
-                        ))
-                      : <td>{formatValue(values, precision, wholeNumberMeasures.includes(measure))}</td>;
+                    const display = measureDisplayNames[measure] || measure;
+                    return Array.isArray(display)
+                      ? display.map((d, i) => <th key={`${measure}-${i}`}>{d}</th>)
+                      : <th key={measure}>{display}</th>;
                   })}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {compiledData.map(({ file, metadata, measures }, rowIndex) => (
+                  <tr key={rowIndex}>
+                    <td>{file}</td>
+                    {selectedMetadataVariables.map((variable, i) => (
+                      <td key={i}>{metadata[variable]}</td>
+                    ))}
+                    {selectedSummaryMeasures.map((measure) => {
+                      const values = measures[measure] || [''];
+                      return Array.isArray(values)
+                        ? values.map((v, i) => (
+                            <td key={`${measure}-${i}`}>
+                              {formatValue(v, precision, wholeNumberMeasures.includes(measure))}
+                            </td>
+                          ))
+                        : <td>{formatValue(values, precision, wholeNumberMeasures.includes(measure))}</td>;
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
         <div className="preview-section-footer">
           <button onClick={handleDownload}>Download Compiled Data</button>
