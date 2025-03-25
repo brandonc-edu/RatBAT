@@ -13,78 +13,80 @@
   }
 
   .filterBox {
-    border-radius: 10px;
+    border-radius: 8px;
     margin-left: 10px;
     margin-right: 10px;
-    border: solid black;
+    background-color: white;
+    border: 10px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-width: thin;
-    height: 400px; /* Controls the height of the filter box */
+    height: 400px; 
     display: flex;
-    overflow: hidden; /* Prevent filters from spilling out */
+    overflow: hidden; 
   }
 
   .filter {
     margin-left: 5px;
-    padding: 5px 10px; /* Adds padding for better visibility */
-    border: 10px solid #12591b; /* Adds a visible border */
+    padding: 5px 10px; 
+    border: 10px solid #12591b; 
     border-radius: 3px;
-    background-color: #f9f9f9; /* Light background color */
-    color: #000; /* Ensures text is visible */
+    background-color: #f9f9f9; 
+    color: #000; 
     cursor: pointer;
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
   }
 
   .filter:hover {
-    background-color: #e0e0e0; /* Slightly darker background on hover */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Adds subtle shadow on hover */
+    background-color: #e0e0e0; 
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
   }
 
   .parameters {
     margin: 5px;
     flex: 4 1 0%;
-    overflow-y: auto; /* Makes the filter section scrollable */
-    padding-right: 10px; /* Adds space for the scroll bar */
+    overflow-y: auto; 
+    padding-right: 10px; 
   }
 
   .meta-buttons {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Buttons fit the container */
-    gap: 10px; /* Spacing between buttons */
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px; 
     padding: 10px;
-    margin: 10px; /* Centers the box horizontally */
+    margin: 10px;
     border: 1px solid black;
     border-radius: 5px;
     background-color: white;
-    height: 350px; /* Fixed height */
+    height: 350px; 
     width: 500px;
-    overflow-y: auto; /* Enable scrolling if buttons overflow */
+    overflow-y: auto; 
     padding-right: 30px;
   }
 
   .metaVar {
-    display: flex; /* Use flexbox for centering */
+    display: flex; 
     align-items: center; /* Vertical alignment */
     justify-content: center; /* Horizontal alignment */
-    width: 100%; /* Button width adapts to grid column */
-    height: 40px; /* Consistent button height */
+    width: 100%; 
+    height: 40px; 
     cursor: pointer;
-    background-color: white; /* Default background */
-    border: 1px solid #ccc; /* Light border */
+    background-color: white;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    font-size: 14px; /* Readable font size */
-    color: black; /* Ensure text visibility */
+    font-size: 14px;
+    color: black;
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    text-align: center; /* Text alignment */
-    line-height: normal; /* Prevents line-height issues */
+    text-align: center;
+    line-height: normal;
   }
 
   .metaVar:hover {
-    background-color: #f0f0f0; /* Add hover effect */
+    background-color: #f0f0f0; 
   }
 
   .metaVar.toggled {
-    background-color: #0056b3; /* Blue background for toggled state */
+    background-color: #0056b3; 
     border-color: #004085;
-    color: white; /* Contrast text for toggled state */
+    color: white;
   }
 }
