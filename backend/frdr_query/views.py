@@ -101,14 +101,23 @@ class FRDRQueryView(APIView):
             frdr_urls = get_frdr_urls(filters,models.trial,dtypes)
             print(f"Fetching the following URLs from the FRDR: {frdr_urls}")
 
-            frdr_request(frdr_urls, full_cache_path, models.timeseries)
+            failed_downloads = frdr_request(frdr_urls, full_cache_path, models.timeseries)
             
-            trial_ids = get_data(filters,models.trial,['trial_id'])
-            trial_ids = [trial['trial_id'] for trial in trial_ids]
- 
+            filters_ts = filters.copy()
+            filters_ts.append({"field":"timeseries","lookup":"isnull","value":False})
+
+            trial_ids = set([list(trial.values())[0] for trial in get_data(filters_ts, models.trial, ["trial_id"])])
+            print()
+            failed_trial_ids = set([trial[0] for trial in failed_downloads])
+            trial_ids = list(trial_ids.difference(failed_trial_ids))
+
             request.session["filtered_trials"] = trial_ids
             request.session.modified = True
-
-            return Response({"message":f"Files successfully saved for trials: {trial_ids}","urls":str(frdr_urls)}, status=status.HTTP_200_OK)
+            
+            if len(failed_downloads) == 0:
+                return Response({"message":f"All files successfully saved for trials: {trial_ids}"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"message":f"One or more files failed to download.","failed downloads":failed_downloads}, status=status.HTTP_207_MULTI_STATUS)
+            
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

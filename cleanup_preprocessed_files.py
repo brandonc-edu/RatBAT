@@ -5,7 +5,7 @@ import time
 directory = os.path.join(os.path.dirname(__file__), 'preprocessing', 'preprocessed')
 
 # Time threshold (e.g., 24 hours in seconds)
-time_threshold = 10
+time_threshold = 24 * 60 * 60
 
 # Current time
 now = time.time()

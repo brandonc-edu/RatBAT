@@ -34,6 +34,7 @@ class PreprocessDataView(APIView):
             parameters = request.data.get('parameters', {})
             determine_k_automatically = request.data.get('determineKAutomatically', False)
             selected_trials = request.data.get('selectedTrials', [])
+            selected_trials = [int(trial) for trial in selected_trials]  # Convert to integers
 
             # Ensure selectedTrials is provided
             if not selected_trials:
@@ -83,7 +84,7 @@ class PreprocessDataView(APIView):
 
             # Query the time series data for the provided trials
             timeseries_url = "http://ratbat.cas.mcmaster.ca/api/get-timeseries/"
-            response = requests.get(timeseries_url, params={"trials": selected_trials})
+            response = requests.get(timeseries_url, params={"trials": ",".join(map(str, selected_trials))})
 
             if response.status_code != 200:
                 return Response({"error": f"Failed to fetch time series data: {response.text}"}, status=response.status_code)

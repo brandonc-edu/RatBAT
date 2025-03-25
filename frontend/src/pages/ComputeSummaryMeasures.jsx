@@ -17,14 +17,21 @@ const ComputeSummaryMeasures = () => {
   const offset = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    // Fetch available data files from the backend
+    // Fetch available trial IDs from the backend
     const fetchDataFiles = async () => {
       try {
-        const response = await axios.get('/api/summary-measures/data-files/');
-        console.log("Fetched data files:", response.data);
-        setDataFiles(response.data);
+        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/get-timeseries/');
+        const trials = response.data;
+
+        // Assuming the response contains a dictionary of trial IDs and their metadata
+        const trialList = Object.keys(trials).map((trialId) => ({
+          id: trialId,
+          metadata: trials[trialId], // Include any metadata associated with the trial
+        }));
+
+        setDataFiles(trialList); // Update the state with the list of trials
       } catch (error) {
-        console.error("Error fetching data files:", error);
+        console.error('Error fetching trials:', error);
       }
     };
 
@@ -59,12 +66,11 @@ const ComputeSummaryMeasures = () => {
     }
   };
 
-  const handleDataFileChange = (event) => {
-    const value = event.target.value;
-    setSelectedDataFiles(prevSelected =>
-      prevSelected.includes(value)
-        ? prevSelected.filter(item => item !== value)
-        : [...prevSelected, value]
+  const handleDataFileChange = (trial) => {
+    setSelectedDataFiles((prevSelected) =>
+      prevSelected.includes(trial)
+        ? prevSelected.filter((item) => item !== trial)
+        : [...prevSelected, trial]
     );
   };
 
@@ -149,13 +155,13 @@ const ComputeSummaryMeasures = () => {
 
   const handleApply = async () => {
     if (selectedDataFiles.length === 0) {
-      alert("Please select at least one data file.");
+      alert("Please select at least one trial.");
       return;
     }
 
     try {
       const response = await axios.post('/api/summary-measures/compute-summary-measures/', {
-        data_file_paths: selectedDataFiles,
+        trial_ids: selectedDataFiles.map(file => file.id), // Send trial IDs
         summary_measures: selectedSummaryMeasures,
         environment: 'common', // or 'q20s' / 'q17'
       });
@@ -356,19 +362,17 @@ const ComputeSummaryMeasures = () => {
         </div>
 
         <div className="selected-data">
-          <h3>Data File</h3>
+          <h3>Trials</h3>
           <div className="data-items">
             {dataFiles.map((file, index) => (
               <div key={index} className="data-item">
                 <label>
                   <input
                     type="checkbox"
-                    name="dataFile"
-                    value={file}
                     checked={selectedDataFiles.includes(file)}
-                    onChange={handleDataFileChange}
+                    onChange={() => handleDataFileChange(file)}
                   />
-                  {file}
+                  {file.id} {/* Display trial ID */}
                 </label>
               </div>
             ))}
