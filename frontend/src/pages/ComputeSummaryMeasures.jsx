@@ -20,7 +20,7 @@ const ComputeSummaryMeasures = () => {
     // Fetch available trial IDs from the backend
     const fetchDataFiles = async () => {
       try {
-        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/get-timeseries/');
+        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/');
         const trials = response.data;
 
         // Assuming the response contains a dictionary of trial IDs and their metadata

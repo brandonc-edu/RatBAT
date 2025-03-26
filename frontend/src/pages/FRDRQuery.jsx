@@ -51,7 +51,7 @@ const FRDRQuery = () => {
 
       console.log("Query requestBody", requestBody);
 
-      const response = await fetch('http://ratbat.cas.mcmaster.ca/api/query-data/', {
+      const response = await fetch('http://ratbat.cas.mcmaster.ca/api/frdr-query/query-data/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
@@ -86,7 +86,7 @@ const FRDRQuery = () => {
       };
       console.log("FRDR requestBody", requestBody);
 
-      const response = await fetch('http://ratbat.cas.mcmaster.ca/api/frdr-query/', {
+      const response = await fetch('http://ratbat.cas.mcmaster.ca/api/frdr-query/frdr-query/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
@@ -117,7 +117,7 @@ const FRDRQuery = () => {
       }
       // Build query string parameters for the get-timeseries view.
       const queryParams = trialIds.map(id => `trials=${id}`).join('&');
-      const url = `http://ratbat.cas.mcmaster.ca/api/get-timeseries/?${queryParams}`;
+      const url = `http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/?${queryParams}`;
 
       console.log("Fetching timeseries data from:", url);
       const response = await fetch(url);

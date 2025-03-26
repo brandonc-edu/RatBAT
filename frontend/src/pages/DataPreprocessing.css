@@ -223,3 +223,37 @@
 .data-preprocessing-page .info-button:hover {
   background-color: #5a630d;
 }
+
+/* Loading overlay to restrict interaction during preprocessing */
+.data-preprocessing-page .loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it appears above all other elements */
+}
+
+/* Spinner for the loading overlay */
+.data-preprocessing-page .spinner {
+  border: 8px solid #f3f3f3; /* Light gray border */
+  border-top: 8px solid #3498db; /* Blue border for the spinning effect */
+  border-radius: 50%; /* Make it circular */
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite; /* Spinning animation */
+}
+
+/* Keyframes for the spinner animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

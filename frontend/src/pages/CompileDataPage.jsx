@@ -55,7 +55,7 @@ const CompileDataPage = () => {
     // Fetch metadata variables from the backend
     const fetchMetadataVariables = async () => {
       try {
-        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/get-fields/');
+        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/frdr-query/get-fields/');
         // Define the fields you want to remove
         const unwantedFields = ["sample_id", "t", "x", "y", "x_s", "y_s", "v_s", "movementtype_s"];
         // Flatten the response and filter out unwanted fields

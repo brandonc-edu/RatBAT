@@ -86,7 +86,7 @@ class PreprocessDataView(APIView):
             print("Updated parameters after handling 'Determine k Automatically' and 'log_transform':", parameters)
 
             # Query the time series data for the provided trials
-            timeseries_url = "http://ratbat.cas.mcmaster.ca/api/get-timeseries/"
+            timeseries_url = "http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/"
             response = requests.get(timeseries_url, params={"trials": ",".join(map(str, selected_trials))})
 
             if response.status_code != 200:
