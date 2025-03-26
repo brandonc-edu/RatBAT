@@ -1,27 +1,16 @@
-.filter-buttons button {
-  margin-left: 10px;
-}
 
 .filter-buttons div {
   margin-top: 10px;
-  margin-bottom: 20px;
-}
-
-.filter-buttons select {
-  margin-left: 5px;
+  margin-bottom: 10px;
 }
 
 .filter-buttons .filterBox {
   border-radius: 8px;
-  margin-left: 10px;
-  margin-right: 10px;
   background-color: white;
   border: 10px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-width: thin;
-  height: 400px; 
+  height: 410px; 
   display: flex;
-  overflow: hidden; 
 }
 
 .filter-buttons .filter {
@@ -42,24 +31,64 @@
 
 .filter-buttons .parameters {
   margin: 5px;
-  flex: 4 1 0%;
+  
   overflow-y: auto; 
-  padding-right: 10px; 
+  padding-right: 10px;
+   
+}
+
+.filter-buttons .filter-group {
+  margin: 5px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 7px;
+  box-sizing: border-box;
+  
+}
+
+.filter-buttons .filter-item {
+  display: flex;
+  align-items: center;
+}
+
+.filter-buttons .filter-item label{
+  flex: 1 2;
+  min-width: 150px;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.filter-buttons .filter-item select{
+  flex: 3 1;
+  border-radius: 4px;
+  margin-right: 10px;
+  padding: 5px;
+}
+
+.filter-buttons .filter-item input{
+  flex: 16 1;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.filter-buttons .filter-item-label-discrete{
+ max-width: 150px;
 }
 
 .filter-buttons .meta-buttons {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px; 
-  padding: 10px;
+  padding: 20px;
   margin: 10px;
-  border: 1px solid black;
+  border: 1px solid #ddd;
   border-radius: 5px;
-  background-color: white;
+  background-color: #f9f9f9;
   height: 350px; 
-  width: 500px;
+  width: 150px;
   overflow-y: auto; 
-  padding-right: 30px;
 }
 
 .filter-buttons .metaVar {
@@ -87,4 +116,20 @@
   background-color: #0056b3; 
   border-color: #004085;
   color: white;
+}
+
+.filter-buttons button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  float: left;
+  margin-left: 5px;
+}
+
+.filter-buttons button:hover {
+  background-color: #0056b3;
 }

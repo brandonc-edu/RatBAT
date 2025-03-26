@@ -1,9 +1,20 @@
+.data-window{
+  margin-top: 10px;
+}
+
 .data-window input {
   margin: 10px;
   padding: 5px;
   width: 100%;
   max-width: 300px;
   box-sizing: border-box;
+}
+
+.data-window{
+  border-radius: 8px;
+  background-color: white;
+  border: 10px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .data-window .data-table {

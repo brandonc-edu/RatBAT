@@ -1,21 +1,20 @@
-.frdr-query h2 {
+.frdr-query .filtered-data-entries {
+  margin-top: 60px;
+}
+.frdr-query h2{
   margin-bottom: 0px;
   margin-left: 5px;
+  margin-top: 0px;
 }
 
-.frdr-query .background {
-  background-color: #f9f9f9;
+.frdr-query {
+  height: 100vh;
+  padding: 20px;
+  background-color: #a5a8aa3a;
 }
 
-.frdr-query .filterBox {
-  border-radius: 10px;
-  margin-left: 10px;
-  margin-right: 10px;
-  border: solid black;
-  border-width: thin;
-  height: 400px; /* Controls the height of the filter box */
-  display: flex;
-  overflow: hidden; /* Prevent filters from spilling out */
+.frdr-query .header{
+  background-color: #a5a8aa3a;
 }
 
 .frdr-query .parameters {
@@ -25,50 +24,20 @@
   padding-right: 10px; /* Adds space for the scroll bar */
 }
 
-.frdr-query .metaVariables {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Buttons fit the container */
-  gap: 10px; /* Spacing between buttons */
-  padding: 10px;
-  margin: 10px; /* Centers the box horizontally */
-  border: 1px solid black;
-  border-radius: 10px;
-  background-color: white;
-  height: 350px; /* Fixed height */
-  overflow-y: auto; /* Enable scrolling if buttons overflow */
-}
-
-.frdr-query .metaVar {
-  display: flex; /* Use flexbox for centering */
-  align-items: center; /* Vertical alignment */
-  justify-content: center; /* Horizontal alignment */
-  width: 100%; /* Button width adapts to grid column */
-  height: 40px; /* Consistent button height */
-  cursor: pointer;
-  background-color: white; /* Default background */
-  border: 1px solid #ccc; /* Light border */
+.frdr-query .frdr-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
   border-radius: 5px;
-  font-size: 14px; /* Readable font size */
-  color: black; /* Ensure text visibility */
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  text-align: center; /* Text alignment */
-  line-height: normal; /* Prevents line-height issues */
-}
-
-.frdr-query .metaVar:hover {
-  background-color: #f0f0f0; /* Add hover effect */
-}
-
-.frdr-query .metaVar.toggled {
-  background-color: #0056b3; /* Blue background for toggled state */
-  border-color: #004085;
-  color: white; /* Contrast text for toggled state */
-}
-
-.frdr-query .dataEntries {
-  border-radius: 10px;
-  border: solid black;
-  border-width: thin;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  float:right;
   margin-left: 10px;
-  margin-right: 10px;
+  margin-right: 5px;
+}
+
+
+.frdr-query button:hover {
+  background-color: #0056b3;
 }
