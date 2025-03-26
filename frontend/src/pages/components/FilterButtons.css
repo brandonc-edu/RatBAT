@@ -4,9 +4,6 @@
   margin-bottom: 10px;
 }
 
-
-
-
 .filter-buttons .filterBox {
   border-radius: 8px;
   background-color: white;
@@ -63,20 +60,18 @@
 }
 
 .filter-buttons .filter-item select{
-  flex: 2 1;
+  flex: 4 1;
   border-radius: 4px;
   margin-right: 10px;
   padding: 5px;
 }
 
 .filter-buttons .filter-item input{
-  flex: 3 1;
+  flex: 16 1;
   padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-
-
 
 .filter-buttons .meta-buttons {
   display: grid;
@@ -118,3 +113,8 @@
   border-color: #004085;
   color: white;
 }
+
+.filter-buttons button:hover{
+
+}
+
