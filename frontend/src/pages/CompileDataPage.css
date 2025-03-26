@@ -95,22 +95,20 @@
   padding-left: 20px;
   padding-right: 20px;
   padding-top: 20px;
+  overflow: hidden; /* Prevent content from spilling out */
 }
 
-.compile-data-page .preview-section-footer {
-  flex-shrink: 0;
-  padding-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 20px;
-  background-color: #fff;
-  border-top: 1px solid #ccc;
+.compile-data-page .preview-section-table-container {
+  flex: 1;
+  overflow-x: auto; /* Enable horizontal scrolling */
+  overflow-y: auto; /* Enable vertical scrolling if needed */
 }
 
 .compile-data-page .preview-section-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  min-width: 800px; /* Ensure the table has a minimum width */
 }
 
 .compile-data-page .preview-section th {
@@ -125,6 +123,17 @@
   padding-right: 10px;
   text-align: right;
 }
+
+.compile-data-page .preview-section-footer {
+  flex-shrink: 0;
+  padding-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px;
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+}
+
 
 /* Adding space between each item and its checkbox */
 .compile-data-page .measure-item,

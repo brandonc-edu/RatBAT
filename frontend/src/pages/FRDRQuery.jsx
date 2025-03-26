@@ -9,6 +9,7 @@ const FRDRQuery = () => {
   // State to hold the database data returned by the API.
   const [data, setData] = useState([]);
   const [filters, setFilters] = useState([]);
+  const [downloading, setDownloading] = useState(false); //Stop spam downloading
 
   //TESTING, default filters
   const defaultFilters = [
@@ -108,11 +109,14 @@ const FRDRQuery = () => {
   
   //Function to handle downloading into a zip file with CSVs for each trial's timeseries
   const handleDownloadZip = async () => {
+    if (downloading) return; // Prevent additional clicks if already downloading.
+    setDownloading(true);
     try {
       // Extract trial_ids from the current data. (Assume that each data entry has a trial_id field)
       const trialIds = Array.from(new Set(data.map(item => item.trial_id)));
       if (trialIds.length === 0) {
         alert("No trial IDs available for download.");
+        setDownloading(false);
         return;
       }
       // Build query string parameters for the get-timeseries view.
@@ -121,19 +125,35 @@ const FRDRQuery = () => {
 
       console.log("Fetching timeseries data from:", url);
       const response = await fetch(url);
-      if (!response.ok) {
+
+      // If it's not OK and also not 207, treat it as an error.
+      if (!response.ok && response.status !== 207) {
         throw new Error(`get-timeseries API responded with status ${response.status}`);
       }
-      const timeseriesData = await response.json();
-      console.log("Timeseries data received:", timeseriesData);
-      
+
+      // If we got a 207, parse partial success differently.
+      let timeseriesData;
+      if (response.status === 207) {
+        const partialResult = await response.json();
+        console.log("Partial success response:", partialResult);
+
+        if (partialResult["failed downloads"] && partialResult["failed downloads"].length > 0) {
+          alert("Some trials failed to download: " + JSON.stringify(partialResult["failed downloads"]));
+        }
+        timeseriesData = partialResult["timeseries"] || {};
+      } else {
+        // Normal 200 OK
+        timeseriesData = await response.json();
+        console.log("Timeseries data received:", timeseriesData);
+      }
+        
       const zip = new JSZip();
 
       // For each trial_id, create a CSV file.
       trialIds.forEach(trialId => {
         // Convert trialId to string if necessary
         const records = timeseriesData[String(trialId)];
-        console.log(`Trial ${trialId}:`, records);
+        //console.log(`Trial ${trialId}:`, records);
         
         // Check if records is an object and has at least one key.
         if (records && typeof records === 'object' && Object.keys(records).length > 0) {
@@ -149,7 +169,7 @@ const FRDRQuery = () => {
           }
           
           const csvContent = csvRows.join('\n');
-          console.log(`Added CSV for trial ${trialId} with:`, csvContent);
+          console.log(`Added CSV for trial ${trialId}`); //with:`, csvContent);
           zip.file(`trial_${trialId}.csv`, csvContent);
         } else {
           console.log(`No valid records for trial ${trialId}`);
@@ -163,20 +183,18 @@ const FRDRQuery = () => {
       console.error("Error downloading zip:", error);
       alert("Error downloading zip file.");
     }
+    setDownloading(false);
   };
 
   return (
     <div className="frdr-query">
-      <div className="background">
-        <h2>Filters</h2>
-        <FilterButtons onApply={handleApplyFilters} />
-          <button onClick={handleFRDRQuery}> Load Data from FRDR </button>
-          <button onClick={handleDownloadZip}>Download Timeseries CSV</button>
-        <h2>Filtered Data Entries</h2>
-        <div className="dataEntries">
-          <DataWindow data={data} />
-        </div>
-      </div>
+      <h2>Filters</h2>
+      <FilterButtons onApply={handleApplyFilters} />
+        <button onClick={handleFRDRQuery}> Load Data from FRDR </button>
+        <button onClick={handleDownloadZip}>Download Timeseries CSV</button>
+      <h2>Filtered Data Entries</h2>
+      <DataWindow data={data} />
+
     </div>
   );
 };

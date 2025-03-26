@@ -4,144 +4,22 @@ import './FilterButtons.css';
 function FilterButtons({ onApply }) {
   const categories = [
     {
-        category: "lightcyclecolony",
-        displayName: "Light Cycle Colony",
-        fields: [
-          { name: "lightcyclecolony_id", displayName: "light cycle colony id", type: "number" },
-          { name: "lightcyclecolonydesc", displayName: "light cycle colony desc", type: "discrete",
-            options: ["Option A", "Option B", "Option C"] }
-        ]
+      category: "project",
+      displayName: "Project",
+      fields: [
+        { name: "project_id", displayName: "project id", type: "number" },
+        { name: "projectdesc", displayName: "project desc", type: "text" }
+      ]
     },
     {
-        category: "lightcycletest",
-        displayName: "Light Cycle Test",
-        fields: [
-          { name: "lightcycletest_id", displayName: "light cycle test id", type: "number" },
-          { name: "lightcycletestdesc", displayName: "light cycle test desc", type: "discrete",
-            options: ["Option A", "Option B", "Option C"]
-           }
-        ]
+      category: "study",
+      displayName: "Study",
+      fields: [
+        { name: "study_id", displayName: "study id", type: "number" },
+        { name: "studydesc", displayName: "study desc", type: "text" }
+      ]
     },
-    {
-        category: "arenatype",
-        displayName: "Arena Type",
-        fields: [
-          { name: "arenatype_id", displayName: "arena type id", type: "number" },
-          { name: "arenatypedesc", displayName: "arena type desc", type: "discrete",
-            options: ["Option A", "Option B", "Option C"]
-           }
-        ]
-    },
-    {
-        category: "arenaloc",
-        displayName: "Arena Location",
-        fields: [
-          { name: "arenaloc_id", displayName: "arena location id", type: "number" },
-          { name: "arenalocdesc", displayName: "arena location desc", type: "discrete",
-            options: ["Option A", "Option B", "Option C"] }
-        ]
-    },
-    {
-        category: "arenaobjects",
-        displayName: "Arena Objects",
-        fields: [
-          { name: "arenaobjects_id", displayName: "arena objects id", type: "number" },
-          { name: "arenaobjectsdesc", displaytName: "arena object desc", type: "discrete",
-            options: ["Option A", "Option B", "Option C"] }
-        ]
-    },
-    {
-        category: "lightconditions",
-        displayName: "Light Conditions",
-        fields: [
-          { name: "lightconditions_id", displayName: "light conditions id", type: "number" },
-          { name: "lightconditionsdesc", displayName: "light condition desc", type: "discrete",
-            options: ["Option A", "Option B", "Option C"] }
-        ]
-    },
-    {
-        category: "surgerymanipulation",
-        displayName: "Surgery Manipulation",
-        fields: [
-          { name: "surgerymanipulation_id", displayName: "surgery manipulation id", type: "number" },
-          { name: "surgerymanipulationdesc", displayName: "surgerymanipulation desc",type: "discrete",
-            options: ["Option A", "Option B", "Option C"] }
-        ]
-    },
-    {
-        category: "surgeryoutcome",
-        displayName: "Surgery Outcome",
-        fields: [
-          { name: "surgeryoutcome_id", displayName: "surgery outcome id", type: "number" },
-          { name: "surgeryoutcomedesc", displayName: "surgery outcome desc", type: "discrete",
-            options: ["Option A", "Option B", "Option C"] }
-        ]
-    },
-    {
-        category: "eventtype",
-        displayName: "Event Type",
-        fields: [
-          { name: "eventtype_id", displayName: "event type id", type: "number" },
-          { name: "eventtypedesc", displayName: "event type desc",type: "discrete",
-            options: ["Option A", "Option B", "Option C"] }
-
-        ]
-    },
-    {
-        category: "animal",
-        displayName: "Animal",
-        fields: [
-          { name: "animal_id",displayName: "animal id", type: "number" }
-        ]
-    },
-    {
-        category: "apparatus",
-        displayName: "Apparatus",
-        fields: [
-          { name: "apparatus_id", displayName: "apparatus id", type: "number" }
-        ]
-    },
-    {
-        category: "treatment",
-        displayName: "Treatment",
-        fields: [
-          { name: "treatment_id", displayName: "treatment id", type: "number" },
-          { name: "drugrx_drug1", displayName: "drugrx drug 1", type: "text" },
-          { name: "drugrx_dose1", displayName: "drugrx dose 1", type: "number" },
-          { name: "drugrx_drug2", displayName: "drugrx drug 2", type: "text" },
-          { name: "drugrx_dose2", displayName: "drugrx dose 2", type: "number" },
-          { name: "drugrx_drug3", displayName: "drugrx drug 3", type: "text" },
-          { name: "drugrx_dose3", displayName: "drugrx dose 3", type: "number" }
-        ]
-    },
-    {
-        category: "trial",
-        displayName: "Trial",
-        fields: [
-          { name: "trial_id", displayName: "trial id", type: "number" },
-          { name: "dateandtime", displayName: "date and time", type: "datetime" },
-          { name: "animalweight", displayName: "animal weight", type: "number" },
-          { name: "injectionnumber", displayName: "injection number", type: "number" },
-          { name: "oftestnumber", displayName: "oftest number", type: "number" },
-          { name: "drugrxnumber", displayName: "drugrx number", type: "number" },
-          { name: "experimenter", displayName: "experimenter", type: "text" },
-          { name: "duration", displayName: "duration", type: "number" },
-          { name: "fallsduringtest", displayName: "falls during test", type: "boolean" },
-          { name: "notes", displayName: "notes", type: "text" },
-          { name: "trackfile", displayName: "track file", type: "text" },
-          { name: "pathplot", displayName: "path plot", type: "text" },
-          { name: "video", displayName: "video", type: "text" },
-          { name: "video_id", displayName: "video id", type: "number" }
-        ]
-    },
-    // {
-    //     category: "fall",
-    //     displayName: "Fall",
-    //     fields: [
-    //       { name: "timewhenfell", displayName: "time when fell", type: "number" }
-    //     ]
-    // },
-    {
+      {
         category: "experiment",
         displayName: "Experiment",
         fields: [
@@ -150,21 +28,90 @@ function FilterButtons({ onApply }) {
         ]
     },
     {
-        category: "study",
-        displayName: "Study",
+      category: "trial",
+      displayName: "Trial",
+      fields: [
+        { name: "trial_id", displayName: "trial id", type: "number" },
+        { name: "dateandtime", displayName: "date and time", type: "datetime" },
+        { name: "animalweight", displayName: "animal weight", type: "number" },
+        { name: "injectionnumber", displayName: "injection number", type: "number" },
+        { name: "oftestnumber", displayName: "oftest number", type: "number" },
+        { name: "drugrxnumber", displayName: "drugrx number", type: "number" },
+        { name: "experimenter", displayName: "experimenter", type: "discrete",
+          options: ["Option A", "Option B", "Option C"] },
+        { name: "duration", displayName: "duration", type: "number" },
+        { name: "fallsduringtest", displayName: "falls during test", type: "number" },
+        { name: "notes", displayName: "notes", type: "text" },
+        { name: "trackfile", displayName: "track file", type: "text" },
+        { name: "pathplot", displayName: "path plot", type: "text" },
+        { name: "video_id", displayName: "video id", type: "number" },
+        { name: "video", displayName: "video", type: "text" },
+        { name: "eventtype_id", displayName: "event type id", type: "number" },
+        { name: "eventtypedesc", displayName: "event type desc",type: "discrete",
+          options: ["Option A", "Option B", "Option C"] }
+      ]
+    },
+    {
+        category: "animal",
+        displayName: "Animal",
         fields: [
-          { name: "study_id", displayName: "study id", type: "number" },
-          { name: "studydesc", displayName: "study desc", type: "text" }
+          { name: "animal_id",displayName: "animal id", type: "number" },
+          { name: "lightcyclecolony_id", displayName: "light cycle colony id", type: "number" },
+          { name: "lightcyclecolonydesc", displayName: "light cycle colony desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] },
+          { name: "lightcycletest_id", displayName: "light cycle test id", type: "number" },
+          { name: "lightcycletestdesc", displayName: "light cycle test desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] } 
         ]
     },
     {
-        category: "project",
-        displayName: "Project",
+        category: "apparatus",
+        displayName: "Apparatus",
         fields: [
-          { name: "project_id", displayName: "project id", type: "number" },
-          { name: "projectdesc", displayName: "project desc", type: "text" }
+          { name: "apparatus_id", displayName: "apparatus id", type: "number" },
+          { name: "arenatype_id", displayName: "arena type id", type: "number" },
+          { name: "arenatypedesc", displayName: "arena type desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] },
+          { name: "arenaloc_id", displayName: "arena location id", type: "number" },
+          { name: "arenalocdesc", displayName: "arena location desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] },
+          { name: "arenaobjects_id", displayName: "arena objects id", type: "number" },
+          { name: "arenaobjectsdesc", displaytName: "arena object desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] },
+          { name: "lightconditions_id", displayName: "light conditions id", type: "number" },
+          { name: "lightconditionsdesc", displayName: "light condition desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] }
+
         ]
     },
+    {
+        category: "treatment",
+        displayName: "Treatment",
+        fields: [
+          { name: "treatment_id", displayName: "treatment id", type: "number" },
+          { name: "surgerymanipulation_id", displayName: "surgery manipulation id", type: "number" },
+          { name: "surgerymanipulationdesc", displayName: "surgerymanipulation desc",type: "discrete",
+            options: ["Option A", "Option B", "Option C"] },
+          { name: "surgeryoutcome_id", displayName: "surgery outcome id", type: "number" },
+          { name: "surgeryoutcomedesc", displayName: "surgery outcome desc", type: "discrete",
+            options: ["Option A", "Option B", "Option C"] },
+          { name: "drugrx_drug1", displayName: "drugrx drug 1", type: "text" },
+          { name: "drugrx_dose1", displayName: "drugrx dose 1", type: "number" },
+          { name: "drugrx_drug2", displayName: "drugrx drug 2", type: "text" },
+          { name: "drugrx_dose2", displayName: "drugrx dose 2", type: "number" },
+          { name: "drugrx_drug3", displayName: "drugrx drug 3", type: "text" },
+          { name: "drugrx_dose3", displayName: "drugrx dose 3", type: "number" }
+        ]
+    }
+
+    // {
+    //     category: "fall",
+    //     displayName: "Fall",
+    //     fields: [
+    //       { name: "timewhenfell", displayName: "time when fell", type: "number" }
+    //     ]
+    // },
+
     // {
     //     category: "timeseries",
     //     displayName: "Time Series",
@@ -181,8 +128,9 @@ function FilterButtons({ onApply }) {
     // }
   ]
 
+  //Removed case sensitive lookups: (exact, contains, startswith, endswith)
   const lookupForText = [
-    'exact', 'iexact', 'contains', 'icontains', 'startswith', 'istartswith', 'endswith', 'iendswith'
+    'iexact',  'icontains', 'istartswith', 'iendswith'
   ];
 
   const lookupDisplayMapping = {
