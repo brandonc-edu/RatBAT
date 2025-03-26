@@ -1,6 +1,10 @@
-.frdr-query h2 {
+.frdr-query .filtered-data-entries {
+  margin-top: 60px;
+}
+.frdr-query h2{
   margin-bottom: 0px;
   margin-left: 5px;
+  margin-top: 0px;
 }
 
 .frdr-query {
@@ -9,9 +13,31 @@
   background-color: #a5a8aa3a;
 }
 
+.frdr-query .header{
+  background-color: #a5a8aa3a;
+}
+
 .frdr-query .parameters {
   margin: 5px;
   flex: 4 1 0%;
   overflow-y: auto; /* Makes the filter section scrollable */
   padding-right: 10px; /* Adds space for the scroll bar */
+}
+
+.frdr-query .frdr-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  float:right;
+  margin-left: 10px;
+  margin-right: 5px;
+}
+
+
+.frdr-query button:hover {
+  background-color: #0056b3;
 }

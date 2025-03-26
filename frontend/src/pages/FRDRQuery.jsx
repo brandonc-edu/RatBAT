@@ -190,9 +190,11 @@ const FRDRQuery = () => {
     <div className="frdr-query">
       <h2>Filters</h2>
       <FilterButtons onApply={handleApplyFilters} />
-        <button onClick={handleFRDRQuery}> Load Data from FRDR </button>
-        <button onClick={handleDownloadZip}>Download Timeseries CSV</button>
-      <h2>Filtered Data Entries</h2>
+      
+      <button className = "frdr-button" onClick={handleFRDRQuery}> Load Data from FRDR </button>
+      <button className = "frdr-button" onClick={handleDownloadZip}>Download Timeseries CSV</button>
+      <h2 className = "filtered-data-entries">Filtered Data Entries</h2>
+    
       <DataWindow data={data} />
 
     </div>

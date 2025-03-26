@@ -350,7 +350,7 @@ function FilterButtons({ onApply }) {
                     const fieldData = localFilters[group.category]?.[field.name] || { value: '' };
                     return (
                       <div key={field.name} className="filter-item">
-                        <label>{field.name}:</label>
+                        <label className="filter-item-label-discrete">{field.name}:</label>
                         <select
                           value={fieldData.value}
                           onChange={(e) => handleDiscreteChange(group.category, field.name, e.target.value)}

@@ -9,7 +9,7 @@
   background-color: white;
   border: 10px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 400px; 
+  height: 410px; 
   display: flex;
 }
 
@@ -31,7 +31,7 @@
 
 .filter-buttons .parameters {
   margin: 5px;
-  flex: 4 1 0%;
+  
   overflow-y: auto; 
   padding-right: 10px;
    
@@ -60,7 +60,7 @@
 }
 
 .filter-buttons .filter-item select{
-  flex: 4 1;
+  flex: 3 1;
   border-radius: 4px;
   margin-right: 10px;
   padding: 5px;
@@ -71,6 +71,10 @@
   padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+.filter-buttons .filter-item-label-discrete{
+ max-width: 150px;
 }
 
 .filter-buttons .meta-buttons {
@@ -114,7 +118,18 @@
   color: white;
 }
 
-.filter-buttons button:hover{
-
+.filter-buttons button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  float: left;
+  margin-left: 5px;
 }
 
+.filter-buttons button:hover {
+  background-color: #0056b3;
+}

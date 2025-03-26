@@ -1,3 +1,7 @@
+.data-window{
+  margin-top: 10px;
+}
+
 .data-window input {
   margin: 10px;
   padding: 5px;
