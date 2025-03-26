@@ -11,7 +11,6 @@ const DataPreprocessing = () => {
     LOWESS: { deg: 2, half_window: 24, num_iter: 2 },
     RRM: { half_windows: [7, 5, 3, 3], min_arr: 12, tol: 1.3 },
     EM: {
-      tol: 0.000001,
       half_window: 4,
       log_transform: 'cbrt', // Default value for log_transform
       num_guesses: 5,
@@ -22,7 +21,8 @@ const DataPreprocessing = () => {
       segment_constrain: true,
     },
   });
-
+  const [isLoading, setIsLoading] = useState(false);
+  
   useEffect(() => {
     const fetchDataFiles = async () => {
       try {
@@ -101,6 +101,8 @@ const DataPreprocessing = () => {
   };
 
   const handlePreprocess = async () => {
+    setIsLoading(true); // Show the loading overlay
+  
     const payload = {
       selectedTrials: selectedDataFiles,
       parameters,
@@ -118,6 +120,8 @@ const DataPreprocessing = () => {
       setPreprocessedFiles(response.data);
     } catch (error) {
       console.error('Error during preprocessing:', error);
+    } finally {
+      setIsLoading(false); // Hide the loading overlay
     }
   };
 
@@ -153,7 +157,6 @@ const DataPreprocessing = () => {
       tol: { displayName: 'Arrest Cut Off', type: 'float', range: [0, 100] },
     },
     EM: {
-      tol: { displayName: 'Arrest Cut Off', type: 'float', range: '> 0' },
       half_window: { displayName: 'Half Window Width', type: 'int', range: [1, 1000] },
       log_transform: { displayName: 'Velocity Transformation', type: 'dropdown', range: null },
       num_guesses: { displayName: '# of Initial Guesses', type: 'int', range: '>= 1' },
@@ -168,6 +171,11 @@ const DataPreprocessing = () => {
   return (
     <div className="data-preprocessing-page">
       <div className="top-section">
+        {isLoading && (
+          <div className="loading-overlay">
+            <div className="spinner"></div>
+          </div>
+        )}
         <div className="preprocessing-methods">
           <h3>Preprocessing Methods</h3>
           <div className="method-item-container">

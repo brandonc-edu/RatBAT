@@ -72,8 +72,6 @@ class PreprocessDataView(APIView):
 
                 return params
 
-            parameters = convert_parameters(parameters)
-
             # Handle "Determine k Automatically"
             if determine_k_automatically:
                 parameters["EM"]["k"] = None

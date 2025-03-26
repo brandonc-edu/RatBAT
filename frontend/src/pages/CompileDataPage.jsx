@@ -95,7 +95,7 @@ const CompileDataPage = () => {
           fields: selectedMetadataVariables,
         };
         console.log("Sending request to query-data with payload:", JSON.stringify(payload, null, 2));
-        const response = await axios.post('http://ratbat.cas.mcmaster.ca/api/query-data/', payload);
+        const response = await axios.post('http://ratbat.cas.mcmaster.ca/api/frdr-query/query-data/', payload);
         console.log(`Metadata response for trial ${trialId}:`, response.data);
         return response.data;
       } catch (error) {
