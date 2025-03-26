@@ -297,7 +297,7 @@ const CompileDataPage = () => {
 
         {/* Loaded Data Files Section */}
         <div className="selection-group data-file">
-          <h3>Loaded Data Files</h3>
+          <h3>Preprocessed Trials</h3>
           <div className="selection-group-content">
             {dataFiles.map((file, index) => (
               <div key={index} className="data-item">
@@ -308,7 +308,7 @@ const CompileDataPage = () => {
                     checked={selectedDataFiles.includes(file)}
                     onChange={() => handleDataFileToggle(file)}
                   />
-                  {file.file_name} (Trial ID: {file.trial_id})
+                  {file.file_name}
                 </label>
               </div>
             ))}

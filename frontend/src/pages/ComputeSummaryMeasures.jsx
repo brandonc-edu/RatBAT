@@ -22,13 +22,14 @@ const ComputeSummaryMeasures = () => {
       try {
         const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/');
         const trials = response.data;
-
+    
         // Assuming the response contains a dictionary of trial IDs and their metadata
         const trialList = Object.keys(trials).map((trialId) => ({
           id: trialId,
           metadata: trials[trialId], // Include any metadata associated with the trial
+          fileName: `preprocessed_trial_${trialId}.csv`, // Add the full file name
         }));
-
+    
         setDataFiles(trialList); // Update the state with the list of trials
       } catch (error) {
         console.error('Error fetching trials:', error);
@@ -362,7 +363,7 @@ const ComputeSummaryMeasures = () => {
         </div>
 
         <div className="selected-data">
-          <h3>Trials</h3>
+          <h3>Preprocessed Trials</h3>
           <div className="data-items">
             {dataFiles.map((file, index) => (
               <div key={index} className="data-item">
@@ -372,7 +373,7 @@ const ComputeSummaryMeasures = () => {
                     checked={selectedDataFiles.includes(file)}
                     onChange={() => handleDataFileChange(file)}
                   />
-                  {file.id} {/* Display trial ID */}
+                  {file.fileName} {/* Display the full file name */}
                 </label>
               </div>
             ))}

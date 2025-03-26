@@ -103,9 +103,17 @@ const DataPreprocessing = () => {
   const handlePreprocess = async () => {
     setIsLoading(true); // Show the loading overlay
   
+    // Create a deep copy of parameters to avoid mutating state
+    const updatedParameters = JSON.parse(JSON.stringify(parameters));
+  
+    // Remove `k` from EM parameters if `determineKAutomatically` is true
+    if (determineKAutomatically) {
+      delete updatedParameters.EM.k;
+    }
+  
     const payload = {
-      selectedTrials: selectedDataFiles,
-      parameters,
+      selectedTrials: selectedDataFiles.map((trial) => parseInt(trial, 10)), // Ensure trials are integers
+      parameters: updatedParameters,
       determineKAutomatically,
     };
   
@@ -168,6 +176,36 @@ const DataPreprocessing = () => {
     },
   };
 
+  const tooltips = {
+    LOWESS: {
+      description: 'Rodent movement is smoothed to reduce noise and errors by fitting polynomials to short windows of movement data.',
+      deg: 'The degree of the polynomial that will be fit to each window of data in order to smooth it.',
+      half_window: 'The width of the window of data used to smooth each point. In frames (with sampling rate of 30 Hz).',
+      num_iter: 'Number of iterations of the LOWESS algorithm.',
+    },
+    RRM: {
+      description: 'Arrests (periods where the rodent is motionless) are identified and smoothed to remove noise.',
+      half_windows: 'A list of shrinking half window widths to use for each subsequent iteration of the RRM algorithm. In frames (with sampling rate of 30 Hz).',
+      min_arr: 'The minimum number of frames that the rodent must be motionless to qualify as an arrest. In frames (with sampling rate of 30 Hz).',
+      tol: 'The movement tolerance under which a rodent can be considered motionless (in arrest). In cm.',
+    },
+    EM: {
+      description: 'Rodent movement is segmented into periods of progression and lingering by modeling movement as a Gaussian mixture model.',
+      half_window: 'The width of the window of data used to calculate approximate velocity around each point. In frames (with sampling rate of 30 Hz).',
+      log_transform: 'Transformation function to be applied to maximum velocity estimate for each movement segment in order to improve model fitting.',
+      num_guesses: 'Number of times the EM algorithm will be run with different initial guesses at the parameters of each mode of movement.',
+      num_iters: 'Number of iterations of the EM algorithm per execution.',
+      significance: 'The significance level at which improvements in model fitting by increasing the number of movement modes will be deemed statistically insignificant (not applicable if using fixed number of modes).',
+      max_k: 'The maximum number of modes of movement that will be tested before the algorithm times out if the improvements do not converge (not applicable if using fixed number of modes).',
+      k: 'The number of movement modes that will be used to model the rodent\'s motion (not applicable if using automatic number of modes).',
+      segment_constrain: 'Label each data point as either progression (1) or lingering (0) rather than specific movement modes.',
+    },
+    determineKAutomatically: {
+      displayName: 'Set # of Modes Automatically',
+      description: 'Automatically determine the optimal number of modes to use in order to optimize model fitting.',
+    },
+  };
+
   return (
     <div className="data-preprocessing-page">
       <div className="top-section">
@@ -181,11 +219,25 @@ const DataPreprocessing = () => {
           <div className="method-item-container">
             {Object.keys(parameters).map((method) => (
               <div key={method} className="method-item">
-                <h4>{algorithmTitles[method]}</h4>
+                <h4>
+                  <div className="tooltip-container">
+                    <button className="info-button">i</button>
+                    <span className="tooltip-text">
+                      {tooltips[method].description || 'No description available.'}
+                    </span>
+                  </div>
+                  {algorithmTitles[method]}
+                </h4>
                 {Object.keys(parameters[method]).map((param) => {
                   const metadata = parameterMetadata[method][param];
                   return (
                     <div key={param} className="parameter-item">
+                      <div className="tooltip-container">
+                        <button className="info-button">i</button>
+                        <span className="tooltip-text">
+                          {tooltips[method][param] || 'No description available.'}
+                        </span>
+                      </div>
                       <label>{metadata.displayName}:</label>
                       {param === 'half_windows' ? (
                         <input
@@ -233,7 +285,15 @@ const DataPreprocessing = () => {
                 })}
                 {method === 'EM' && (
                   <div className="parameter-item">
-                    <label style={{ marginRight: '10px' }}>Determine k Automatically:</label>
+                    <div className="tooltip-container">
+                      <button className="info-button">i</button>
+                      <span className="tooltip-text">
+                        {tooltips.determineKAutomatically.description}
+                      </span>
+                    </div>
+                    <label style={{ marginRight: '10px' }}>
+                      {tooltips.determineKAutomatically.displayName}:
+                    </label>
                     <input
                       type="checkbox"
                       checked={determineKAutomatically}
