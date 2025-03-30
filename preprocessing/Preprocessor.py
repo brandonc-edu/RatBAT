@@ -34,7 +34,7 @@ LOG_TRANSFORM_FUNCTIONS = {
     "log10": np.log10,
     "log2": np.log2,
     "log1p": np.log1p,
-    "None": None,
+    "None": lambda x: x,
 }
 
 FRAMES_PER_SECOND = 29.97
