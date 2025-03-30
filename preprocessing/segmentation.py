@@ -279,13 +279,15 @@ def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:f
     for k in range(1, max_k + 2):
         params, log_likelihood = em_auto(data, k, num_guesses, num_iters)
 
+        print(f"p-value for improvment for (k={k}) modes: {stats.chi2.cdf(log_likelihood - prev_likelihood,2)}")
+
         # Use log likelihood test to determine whether improvements from
         # increasing k are statistically significant.
         if 1 - stats.chi2.cdf(log_likelihood - prev_likelihood, 2) > significance:
             print(f"Optimal model found with {k - 1} gaussians:")
             print(f"Optimal parameters are: {prev_params}")
             return prev_params, prev_likelihood
-
+        
         prev_params = params
         prev_likelihood = log_likelihood
 
