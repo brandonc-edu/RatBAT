@@ -62,7 +62,7 @@ def get_foreign_keys(model):
 
 
 
-def get_relationship(start, dest, searched = None) -> (str|None):
+def get_relationship(start, dest, searched = None):
     """Recursive pathfinding algorithm to determine the relationship between
     a database table and some field in the database.
 
@@ -136,3 +136,34 @@ def build_model(model, data, replace=False, do_async=False):
         model.objects.abulk_create(row_models, batch_size = 50000, ignore_conflicts = True)
     else:
         model.objects.bulk_create(row_models, batch_size = 50000, ignore_conflicts = True)
+
+def update_timeseries(model, data):
+    """Function to translate a pandas dataframe into a Django model to be stored in the database.
+
+    Parameters
+    ----------
+    model : django.db.models.base.ModelBase
+        Model class to store the data in.
+    data : pandas.DataFrame
+        Data to be stored in the database
+    pkeys : list
+        List of primary key labels.
+    """
+    
+    data.replace(np.nan, None, inplace = True)
+    # Replace foreign key references ids with actual referenced model
+    fkeys = get_foreign_keys(model)
+    fkeys = {key.name:key for key in fkeys}
+    
+    row_models = list(model.objects.filter(trial__trial_id__in = data["trial_id"]))
+    if len(row_models) == 0:
+        raise Exception("Timeseries data must exist in order to add smoothed data.")
+    
+    for i in range(len(data.index)):
+        row_models[i].x_s = data.loc[i,"x_s"]
+        row_models[i].y_s = data.loc[i,"y_s"]
+        row_models[i].v_s = data.loc[i,"v_s"]
+        row_models[i].movementtype_s = data.loc[i,"movementtype_s"] 
+    start = time.time()
+    model.objects.bulk_update(row_models, ["x_s","y_s","v_s","movementtype_s"], batch_size = 100)
+    print(time.time()-start)

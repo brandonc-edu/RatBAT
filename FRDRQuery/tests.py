@@ -34,6 +34,11 @@ request = factory.post("/api/query-data/",{"filters":
                                             content_type="applicaton/json")
 """
 """
+
+{
+ "trials":[1,2,3,4,5]
+}
+
 {
     "filters":[
         {
@@ -76,4 +81,22 @@ request = factory.post("/api/query-data/",{"filters":
         }
     ],
     "fields":["drugrx_drug1","project_desc"]
+
+{
+    "filters":[
+        {
+            "field":"trial_id",
+            "lookup":"gt",
+            "value":13185
+        },
+        {
+            "field":"trial_id",
+            "lookup":"lt",
+            "value":13197
+        }
+    ],
+    "cache_path":"database/data/test_data",
+    "dtypes":"t"
+}
+    
 """

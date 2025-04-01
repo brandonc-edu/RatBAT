@@ -27,7 +27,7 @@ const DataPreprocessing = () => {
     const fetchDataFiles = async () => {
       try {
         // Use the correct endpoint URL
-        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/');
+        const response = await axios.get('http://localhost:8000/api/frdr-query/get-timeseries/?trials=32');
         const trials = response.data;
     
         // Assuming the response contains a dictionary of trial IDs and their metadata
@@ -50,24 +50,12 @@ const DataPreprocessing = () => {
   
     // Special handling for `half_windows`
     if (param === 'half_windows') {
-      const list = value.split(',').map((item) => parseInt(item.trim(), 10));
-  
-      // Validate the list
-      if (
-        list.length < 1 || // Must have at least 1 item
-        list.length > 8 || // Must have at most 8 items
-        list.some((item) => isNaN(item) || item < 1 || item > 1000) || // All items must be in [1, 1000]
-        list.some((item, index) => index < list.length - 1 && item < list[index + 1]) // Each item must be >= the next item
-      ) {
-        alert('Invalid input for Half Window Widths. Ensure 1-8 items, each in [1, 1000], and sorted in descending order.');
-        return;
-      }
-  
+      // Allow intermediate input without validation
       setParameters((prev) => ({
         ...prev,
-        [method]: { ...prev[method], [param]: list },
+        [method]: { ...prev[method], [param]: value.split(',').map((item) => item.trim()) },
       }));
-      return;
+      return; // Skip validation during typing
     }
   
     // Enforce numeric ranges for other inputs
@@ -92,6 +80,26 @@ const DataPreprocessing = () => {
       ...prev,
       [method]: { ...prev[method], [param]: value },
     }));
+  };
+  
+  const validateHalfWindows = (method, param) => {
+    const list = parameters[method][param].map((item) => parseInt(item, 10));
+  
+    // Perform validation
+    if (
+      list.some((item) => isNaN(item) || item < 1 || item > 1000) || // All items must be in [1, 1000]
+      list.some((item, index) => index < list.length - 1 && item < list[index + 1]) // Each item must be >= the next item (descending order)
+    ) {
+      alert('Invalid input for Half Window Widths. Ensure 1-8 items, each in [1, 1000], and sorted in descending order.');
+      return false;
+    }
+  
+    // Update the state with the validated list
+    setParameters((prev) => ({
+      ...prev,
+      [method]: { ...prev[method], [param]: list },
+    }));
+    return true;
   };
 
   const handleDataFileToggle = (file) => {
@@ -121,9 +129,9 @@ const DataPreprocessing = () => {
   
     try {
       const response = await axios.post(
-        '/api/data-preprocessing/preprocess/',
+        'http://localhost:8000/api/data-preprocessing/preprocess/',
         payload,
-        { timeout: 600000 } // Set timeout to 5 minutes (300,000 ms)
+        { timeout: 1800000 } // Set timeout to 30 minutes (1800000 ms)
       );
       setPreprocessedFiles(response.data);
     } catch (error) {
@@ -135,7 +143,7 @@ const DataPreprocessing = () => {
 
   const handleDownload = (file) => {
     const link = document.createElement('a');
-    link.href = `http://ratbat.cas.mcmaster.ca/api/data-preprocessing/download/${file}`;
+    link.href = `http://localhost:8000/api/data-preprocessing/download/${file}`;
     link.download = file;
     link.click();
   };
@@ -243,7 +251,8 @@ const DataPreprocessing = () => {
                         <input
                           type="text"
                           value={parameters[method][param].join(', ')}
-                          onChange={(e) => handleParameterChange(method, param, e.target.value)}
+                          onChange={(e) => handleParameterChange(method, param, e.target.value)} // Allow typing
+                          onBlur={() => validateHalfWindows(method, param)} // Validate on blur
                           placeholder="Enter comma-separated values"
                         />
                       ) : metadata.type === 'dropdown' ? (

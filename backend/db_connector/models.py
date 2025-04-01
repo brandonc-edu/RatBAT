@@ -70,6 +70,7 @@ class trial(models.Model):
     duration = models.IntegerField()          
     fallsduringtest = models.IntegerField()          
     notes = models.CharField(max_length=2000,null=True)
+    preprocessed = models.CharField(max_length=200,null=True)
     trackfile = models.CharField(max_length=200,null=True) 
     pathplot = models.CharField(max_length=200,null=True) 
     video = models.CharField(max_length=200,null=True) 

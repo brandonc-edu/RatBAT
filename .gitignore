@@ -1,5 +1,6 @@
 venv/
 backend/summary_measures/migrations/
+backend/env
 backend/db_connector/migrations/
 backend/data-preprocessing/migrations/
 database/data/test_data/

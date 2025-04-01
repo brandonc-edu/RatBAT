@@ -1,25 +1,10 @@
+// filepath: /home/yadavi1/RatBAT/frontend/jest.config.js
 module.exports = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['@testing-library/jest-dom'],
   transform: {
-    "^.+\\.[tj]sx?$": [
-      "@swc/jest",
-      {
-        jsc: {
-          parser: {
-            syntax: "ecmascript",
-            jsx: true
-          },
-          target: "es2020"
-        },
-        module: {
-          type: "commonjs"
-        }
-      }
-    ]
+    "^.+\\.[tj]sx?$": "babel-jest"
   },
-  // Ensure axios is transformed too. On Windows, this regex often works better:
-  transformIgnorePatterns: [
-    "node_modules/(?!axios)"
-  ]
+  transformIgnorePatterns: ["node_modules/(?!(axios)/)"], // Ensure axios is transformed
+  extensionsToTreatAsEsm: [".ts", ".tsx", ".js", ".jsx"]
 };
