@@ -108,10 +108,12 @@
 .data-preprocessing-page .data-selection-footer {
   padding-top: 10px;
   display: flex;
-  justify-content: flex-end; /* Align the button to the right */
+  justify-content: flex-end; /* Align the buttons to the right */
+  gap: 10px; /* Add spacing between the buttons */
   position: sticky;
   bottom: 0;
   background-color: white;
+  align-items: center;
   border-top: 1px solid #ccc;
 }
 
@@ -226,7 +228,7 @@
 
 /* Loading overlay to restrict interaction during preprocessing */
 .data-preprocessing-page .loading-overlay {
-  position: fixed;
+  position: fixed; /* Ensure it covers the entire viewport */
   top: 0;
   left: 0;
   width: 100%;
@@ -236,6 +238,7 @@
   justify-content: center;
   align-items: center;
   z-index: 1000; /* Ensure it appears above all other elements */
+  pointer-events: none; /* Prevent interaction with the overlay */
 }
 
 /* Spinner for the loading overlay */

@@ -22,12 +22,13 @@ const DataPreprocessing = () => {
     },
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   
   useEffect(() => {
     const fetchDataFiles = async () => {
       try {
         // Use the correct endpoint URL
-        const response = await axios.get('http://localhost:8000/api/frdr-query/get-timeseries/?trials=32');
+        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/');
         const trials = response.data;
     
         // Assuming the response contains a dictionary of trial IDs and their metadata
@@ -129,11 +130,22 @@ const DataPreprocessing = () => {
   
     try {
       const response = await axios.post(
-        'http://localhost:8000/api/data-preprocessing/preprocess/',
+        'http://ratbat.cas.mcmaster.ca/api/data-preprocessing/preprocess/',
         payload,
         { timeout: 1800000 } // Set timeout to 30 minutes (1800000 ms)
       );
-      setPreprocessedFiles(response.data);
+  
+      if (response.status === 200) {
+        const { preprocessed_files, parameter_files } = response.data;
+  
+        // Flatten the files into a single array
+        const combinedFiles = [
+          ...preprocessed_files.map((file) => ({ type: 'preprocessed', file })),
+          ...parameter_files.map((file) => ({ type: 'parameter', file })),
+        ];
+  
+        setPreprocessedFiles(combinedFiles);
+      }
     } catch (error) {
       console.error('Error during preprocessing:', error);
     } finally {
@@ -143,11 +155,51 @@ const DataPreprocessing = () => {
 
   const handleDownload = (file) => {
     const link = document.createElement('a');
-    link.href = `http://localhost:8000/api/data-preprocessing/download/${file}`;
+    link.href = `http://ratbat.cas.mcmaster.ca/api/data-preprocessing/download/${file}`;
     link.download = file;
     link.click();
   };
 
+  const handleFetchPreprocessedData = async () => {
+    if (selectedDataFiles.length === 0) {
+      alert('Please select at least one trial to fetch preprocessed data.');
+      return;
+    }
+  
+    setIsFetching(true); // Show the loading spinner for "Fetch Preprocessed"
+  
+    const payload = { trials: selectedDataFiles.map((trial) => parseInt(trial, 10)) };
+    console.log('Payload being sent:', payload);
+  
+    try {
+      const response = await axios.post(
+        'http://ratbat.cas.mcmaster.ca/api/data-preprocessing/fetch-preprocessed/',
+        payload
+      );
+  
+      if (response.status === 200) {
+        const message = response.data.message || 'All files successfully fetched.';
+        alert(message);
+  
+        // Add the successfully fetched files to the preprocessedFiles state
+        const fetchedFiles = response.data.trial_ids || [];
+        const formattedFiles = fetchedFiles.map((file) => ({
+          file, // Use the file name directly
+          type: 'preprocessed', // Mark as preprocessed
+        }));
+  
+        setPreprocessedFiles((prev) => [...prev, ...formattedFiles]);
+      } else {
+        alert('Failed to fetch preprocessed data.');
+      }
+    } catch (error) {
+      console.error('Error fetching preprocessed data:', error);
+      alert('An error occurred while fetching preprocessed data.');
+    } finally {
+      setIsFetching(false); // Hide the loading spinner
+    }
+  };
+  
   // Algorithm titles for display
   const algorithmTitles = {
     LOWESS: 'Movement Smoothing (LOWESS)',
@@ -216,12 +268,13 @@ const DataPreprocessing = () => {
 
   return (
     <div className="data-preprocessing-page">
+    {(isLoading || isFetching) && (
+      <div className="loading-overlay">
+        <div className="spinner"></div>
+      </div>
+    )}
+
       <div className="top-section">
-        {isLoading && (
-          <div className="loading-overlay">
-            <div className="spinner"></div>
-          </div>
-        )}
         <div className="preprocessing-methods">
           <h3>Preprocessing Methods</h3>
           <div className="method-item-container">
@@ -332,28 +385,45 @@ const DataPreprocessing = () => {
             ))}
           </div>
           <div className="data-selection-footer">
-            <button onClick={handlePreprocess}>Preprocess</button>
+            <div className="tooltip-container">
+              <button className="info-button">i</button>
+              <span className="tooltip-text">
+                Checks if there already exists preprocessed data using default parameters in the FRDR for the selected trials and retrieves it, which is faster than preprocessing it again.
+              </span>
+            </div>
+            <button onClick={handleFetchPreprocessedData} disabled={isFetching}>
+              {isFetching ? 'Fetching...' : 'Fetch Preprocessed'}
+            </button>
+            <button onClick={handlePreprocess} disabled={isLoading}>
+              {isLoading ? 'Processing...' : 'Preprocess'}
+            </button>
           </div>
         </div>
       </div>
 
       <div className="results-section">
-        <h3>Preprocessed Files</h3>
+        <h3>Result</h3>
         <div className="result-items">
-          {preprocessedFiles.map((file) => (
+          {preprocessedFiles.map(({ file }) => (
             <div key={file} className="result-item">
               <label>
                 <input
                   type="checkbox"
-                  onChange={(e) => console.log(`Checkbox for ${file} is ${e.target.checked ? 'checked' : 'unchecked'}`)}
+                  onChange={(e) =>
+                    console.log(`Checkbox for ${file} is ${e.target.checked ? 'checked' : 'unchecked'}`)
+                  }
                 />
-                {file}
+                {file} {/* Display only the file name */}
               </label>
             </div>
           ))}
         </div>
         <div className="results-footer">
-          <button onClick={() => preprocessedFiles.forEach((file) => handleDownload(file))}>
+          <button
+            onClick={() =>
+              preprocessedFiles.forEach(({ file }) => handleDownload(file))
+            }
+          >
             Download Selected
           </button>
         </div>

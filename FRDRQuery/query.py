@@ -87,10 +87,36 @@ def get_preprocessed_urls(trials:list[int], trial_model:ModelBase) -> list[(int,
     for trial in trials:
         data = (trial_model.objects.filter(trial_id = trial).values(*ts_fields).distinct())[0]
         
-        if not data["preprocessed"] == None and data["timeseries__x_s"] == None:
+        if not data["preprocessed"] == None:
             urls.append((data["trial_id"], "s", data["preprocessed"])) 
     
     return urls
+  
+# def get_preprocessed_urls(trials: list[int], trial_model: ModelBase) -> list[(int, str, str)]:
+#     """Retrieves URLs for smoothed files from the FRDR for given trial_ids."""
+
+#     ts_fields = ["trial_id", "preprocessed", "timeseries__x_s"]
+#     urls = []
+
+#     for trial in trials:
+#         # Fetch all rows for the trial
+#         data = trial_model.objects.filter(trial_id=trial).values(*ts_fields).distinct()
+#         print(f"Trial ID: {trial}, Data: {list(data)}")  # Log the data for each trial
+
+#         if not data:
+#             print(f"No data found for trial ID: {trial}")
+#             continue
+
+#         # Check each row for the condition
+#         for row in data:
+#             print(f"Checking row: {row}")
+#             if row["preprocessed"] is not None:  # Adjusted condition
+#                 urls.append((row["trial_id"], "s", row["preprocessed"]))
+#                 print(f"Added URL: {urls[-1]}")
+#                 break  # Stop after finding the first valid row for this trial
+
+#     print(f"Generated URLs: {urls}")
+#     return urls
 
 
 def get_data(filters:dict, trial_model:ModelBase, fields:list[str]) -> list[dict]:

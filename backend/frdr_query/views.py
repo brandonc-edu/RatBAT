@@ -124,14 +124,13 @@ class FRDRQueryView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 class FRDRQueryPreprocessedView(APIView):
-    """An api view used to submit trial_ids.
+    """An API view used to submit trial_ids.
     
-    Any data already stored in the database will not be refetched from the frdr. 
+    Any data already stored in the database will not be refetched from the FRDR. 
     """
     def post(self, request, *args, **kwargs):
-
         try:        
-            trials  = request.data.get('trials')
+            trials = request.data.get('trials')
 
             print(f"Received trials: {trials}")
 
@@ -139,18 +138,22 @@ class FRDRQueryPreprocessedView(APIView):
                 return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
 
             trials = [int(trial) for trial in trials]
-            frdr_urls = get_preprocessed_urls(trials,models.trial)
+            frdr_urls = get_preprocessed_urls(trials, models.trial)
             print(f"Fetching the following URLs from the FRDR: {frdr_urls}")
 
-            failed_downloads = frdr_request(frdr_urls,"",models.timeseries)
+            failed_downloads = frdr_request(frdr_urls, "", models.timeseries)
             trial_ids = set([trial[0] for trial in frdr_urls])
             failed_trial_ids = set([trial[0] for trial in failed_downloads])
             trial_ids = list(trial_ids.difference(failed_trial_ids))
 
-            if len(failed_downloads) == 0:
-                return Response({"message":f"All files successfully saved for trials: {trial_ids}"}, status=status.HTTP_200_OK)
-            else:
-                return Response({"message":f"One or more files failed to download.","failed downloads":failed_downloads}, status=status.HTTP_207_MULTI_STATUS)
+            response_data = {
+                "message": f"All files successfully saved for trials: {trial_ids}" if len(failed_downloads) == 0 else "One or more files failed to download.",
+                "urls": frdr_urls,  # Include the URLs in the response
+                "failed_downloads": failed_downloads
+            }
+
+            status_code = status.HTTP_200_OK if len(failed_downloads) == 0 else status.HTTP_207_MULTI_STATUS
+            return Response(response_data, status=status_code)
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

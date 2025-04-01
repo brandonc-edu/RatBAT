@@ -84,7 +84,7 @@ class PreprocessDataView(APIView):
             print("Updated parameters after handling 'Determine k Automatically' and 'log_transform':", parameters)
 
             # Query the time series data for the provided trials
-            timeseries_url = "http://localhost:8000/api/frdr-query/get-timeseries/?trials=32"
+            timeseries_url = "http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/"
             response = requests.get(timeseries_url, params={"trials": ",".join(map(str, selected_trials))})
 
             if response.status_code != 200:
@@ -128,8 +128,68 @@ class PreprocessDataView(APIView):
                 output_file_path = os.path.join(output_directory, output_file_name)
                 pd.DataFrame(preprocessed_data, columns=['frame', 'x', 'y', 'velocity', 'segment_type']).to_csv(output_file_path, index=False)
                 preprocessed_files.append(output_file_name)
+                
+            # Create parameter files for each trial
+            parameter_files = []
+            for trial_id in selected_trials:
+                parameter_file_name = f"parameters_trial_{trial_id}.csv"
+                parameter_file_path = os.path.join(output_directory, parameter_file_name)
+                pd.DataFrame([parameters]).to_csv(parameter_file_path, index=False)
+                parameter_files.append(parameter_file_name)
 
-            return Response(preprocessed_files, status=status.HTTP_200_OK)
+            return Response({"preprocessed_files": preprocessed_files, "parameter_files": parameter_files}, status=status.HTTP_200_OK)
         except Exception as e:
             print("Error during preprocessing:", str(e))
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+          
+class FetchPreprocessedDataView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            # Get the selected trials from the request
+            selected_trials = request.data.get('trials', [])
+            selected_trials = [int(trial) for trial in selected_trials]  # Convert to integers
+
+            if not selected_trials:
+                return Response({"error": "No trials provided in the request."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Call the FRDR service to fetch preprocessed data
+            frdr_url = "http://ratbat.cas.mcmaster.ca/api/frdr-query/frdr-query-preprocessed/"
+            response = requests.post(frdr_url, json={"trials": selected_trials})
+
+            if response.status_code != 200:
+                return Response({"error": f"Failed to fetch data from FRDR: {response.text}"}, status=response.status_code)
+
+            # Parse the response from the FRDR service
+            fetched_data = response.json()
+            fetched_urls = fetched_data.get("urls", [])  # Now correctly retrieves the URLs
+
+            if not fetched_urls:
+                return Response({"message": "No preprocessed files found for the selected trials."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Directory where preprocessed files will be saved
+            output_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'preprocessing', 'preprocessed')
+            os.makedirs(output_directory, exist_ok=True)
+
+            # Download and save the files locally
+            saved_files = []
+            for trial_id, _, file_url in fetched_urls:
+                # Extract the original file name
+                original_file_name = file_url.split("/")[-1]
+                # Rename the file to follow the preprocessed_trial_<trial_id>.csv format
+                new_file_name = f"preprocessed_trial_{trial_id}.csv"
+                file_path = os.path.join(output_directory, new_file_name)
+
+                # Download the file
+                file_response = requests.get(file_url)
+                if file_response.status_code == 200:
+                    with open(file_path, 'wb') as f:
+                        f.write(file_response.content)
+                    saved_files.append(new_file_name)
+                    print(f"File saved and renamed: {file_path}")
+                else:
+                    print(f"Failed to download file: {file_url}")
+
+            return Response({"message": "All files successfully fetched and saved.", "trial_ids": saved_files}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("Error fetching and saving preprocessed data:", str(e))
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
