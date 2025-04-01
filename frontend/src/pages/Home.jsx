@@ -31,6 +31,23 @@ const Home = () => {
         </p>
       </section>
 
+      {/* ACTUAL Theoretical Background Section */}
+      <section className="theoretical-background">
+        <h2>Background</h2>
+        <p>
+          OCD, or Obsessive Compulsive Disorder, is a severe and complex disorder that deeply impacts the lives of approximately 1% of adults worldwide. Decades of research have gone into understanding the many facets of OCD, leading to major advancements in diagnosis and treatment. 
+        </p>
+        <p>
+          One important direction of neuroscientific research into OCD centres around creating and analysing animal models of the disorder. These models allow researchers to examine animals who possess OCD or present OCD-like symptoms and study their behaviour for important, actionable insights
+        </p>
+        <p>
+          The Szechtman Lab Collection is comprised of over two decades worth of data collected from a multitude of experiments involving animal models of OCD, using various treatment methods on rodents to simulate OCD-like symptoms for observation. All in all, the combined research efforts total approximately twenty thousand trials worth of raw video and time series data, testing a wide array of independent variables. 
+        </p>
+        <p>
+          Our project, RatBAT, aims to provide an accessible and powerful tool to researchers that will allow them to access, process, and analyze this data and open the door for future projects and studies that will help us better understand and treat OCD. 
+        </p>
+      </section>
+
       {/* Dataset Highlights Section */}
       <section className="dataset-highlights">
         <h2>Data Collection</h2>
