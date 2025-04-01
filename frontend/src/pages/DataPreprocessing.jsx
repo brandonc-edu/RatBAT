@@ -200,6 +200,16 @@ const DataPreprocessing = () => {
     }
   };
   
+  const handleSelectAll = () => {
+    if (selectedDataFiles.length === dataFiles.length) {
+      // Deselect all
+      setSelectedDataFiles([]);
+    } else {
+      // Select all
+      setSelectedDataFiles(dataFiles.map((trial) => trial.id));
+    }
+  };
+  
   // Algorithm titles for display
   const algorithmTitles = {
     LOWESS: 'Movement Smoothing (LOWESS)',
@@ -396,6 +406,9 @@ const DataPreprocessing = () => {
             </button>
             <button onClick={handlePreprocess} disabled={isLoading}>
               {isLoading ? 'Processing...' : 'Preprocess'}
+            </button>
+            <button onClick={handleSelectAll}>
+              {selectedDataFiles.length === dataFiles.length ? 'Deselect All' : 'Select All'}
             </button>
           </div>
         </div>

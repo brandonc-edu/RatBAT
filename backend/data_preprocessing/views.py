@@ -161,33 +161,73 @@ class FetchPreprocessedDataView(APIView):
 
             # Parse the response from the FRDR service
             fetched_data = response.json()
-            fetched_urls = fetched_data.get("urls", [])  # Now correctly retrieves the URLs
-
-            if not fetched_urls:
-                return Response({"message": "No preprocessed files found for the selected trials."}, status=status.HTTP_404_NOT_FOUND)
+            fetched_urls = fetched_data.get("urls", [])  # Retrieve the URLs
 
             # Directory where preprocessed files will be saved
             output_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'preprocessing', 'preprocessed')
             os.makedirs(output_directory, exist_ok=True)
 
-            # Download and save the files locally
             saved_files = []
-            for trial_id, _, file_url in fetched_urls:
-                # Extract the original file name
-                original_file_name = file_url.split("/")[-1]
-                # Rename the file to follow the preprocessed_trial_<trial_id>.csv format
-                new_file_name = f"preprocessed_trial_{trial_id}.csv"
-                file_path = os.path.join(output_directory, new_file_name)
 
-                # Download the file
-                file_response = requests.get(file_url)
-                if file_response.status_code == 200:
-                    with open(file_path, 'wb') as f:
-                        f.write(file_response.content)
-                    saved_files.append(new_file_name)
-                    print(f"File saved and renamed: {file_path}")
-                else:
-                    print(f"Failed to download file: {file_url}")
+            if fetched_urls:
+                # Download and save the files locally
+                for trial_id, _, file_url in fetched_urls:
+                    # Extract the original file name
+                    original_file_name = file_url.split("/")[-1]
+                    # Rename the file to follow the preprocessed_trial_<trial_id>.csv format
+                    new_file_name = f"preprocessed_trial_{trial_id}.csv"
+                    file_path = os.path.join(output_directory, new_file_name)
+
+                    # Download the file
+                    file_response = requests.get(file_url)
+                    if file_response.status_code == 200:
+                        with open(file_path, 'wb') as f:
+                            f.write(file_response.content)
+                        saved_files.append(new_file_name)
+                        print(f"File saved and renamed: {file_path}")
+                    else:
+                        print(f"Failed to download file: {file_url}")
+            elif response.status_code == 200 and fetched_urls == []:
+                # If the API call succeeded and returned an empty list, fetch smoothed data
+                timeseries_url = "http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/"
+                response = requests.get(timeseries_url, params={"trials": ",".join(map(str, selected_trials))})
+
+                if response.status_code != 200:
+                    return Response({"error": f"Failed to fetch time series data: {response.text}"}, status=response.status_code)
+
+                timeseries_data = response.json()
+
+                for trial_id, trial_data in timeseries_data.items():
+                    print(f"Processing trial: {trial_id}")
+
+                    # Check if smoothed data exists
+                    x_s_values = trial_data.get("x_s")
+                    if x_s_values is None or all(value is None for value in x_s_values):
+                        return Response(
+                            {"error": f"No smoothed data exists for trial {trial_id}."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    # Extract the required fields
+                    if {'sample_id', 'x_s', 'y_s', 'v_s', 'movementtype_s'}.issubset(trial_data):
+                        smoothed_data = {
+                            "sample_id": trial_data.get("sample_id"),
+                            "x_s": trial_data.get("x_s"),
+                            "y_s": trial_data.get("y_s"),
+                            "v_s": trial_data.get("v_s"),
+                            "movementtype_s": trial_data.get("movementtype_s"),
+                        }
+                    else:
+                        return Response(
+                            {"error": f"Trial {trial_id} does not have all required smoothed data fields."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    # Save the smoothed data directly to a CSV file
+                    output_file_name = f"preprocessed_trial_{trial_id}.csv"
+                    output_file_path = os.path.join(output_directory, output_file_name)
+                    pd.DataFrame(smoothed_data).to_csv(output_file_path, index=False, header=False)  # No headers
+                    saved_files.append(output_file_name)
 
             return Response({"message": "All files successfully fetched and saved.", "trial_ids": saved_files}, status=status.HTTP_200_OK)
         except Exception as e:
