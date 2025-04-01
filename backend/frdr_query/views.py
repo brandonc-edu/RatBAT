@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from FRDRQuery.query import frdr_request, get_frdr_urls, get_timeseries, get_data
+from FRDRQuery.query import frdr_request, get_frdr_urls, get_timeseries, get_data, get_preprocessed_urls
 
 from django.apps import apps
 import django
@@ -63,7 +63,7 @@ class GetTimeSeriesView(APIView):
     def get(self, request, *args, **kwargs):
         try:        
             trials = request.GET.getlist("trials",request.session.get("filtered_trials",[]))
-            print(trials)
+            
             trials = [int(trial) for trial in trials]
 
             print(f"Received trials: {trials}")
@@ -89,7 +89,8 @@ class FRDRQueryView(APIView):
             print(f"Received filters: {filters}")
             print(f"Received cache_path: {cache_path}")
             print(f"Received dtypes: {dtypes}")
-            
+
+
             if not filters or not cache_path:
                 return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -107,7 +108,7 @@ class FRDRQueryView(APIView):
             filters_ts.append({"field":"timeseries","lookup":"isnull","value":False})
 
             trial_ids = set([list(trial.values())[0] for trial in get_data(filters_ts, models.trial, ["trial_id"])])
-            print()
+
             failed_trial_ids = set([trial[0] for trial in failed_downloads])
             trial_ids = list(trial_ids.difference(failed_trial_ids))
 
@@ -119,5 +120,37 @@ class FRDRQueryView(APIView):
             else:
                 return Response({"message":f"One or more files failed to download.","failed downloads":failed_downloads}, status=status.HTTP_207_MULTI_STATUS)
             
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class FRDRQueryPreprocessedView(APIView):
+    """An api view used to submit trial_ids.
+    
+    Any data already stored in the database will not be refetched from the frdr. 
+    """
+    def post(self, request, *args, **kwargs):
+
+        try:        
+            trials  = request.data.get('trials')
+
+            print(f"Received trials: {trials}")
+
+            if not trials:
+                return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
+
+            trials = [int(trial) for trial in trials]
+            frdr_urls = get_preprocessed_urls(trials,models.trial)
+            print(f"Fetching the following URLs from the FRDR: {frdr_urls}")
+
+            failed_downloads = frdr_request(frdr_urls,"",models.timeseries)
+            trial_ids = set([trial[0] for trial in frdr_urls])
+            failed_trial_ids = set([trial[0] for trial in failed_downloads])
+            trial_ids = list(trial_ids.difference(failed_trial_ids))
+
+            if len(failed_downloads) == 0:
+                return Response({"message":f"All files successfully saved for trials: {trial_ids}"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"message":f"One or more files failed to download.","failed downloads":failed_downloads}, status=status.HTTP_207_MULTI_STATUS)
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

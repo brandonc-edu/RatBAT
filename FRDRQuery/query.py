@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 from django.db.models.base import ModelBase
 from django.db.models import Q
-from database.db_helper import build_model, get_relationship, FIELD_LOOKUPS
+from database.db_helper import build_model, get_relationship, FIELD_LOOKUPS, update_timeseries
 from django_pandas.io import read_frame
 
 def get_frdr_urls(filters:dict, trial_model:ModelBase, dtypes:str) -> list[(int,str,str)]:
@@ -68,6 +68,31 @@ def get_frdr_urls(filters:dict, trial_model:ModelBase, dtypes:str) -> list[(int,
     
     return urls
 
+def get_preprocessed_urls(trials:list[int], trial_model:ModelBase) -> list[(int,str,str)]:
+    """Retreives urls for smoothed files from the frdr for given trial_ids.
+
+    Parameters
+    ----------
+    trials : list[int]
+    trial_model : django.db.models.ModelBase
+        Django model class for the trial table.
+    """
+
+    ts_fields = ["trial_id",
+                 "preprocessed",
+                 "timeseries__x_s"]
+
+    urls = []
+
+    for trial in trials:
+        data = (trial_model.objects.filter(trial_id = trial).values(*ts_fields).distinct())[0]
+        
+        if not data["preprocessed"] == None and data["timeseries__x_s"] == None:
+            urls.append((data["trial_id"], "s", data["preprocessed"])) 
+    
+    return urls
+
+
 def get_data(filters:dict, trial_model:ModelBase, fields:list[str]) -> list[dict]:
     """Given a list of filters and fields, get data all for those fields which falls under the filter.
 
@@ -122,6 +147,7 @@ def frdr_request(files:list[tuple[int,str,str]], cache_path:str, timeseries_mode
              - "v" : raw video
              - "t" : raw time series data
              - "p" : raw pathplots
+             - "s" : smoothed time series data
     cache_path : str
         filepath to location to cache requested data.
     timeseries_model : django.db.models.ModelBase
@@ -150,6 +176,12 @@ def frdr_request(files:list[tuple[int,str,str]], cache_path:str, timeseries_mode
                 build_model(timeseries_model,ts_data)
             else:
                 failed_downloads.append((file[0],'t'))
+        if file[1] == 's':
+            trk = get_preprocessed(file[0],url)
+            if type(trk) == pd.DataFrame:
+                update_timeseries(timeseries_model,trk)
+            else:
+                failed_downloads.append((file[0],'s'))
                 
     return failed_downloads
 
@@ -175,6 +207,7 @@ def get_media(url:str,cache_path:str) -> None:
         for i in r.iter_content(chunk_size=10*1024*1024):
             fh.write(i)
     return True
+
 def get_timeseries(trials:list[int], trial_model) -> pd.DataFrame:
     """Given a list of trial ids, get dataframes of time series data for those trials.
 
@@ -241,6 +274,36 @@ def get_trackfile(trial_id:int, url:str):
     tf.rename({"Sample no.":"sample_id","Trial_ID":"trial_id","X":"x","Y":"y","Time":"t"},axis=1,inplace=True)
     tf["trial_id"] = [trial_id for _ in range(len(tf.index))]
     tf = tf[["trial_id","sample_id","t","x","y"]]
+    tf.replace("-",np.nan,inplace=True)
+
+    return tf
+
+def get_preprocessed(trial_id:int, url:str):
+    """Fetches preprocessed trackfile from the FRDR and formats it to match the local database.
+
+    Parameters
+    ----------
+    trial_id : int
+        trial id of requested trial.
+    url : str
+        url of the requested trackfile on the frdr.
+            
+    Returns
+    -------
+    pandas.DataFrame
+        Formatted requested trackfile.
+    """
+    try:
+        names = ["sample_id","x_s","y_s","v_s","movementtype_s"]
+        tf = pd.read_csv(url, names = names)
+    
+    except Exception as e:
+        print(f"Error downloading file: {url}")
+        print(f"Error details: {e}")
+        return None
+
+    tf["trial_id"] = [trial_id for _ in range(len(tf.index))]
+    tf = tf[["trial_id","sample_id","x_s","y_s","v_s","movementtype_s"]]
     tf.replace("-",np.nan,inplace=True)
 
     return tf
