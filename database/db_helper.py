@@ -62,7 +62,7 @@ def get_foreign_keys(model):
 
 
 
-def get_relationship(start, dest, searched = None) -> (str|None):
+def get_relationship(start, dest, searched = None):
     """Recursive pathfinding algorithm to determine the relationship between
     a database table and some field in the database.
 
