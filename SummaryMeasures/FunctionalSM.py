@@ -629,6 +629,8 @@ def Calculate_Bouts(data, env: fsm.Environment, requiredSummaryMeasures, preExis
     """
         Calculates the bouts of checking. Not sure of what to return yet
 
+        TO BE IMPLEMENTED
+
         Reference ID is: calc_boutsOfChecking
     """
     # Check if required summary measures have been calculated already
@@ -641,39 +643,62 @@ def Calculate_Bouts(data, env: fsm.Environment, requiredSummaryMeasures, preExis
     mainHomeBase = requiredSummaryMeasures["calc_homebases"][0]
     mainHomeBaseReturn = requiredSummaryMeasures["calc_HB1_meanReturn"]
 
+    ## Need to find all long lingering episodes and filter them out to get bouts of activity
     # Find mean time + IQR of lingering episodes
     allLing = []
     ling = False
     currentLing = []
 
-    # Get all lingering episodes
+    # Get the start and end points of all lingering episodes
     for i in range(len(data)):
         frame = data[i]
         if frame[4] == 0:
             ling = True
-            currentLing.append(frame)
+            currentLing.append(i)
         elif frame[4] == 1 and ling == True:
             ling = False
+            currentLing.append(i)
             allLing.append(currentLing)
             currentLing = []
     if len(currentLing) != 0: # In case the loop ends on a lingering episode
-        allLing.append(currentLing)
+        allLing.append(len(data))
 
     # Calculate means for lingering episode duration
-    timeForEpi = [len(epi) for epi in allLing]
+    timeForEpi = [start - end for epi in allLing for start, end in epi] # Calculate the total duration
     meanTimeLing = sum(timeForEpi) / len(allLing)
     q75Mean, q25Mean = np.percentile(timeForEpi, [75, 25])
     iqrMean = q75Mean - q25Mean
-    
-    # Calculate means for lingering episodes return times
 
-    # Get outlier lingering episodes (time of epi is >= mean + iqr)
+    # Get outlier lingering episodes (time of epi is >= mean + 1.5 * iqr)
     outlierIndices = np.array(timeForEpi)
-    outlierIndices = [outlierIndices >= (meanTimeLing + iqrMean)]
+    outlierIndices = [outlierIndices >= (meanTimeLing + 1.5 * iqrMean)]
     outliers = []
-    for x in range(len(timeForEpi)): # Get all outlier lingering episodes
-        if outlierIndices[x]:
-            outliers.append(allLing[x])
+    for x in range(len(timeForEpi)): # Get indices of all outlier episodes in the actual data
+        outliers = outliers + [frame for frame in range(timeForEpi[x][0], timeForEpi[x][1])] # generate indicies between the start and end of lingering episodes
+
+    # Calculate bouts of activity
+    boutOfActivity = np.delete(data, outliers, axis=0) # Delete all frames that belong to outlier lingering episodes
+
+    # # Filter out all bouts that have too long excursion times
+    
+    # Find all possible intervals
+    ## Find the start and end points of all homebase visitations (their frames).
+    right_points = [] # start of hb visitation (think of it as the ')', or end, of an interval)
+    left_points = [] # end of hb visitation (think of it as the '(', or start, of an interval)
+    hb = False if env.SpecimenLocation(data[0][1], data[0][2]) != mainHomeBase else True
+    for i in range(len(data)):
+        frame = data[i]
+        if not hb and env.SpecimenLocation(frame[1], frame[2]) == mainHomeBase:
+            hb = True
+            right_points.append(i)
+        elif hb and env.SpecimenLocation(frame[1], frame[2]) != mainHomeBase:
+            hb = False
+            left_points.append(i - 1)
+
+    ## Create the intervals from the above 
+
+
+    ## Check if their excursion stuff meets the criteria
 
     # Filter out lingering episodes that don't start and end in homebase
     outliers = list(filter(lambda x : env.SpecimenLocation(x[0][1], x[0][2]) == mainHomeBase and env.SpecimenLocation(x[-1][1], x[-1][2]) == mainHomeBase, outliers))
