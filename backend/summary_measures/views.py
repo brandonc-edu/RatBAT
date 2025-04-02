@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from SummaryMeasures.CommanderSM import Commander
 from SummaryMeasures.DependenciesSM import Karpov
-from SummaryMeasures.FunctionalSM import SM_DEPENDENCIES
+from SummaryMeasures.FunctionalSM import DATA_DEPENDENCIES
 
 import pandas as pd
 import os
@@ -11,7 +11,7 @@ import os
 class ListSummaryMeasuresView(APIView):
     def get(self, request, *args, **kwargs):
         try:
-            summary_measures = list(SM_DEPENDENCIES.keys())
+            summary_measures = list(DATA_DEPENDENCIES.keys())
             # Ensure calc_homebases is included at the start
             if 'calc_homebases' in summary_measures:
                 summary_measures.remove('calc_homebases')

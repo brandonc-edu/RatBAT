@@ -23,10 +23,18 @@ class Command(BaseCommand):
     help = "Load all metadata into the database."
     
     def handle(self,*args,**kwargs):
+        # Runs with 'python3 backend/manage.py load_metadata'
+        
         # Load metadata from csv file.
         data_path = os.path.join(os.path.dirname(__file__),'..','..','..','..','database','data','FRDR_interface_20211029_SupplementaryMaterial(MetaDataTable).csv')
         data_path = os.path.abspath(data_path)
         df = pd.read_csv(data_path,header=1, encoding_errors="replace", dtype=str)
+
+        # Load updates from csv file.
+        updates_path = os.path.join(os.path.dirname(__file__),'..','..','..','..','database','data','FRDR_update_log.csv')
+        updates_path = os.path.abspath(updates_path)
+        updates = pd.read_csv(updates_path,dtype = {"Study_ID":str,"Publication_ID":str,"default_smoothed_available":int})
+        updates.set_index('Study_ID',inplace=True)
 
         # Rename columns to match the database column names and drop columns that do not appear in the database.
         label_path = os.path.join(os.path.dirname(__file__),'..','..','..','..','database','data','FRDR_variable_translations.csv')
@@ -42,6 +50,14 @@ class Command(BaseCommand):
 
         # Drop 'total' row from df.
         df = df[:-1]
+
+        # Update file links to frdr links instead of globus links.
+        df[["Video","Trackfile","Pathplot"]] = df[["Video","Trackfile","Pathplot"]].map(lambda url: str(url).replace("g-624536.53220.5898.data.globus.org","www.frdr-dfdr.ca/repo/files"))
+        for column in ["Video","Trackfile","Pathplot"]:
+            df[column] = df.apply(lambda row: re.sub("publication_[0-9]+/",f"publication_{updates.loc[row['Study_ID'],'Publication_ID']}/",str(row[column])),axis=1)
+
+        # Adding preprocessed url if exists.
+        df["preprocessed"] = df.apply(lambda row: None if not updates.loc[row["Study_ID"],"default_smoothed_available"] else (row["Trackfile"].replace("05_EthoVision_csvTrackFiles","08_SEEprocessedTrackFiles")).replace("_TrackFile","_smoothed"), axis=1)
 
         # Add integer ID values for unique apparatus/treatment combinations.
         # Create new dataframes with integer IDs then merge them back into the original dataframe.
@@ -87,6 +103,7 @@ class Command(BaseCommand):
                             "Duration",
                             "FallsDuringTest",
                             "Notes",
+                            "preprocessed",
                             "Trackfile",
                             "Pathplot",
                             "Video",
