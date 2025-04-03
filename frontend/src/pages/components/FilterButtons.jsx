@@ -29,7 +29,7 @@ function FilterButtons({ onApply }) {
       category: "study",
       displayName: "Study",
       fields: [
-        { name: "study_id", displayName: "study id", type: "number" },
+        { name: "study_id", displayName: "study id", type: "text" },
         { name: "studydesc", displayName: "study desc", type: "text" }
       ]
     },
@@ -143,6 +143,7 @@ function FilterButtons({ onApply }) {
         ]
     }
 
+    // REMOVED FILTERS... Not relevant to filters
     // {
     //     category: "fall",
     //     displayName: "Fall",
@@ -245,7 +246,7 @@ function FilterButtons({ onApply }) {
       const categoryFilters = { ...(prev[category] || {}) };
       const existingField = categoryFilters[field] || { lookup: 'range', value: { min: '', max: '' } };
       
-      // Always ensure we store { lookup, value: { min, max } }
+      // store { lookup, value: { min, max } }
       const updatedValue = { ...(existingField.value || { min: '', max: '' }) };
       updatedValue[bound] = newValue; // set the min or max
   
@@ -310,16 +311,27 @@ function FilterButtons({ onApply }) {
       for (const field in localFilters[category]){
         const { lookup, value } = localFilters[category][field];
         if (lookup === 'range') {
-          // if min or max is empty, skip them
           const min = value.min?.trim();
           const max = value.max?.trim();
-          if (!min && !max) continue; // both empty => skip
-          // Example: push an object with "range" or two separate objects
-          filtersArray.push({
-            field: field,
-            lookup: 'range',
-            value: { min, max }
-          });
+          if (min && max) {
+            filtersArray.push({
+              field: field,
+              lookup: 'range',
+              value: [min, max]
+            });
+          } else if (min) {
+            filtersArray.push({
+              field: field,
+              lookup: 'gte',
+              value: min
+            });
+          } else if (max) {
+            filtersArray.push({
+              field: field,
+              lookup: 'lte',
+              value: max
+            });
+          }
         } else {
           // Non-range: skip if empty
           if (value.trim() === '') continue;
@@ -435,46 +447,5 @@ function FilterButtons({ onApply }) {
     </div>
   );
 }
-
-//   return (
-//     <div>
-//       <div className="filterBox">
-//         {/* Render filter inputs for each toggled category */}
-//         <div className='parameters'>
-//           {categories.map((group, index) => (
-//             toggledButtons[index] && (
-//               <div key={group.category} className="filter-group">
-//                 <h3>{group.category}</h3>
-//                 {group.fields.map(field => (
-//                   <div key={field} className="filter-item">
-//                     <label>{field}:</label>
-//                     <input 
-//                       type="text" 
-//                       value={(localFilters[group.category] && localFilters[group.category][field]) || ''}
-//                       onChange={(e) => handleFieldChange(group.category, field, e.target.value)}
-//                     />
-//                   </div>
-//                 ))}
-//               </div>
-//             )
-//           ))}
-//         </div> 
-//         {/* Meta-variable buttons for each category */}
-//         <div className="meta-buttons">
-//           {categories.map((group, index) => (
-//             <button
-//               key={group.category}
-//               className={`metaVar ${toggledButtons[index] ? 'toggled' : ''}`}
-//               onClick={() => toggleCategory(index)}
-//             >
-//               {group.category}
-//             </button>
-//           ))}
-//         </div>
-//       </div>
-//       <button onClick={handleApply}>Apply</button>
-//     </div>
-//   );
-// }
 
 export default FilterButtons;
