@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from FRDRQuery.query import frdr_request, get_frdr_urls, get_timeseries, get_data, get_preprocessed_urls
+from FRDRQuery.query import frdr_request, get_frdr_urls, get_timeseries, get_data, get_preprocessed_urls
 
 from django.apps import apps
 import django
@@ -64,6 +65,7 @@ class GetTimeSeriesView(APIView):
         try:        
             trials = request.GET.getlist("trials",request.session.get("filtered_trials",[]))
             
+            
             trials = [int(trial) for trial in trials]
 
             print(f"Received trials: {trials}")
@@ -91,6 +93,8 @@ class FRDRQueryView(APIView):
             print(f"Received dtypes: {dtypes}")
 
 
+
+
             if not filters or not cache_path:
                 return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -103,7 +107,16 @@ class FRDRQueryView(APIView):
             print(f"Fetching the following URLs from the FRDR: {frdr_urls}")
 
             failed_downloads = frdr_request(frdr_urls, full_cache_path, models.timeseries)
+            failed_downloads = frdr_request(frdr_urls, full_cache_path, models.timeseries)
             
+            filters_ts = filters.copy()
+            filters_ts.append({"field":"timeseries","lookup":"isnull","value":False})
+
+            trial_ids = set([list(trial.values())[0] for trial in get_data(filters_ts, models.trial, ["trial_id"])])
+
+            failed_trial_ids = set([trial[0] for trial in failed_downloads])
+            trial_ids = list(trial_ids.difference(failed_trial_ids))
+
             filters_ts = filters.copy()
             filters_ts.append({"field":"timeseries","lookup":"isnull","value":False})
 

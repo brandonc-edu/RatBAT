@@ -19,9 +19,9 @@ DEFAULT_PARAMS = {
         "half_window" : 4,    
         "log_transform" : np.cbrt, 
         "num_guesses" : 5,   
-        "num_iters" : 200,    
+        "num_iters" : 500,    
         "significance" : 0.05,  
-        "max_k" : 4, 
+        "max_k" : 6, 
         "k" : None,
         "segment_constrain" : True # Specifies if the segment types should be constrained to 0 (lingering episodes) and 1 (progression episodes). False = more movement types than just two.
     }
@@ -200,3 +200,4 @@ class Preprocessor:
         if parameter_dict != None and len(parameter_dict) != 0:
             for param, val in parameter_dict["EM"].items():
                 self.em_params[param] = self.set_function_or_value(param, val)
+

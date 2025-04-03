@@ -5,7 +5,7 @@ This module contains all of the required functionality in regards to Summary Mea
 
 Authors: Brandon Carrasco
 Created on: 07-11-2024
-Modified on: 16-11-2024
+Modified on: 07-03-2025
 """
 
 # Imports
@@ -32,12 +32,17 @@ SM_MAPPING = {
     "calc_HB2_stopDuration" : "Calculate_Secondary_Homebase_Stop_Duration",
     "calc_HB2_cumulativeReturn" : "Calculate_Frequency_Stops_Secondary_Homebase",
     "calc_HB1_expectedReturn" : "Calculated_Expected_Return_Frequency_Main_Homebase",
+    "calc_sessionReturnTimeMean" : "Calculate_Mean_Return_Time_All_Locales",
     "calc_sessionTotalLocalesVisited" : "Calculate_Total_Locales_Visited",
     "calc_sessionTotalStops" : "Calculate_Total_Stops",
+    "calc_expectedMainHomeBaseReturn" : "Expected_Return_Time_Main_Homebase",
+    "calc_distanceTravelled" : "Calculate_Distance_Travelled",
+    "calc_boutsOfChecking" : "Calculate_Bouts"
 }
 
 DATA_MAPPING = {
-    "locale_stops_calc" : "CalculateStops"
+    "locale_stops_calc" : "CalculateStops",
+    "distances_calc" : "CalcuateDistances",
 }
 
 
@@ -54,6 +59,9 @@ SM_DEPENDENCIES = {
     "calc_HB2_stopDuration" : ["calc_homebases"],
     "calc_HB2_cumulativeReturn" : ["calc_homebases"],
     "calc_HB1_expectedReturn" : ["calc_homebases"],
+    "calc_sessionReturnTimeMean" : ["calc_homebases"],
+    "calc_expectedMainHomeBaseReturn" : ["calc_homebases", "calc_HB1_meanReturn", "calc_sessionReturnTimeMean"],
+    "calc_boutsOfChecking" : ["calc_homebases", "calc_HB1_meanReturn"],
 }
 
 ## Data Dependencies
@@ -68,8 +76,10 @@ DATA_DEPENDENCIES = {
     "calc_HB2_stopDuration" : ["locale_stops_calc"],
     "calc_HB2_cumulativeReturn" : ["locale_stops_calc"],
     "calc_HB1_expectedReturn" : ["locale_stops_calc"],
+    "calc_sessionReturnTimeMean" : ["locale_stops_calc"],
     "calc_sessionTotalLocalesVisited" : ["locale_stops_calc"],
     "calc_sessionTotalStops" : ["locale_stops_calc"],
+    "calc_distanceTravelled" : ["distances_calc"]
 }
 
 
@@ -150,6 +160,27 @@ def CalculateStops(data, env: fsm.Environment):
         # stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
         stopFrames[maxLocale] += sum(locDur) 
     return stopLocales, stopFrames
+
+
+def CalcuateDistances(data, env: fsm.Environment):
+    """
+        Given the raw time-series data and environment, calculates the distance travelled from one frame to the next.
+
+        Frame 0 will always be 0.
+    """
+    distanceFrames = [0]
+    prevFrameX = data[0][1]
+    prevFrameY = data[0][2]
+    for i in range(1, len(data)):
+        curFrameX = data[i][1]
+        curFrameY = data[i][2]
+        dist = np.sqrt(np.square(curFrameX - prevFrameX) + np.square(curFrameY - prevFrameY))
+        distanceFrames.append(dist)
+        prevFrameX = curFrameX
+        prevFrameY = curFrameY
+    return distanceFrames
+        
+        
 
 ### NEW Functions to Calculate Summary Measures
 
@@ -450,7 +481,7 @@ def Calculated_Expected_Return_Frequency_Main_Homebase(data, env: fsm.Environmen
 
 def Calculate_Mean_Return_Time_All_Locales(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
     """
-        Calculates the weighted mean return time to all locales,
+        Calculates the mean return time to all locales,
 
         Warning: There must be at least two stop within the first home base (for there to be a main home base). I think.
 
@@ -458,9 +489,62 @@ def Calculate_Mean_Return_Time_All_Locales(data, env: fsm.Environment, requiredS
 
         Reference ID is: calc_sessionReturnTimeMean
     """
-    pass
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_sessionReturnTimeMean', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_sessionReturnTimeMean"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
 
-# def Expected_Return_Time_Main_Homebase
+    ### Summary Measure Logic
+    if requiredSummaryMeasures["calc_homebases"][1] == None:
+        print("WARNING: Cannot calculate mean return time to all locales, as the first home base is only stopped in once!")
+        return None
+
+    localeVisits = desiredCalcs['locale_stops_calc'][0]
+    mainHomeBase = requiredSummaryMeasures['calc_homebases'][0]
+
+    totalExcursionDuration = 0
+    excursion = False
+    # Count number of excursions (and their total stops) for each locale
+    for i in range(len(data)):
+        frame = data[i]
+        specimenLocale = env.SpecimenLocation(frame[1], frame[2])
+        if specimenLocale != mainHomeBase: # If the specimen is not in the main home base
+            if frame[4] == 1 and not excursion: # If the specimen is no longer in its main home base, it's on an excursion. Has to be moving in a progressive episode to be counted as an excursion (lingering between main home base and elsewhere doesn't count).
+                excursion = True
+            elif excursion and localeVisits[specimenLocale] > 1: # If the specimen is on an excursion in a locale that it will/has stopped in more than once
+                totalExcursionDuration += 1
+        else:
+            excursion = False
+    return (totalExcursionDuration / sum(localeVisits)) / FRAMES_PER_SECOND
+
+
+def Expected_Return_Time_Main_Homebase(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates the expected return time to the main homebase.
+
+        Warning: There must be at least two stop within the first home base (for there to be a main home base). I think.
+
+        Also referred to as: KPexpReturntime01
+
+        Reference ID is: calc_expectedMainHomeBaseReturn
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_expectedMainHomeBaseReturn', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_expectedMainHomeBaseReturn"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    if requiredSummaryMeasures["calc_homebases"][1] == None:
+        print("WARNING: Cannot calculate mean return time to all locales, as the first home base is only stopped in once!")
+        return None
+    
+    mainHomeBaseMeanReturn = requiredSummaryMeasures['calc_HB1_meanReturn']
+    sessionMeanReturn = requiredSummaryMeasures['calc_sessionReturnTimeMean']
+    
+    return mainHomeBaseMeanReturn / sessionMeanReturn
+    
 
 def Calculate_Total_Locales_Visited(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
     """
@@ -503,7 +587,132 @@ def Calculate_Total_Stops(data, env: fsm.Environment, requiredSummaryMeasures, p
 
 ###  Distance & Locomotion Summary Measures ###
 
-# def 
+def Calculate_Distance_Travelled(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates all distances travelled metrics. Returns a tuple of (total distance for progression segments only, total distance for all segments),
+        total distance travelled, speed of progression, 
+        and a tuple of two lists of travelled distances in five minute intervals from start to finish,
+        with the first list corresponding to the use of only the progression statements, and
+        the second corresponding to the use of all segements.
+
+        See Checking_parameters_Definitions_Oct30_2024 for full list of variables.
+
+        Reference ID is: calc_distanceTravelled
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_distanceTravelled', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_distanceTravelled"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    distanceData = desiredCalcs['distances_calc']
+    # Get chunk length (in terms of frames) for five minutes worth of time
+    chunkLength = 5 * 60 * FRAMES_PER_SECOND
+    chunk = 0
+    distancesProgression = [0 for i in range(55 / 5)]
+    distancesAll = [0 for i in range(55 / 5)]
+    totalDurationOfProgression = 0
+
+    for i in range(len(data)):
+        # Update chunks if necessary
+        if i == (chunk + 1) * chunkLength:
+            chunk += 1
+        frame = data[i]
+        # Add distance to all distances list
+        distancesAll[chunk] += distanceData[i]
+        if frame[4] == 1: # If it's a progression segment, add it to the progression distances list
+            distancesProgression[chunk] += distanceData
+            totalDurationOfProgression += 1 # Add 1 frame to the total duration of progressions
+    totalDurationSeconds = totalDurationOfProgression / FRAMES_PER_SECOND
+    # Divide all distances by 100 to get distance in metres
+    distancesAll = [distance / 100 for distance in distancesAll]
+    distancesProgression = [distance / 100 for distance in distancesProgression]
+    # Calculate total distance travelled for all & progression
+    totalDistanceAll = sum(distancesAll)
+    totalDistanceProgression = sum(distancesProgression)
+    return (totalDistanceProgression, totalDistanceAll), totalDurationSeconds, totalDistanceProgression / (totalDurationSeconds), (distancesProgression, distancesAll)
+
+def Calculate_Bouts(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+    """
+        Calculates the bouts of checking. Not sure of what to return yet
+
+        TO BE IMPLEMENTED
+
+        Reference ID is: calc_boutsOfChecking
+    """
+    # Check if required summary measures have been calculated already
+    CheckForMissingDependencies('calc_boutsOfChecking', requiredSummaryMeasures.keys())
+    # Perform any necessary pre-calcs
+    requiredCalcs = DATA_DEPENDENCIES["calc_boutsOfChecking"]
+    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
+
+    ### Summary Measure Logic
+    mainHomeBase = requiredSummaryMeasures["calc_homebases"][0]
+    mainHomeBaseReturn = requiredSummaryMeasures["calc_HB1_meanReturn"]
+
+    ## Need to find all long lingering episodes and filter them out to get bouts of activity
+    # Find mean time + IQR of lingering episodes
+    allLing = []
+    ling = False
+    currentLing = []
+
+    # Get the start and end points of all lingering episodes
+    for i in range(len(data)):
+        frame = data[i]
+        if frame[4] == 0:
+            ling = True
+            currentLing.append(i)
+        elif frame[4] == 1 and ling == True:
+            ling = False
+            currentLing.append(i)
+            allLing.append(currentLing)
+            currentLing = []
+    if len(currentLing) != 0: # In case the loop ends on a lingering episode
+        allLing.append(len(data))
+
+    # Calculate means for lingering episode duration
+    timeForEpi = [start - end for epi in allLing for start, end in epi] # Calculate the total duration
+    meanTimeLing = sum(timeForEpi) / len(allLing)
+    q75Mean, q25Mean = np.percentile(timeForEpi, [75, 25])
+    iqrMean = q75Mean - q25Mean
+
+    # Get outlier lingering episodes (time of epi is >= mean + 1.5 * iqr)
+    outlierIndices = np.array(timeForEpi)
+    outlierIndices = [outlierIndices >= (meanTimeLing + 1.5 * iqrMean)]
+    outliers = []
+    for x in range(len(timeForEpi)): # Get indices of all outlier episodes in the actual data
+        outliers = outliers + [frame for frame in range(timeForEpi[x][0], timeForEpi[x][1])] # generate indicies between the start and end of lingering episodes
+
+    # Calculate bouts of activity
+    boutOfActivity = np.delete(data, outliers, axis=0) # Delete all frames that belong to outlier lingering episodes
+
+    # # Filter out all bouts that have too long excursion times
+    
+    # Find all possible intervals
+    ## Find the start and end points of all homebase visitations (their frames).
+    right_points = [] # start of hb visitation (think of it as the ')', or end, of an interval)
+    left_points = [] # end of hb visitation (think of it as the '(', or start, of an interval)
+    hb = False if env.SpecimenLocation(data[0][1], data[0][2]) != mainHomeBase else True
+    for i in range(len(data)):
+        frame = data[i]
+        if not hb and env.SpecimenLocation(frame[1], frame[2]) == mainHomeBase:
+            hb = True
+            right_points.append(i)
+        elif hb and env.SpecimenLocation(frame[1], frame[2]) != mainHomeBase:
+            hb = False
+            left_points.append(i - 1)
+
+    ## Create the intervals from the above 
+
+
+    ## Check if their excursion stuff meets the criteria
+
+    # Filter out lingering episodes that don't start and end in homebase
+    outliers = list(filter(lambda x : env.SpecimenLocation(x[0][1], x[0][2]) == mainHomeBase and env.SpecimenLocation(x[-1][1], x[-1][2]) == mainHomeBase, outliers))
+
+    # Dunno :)
+
 
 
 ### TESTING ###

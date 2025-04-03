@@ -1,5 +1,6 @@
 from django.urls import path
 from frdr_query.views import FRDRQueryView, GetFieldsView, QueryDataView, GetTimeSeriesView, FRDRQueryPreprocessedView
+from frdr_query.views import FRDRQueryView, GetFieldsView, QueryDataView, GetTimeSeriesView, FRDRQueryPreprocessedView
 
 urlpatterns = [
     path('get-fields/', GetFieldsView.as_view(), name='get_fields'),
