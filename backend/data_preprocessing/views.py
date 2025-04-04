@@ -43,35 +43,6 @@ class PreprocessDataView(APIView):
 
             print(f"Using provided trial IDs: {selected_trials}")
 
-            def convert_parameters(params):
-                for method, method_params in params.items():
-                    for key, value in method_params.items():
-                        # Convert to int if possible, otherwise to float
-                        if isinstance(value, str):
-                            if value.isdigit():
-                                params[method][key] = int(value)
-                            else:
-                                try:
-                                    params[method][key] = float(value)
-                                except ValueError:
-                                    pass
-
-                        # Validate RRM parameters
-                        if method == "RRM":
-                            if key == "min_arr" and (value < 1 or value > 1000):
-                                params[method][key] = 5  # Default value
-                            if key == "tol" and (value <= 0 or value > 100):
-                                params[method][key] = 0.000001  # Default value
-
-                        # Validate EM parameters
-                        if method == "EM":
-                            if key == "k" and value is None:
-                                params[method][key] = 2  # Default value if not set
-                            if key == "log_transform" and value not in LOG_TRANSFORM_FUNCTIONS.keys():
-                                params[method][key] = "cbrt"  # Default to "cbrt" if invalid
-
-                return params
-
             # Handle "Determine k Automatically"
             if determine_k_automatically:
                 parameters["EM"]["k"] = None
