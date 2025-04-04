@@ -623,7 +623,7 @@ def Calculate_Distance_Travelled(data, env: fsm.Environment, requiredSummaryMeas
         # Add distance to all distances list
         distancesAll[chunk] += distanceData[i]
         if frame[4] == 1: # If it's a progression segment, add it to the progression distances list
-            distancesProgression[chunk] += distanceData
+            distancesProgression[chunk] += distanceData[i]
             totalDurationOfProgression += 1 # Add 1 frame to the total duration of progressions
     totalDurationSeconds = totalDurationOfProgression / FRAMES_PER_SECOND
     # Divide all distances by 100 to get distance in metres
