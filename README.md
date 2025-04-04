@@ -9,5 +9,5 @@ Researchers, such as our supervisors or others aiming to use the rat data hosted
 
 ## How to access this project?
 
-This project is temporarily hosted on: http://ratbat.cas.mcmaster.ca/
+This project is temporarily hosted on: http://ratbat.cas.mcmaster.ca/  
 (Note that in order to access this website you must be either on McMaster campus or using the McMaster VPN)
