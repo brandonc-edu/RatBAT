@@ -16,7 +16,7 @@ const FRDRQuery = () => {
     { field: "trial_id", lookup: "lt", value: 110 },
     { field: "drugrx_drug1", lookup: "exact", value: "QNP" }
   ];
-  const emptyFilters = [{field: "trial_id", lookup: "lte", value: "1000"}];
+  const emptyFilters = [{field: "trial_id", lookup: "lte", value: "10"}];
 
   //TESTING, what filters I want
   const defaultFields = [  "trial_id",
@@ -45,6 +45,12 @@ const FRDRQuery = () => {
   // Function to call the QueryDataView API and pull data from the database.
   const fetchQueryData = async (filters) => {
     try {
+      
+      if (filters.length == 0){
+        alert("No trial IDs available for download.");
+        return;
+      }
+
       const requestBody = {
         filters: filters,
         fields: defaultFields
@@ -73,13 +79,19 @@ const FRDRQuery = () => {
   };
 
   // Call the API once when the component mounts.
-  useEffect(() => {
-    fetchQueryData(emptyFilters);
-  }, []);
+  // useEffect(() => {
+  //   //fetchQueryData(emptyFilters);
+  // }, []);
 
   //Function to call FRDRQueryView API
   const handleFRDRQuery = async () => {
     try {
+
+      if (filters.length == 0){
+        alert("No trial IDs available for download.");
+        return;
+      }
+
       const requestBody = {
         filters: filters, 
         cache_path: "database/data", 
@@ -99,7 +111,21 @@ const FRDRQuery = () => {
 
       const result = await response.json();
       console.log("FRDR data loaded:", result);
-      alert("FRDR data loaded successfully!");
+
+      // FRDR cannot handle large file loads so include partial success to notify users.
+      if (frdrResult.message && frdrResult.message.includes("One or more files failed to download.")) {
+        if (result["failed downloads"] && result["failed downloads"].length > 0) {
+          const failedList = result["failed downloads"]
+            .map(([trialId, dtype]) => `Trial ${trialId}, type: ${dtype}`)
+            .join("\n");
+          
+          alert(`Some files failed to download:\n${failedList}`);
+        }
+      }
+      else{
+        alert("FRDR data loaded successfully!");
+      }
+      
       // Backend caches trialIds in the db
     } catch (error) {
       console.error("Error fetching data from FRDR:", error);
@@ -109,60 +135,45 @@ const FRDRQuery = () => {
   
   //Function to handle downloading into a zip file with CSVs for each trial's timeseries
   const handleDownloadZip = async () => {
-    if (downloading) return; // Prevent additional clicks if already downloading.
+    if (downloading) return;
     setDownloading(true);
     try {
-      // Extract trial_ids from the current data. (Assume that each data entry has a trial_id field)
-      const trialIds = Array.from(new Set(data.map(item => item.trial_id)));
-      if (trialIds.length === 0) {
-        alert("No trial IDs available for download.");
+      
+      //Run frdr-query api call first to load into database. ugly.
+      try{
+        await handleFRDRQuery();
+      } catch(error){
         setDownloading(false);
         return;
       }
-      // Build query string parameters for the get-timeseries view.
+      
+
       const queryParams = trialIds.map(id => `trials=${id}`).join('&');
       const url = `http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/?${queryParams}`;
 
       console.log("Fetching timeseries data from:", url);
       const response = await fetch(url);
 
-      // If it's not OK and also not 207, treat it as an error.
-      if (!response.ok && response.status !== 207) {
+      if (!response.ok) {
         throw new Error(`get-timeseries API responded with status ${response.status}`);
       }
 
-      // If we got a 207, parse partial success differently.
-      let timeseriesData;
-      if (response.status === 207) {
-        const partialResult = await response.json();
-        console.log("Partial success response:", partialResult);
-
-        if (partialResult["failed downloads"] && partialResult["failed downloads"].length > 0) {
-          alert("Some trials failed to download: " + JSON.stringify(partialResult["failed downloads"]));
-        }
-        timeseriesData = partialResult["timeseries"] || {};
-      } else {
-        // Normal 200 OK
-        timeseriesData = await response.json();
-        console.log("Timeseries data received:", timeseriesData);
-      }
-        
+      let timeseriesData = await response.json();
+      console.log("Timeseries data received:", timeseriesData);
+    
       const zip = new JSZip();
 
-      // For each trial_id, create a CSV file.
+      
       trialIds.forEach(trialId => {
-        // Convert trialId to string if necessary
         const records = timeseriesData[String(trialId)];
         //console.log(`Trial ${trialId}:`, records);
         
-        // Check if records is an object and has at least one key.
         if (records && typeof records === 'object' && Object.keys(records).length > 0) {
-          // Determine the number of rows from one of the arrays.
           const numRows = records.sample_id.length;
-          const csvHeaders = ['sample_id', 't', 'x', 'y']; // Adjust headers as needed.
+          const csvHeaders = ['sample_id', 't', 'x', 'y'];
           const csvRows = [csvHeaders.join(',')];
           
-          // Loop over each index to build rows.
+        
           for (let i = 0; i < numRows; i++) {
             const row = csvHeaders.map(header => records[header] ? records[header][i] : '');
             csvRows.push(row.join(','));
@@ -190,11 +201,9 @@ const FRDRQuery = () => {
     <div className="frdr-query">
       <h2>Filters</h2>
       <FilterButtons onApply={handleApplyFilters} />
-      
-      <button className = "frdr-button" onClick={handleFRDRQuery}> Load Data from FRDR </button>
       <button className = "frdr-button" onClick={handleDownloadZip}>Download Timeseries CSV</button>
+      <button className = "frdr-button" onClick={handleFRDRQuery}> Load Data from FRDR </button>
       <h2 className = "filtered-data-entries">Filtered Data Entries</h2>
-    
       <DataWindow data={data} />
 
     </div>
