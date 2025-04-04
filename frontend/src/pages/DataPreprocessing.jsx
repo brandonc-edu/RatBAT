@@ -12,12 +12,12 @@ const DataPreprocessing = () => {
     RRM: { half_windows: [7, 5, 3, 3], min_arr: 12, tol: 1.3 },
     EM: {
       half_window: 4,
-      log_transform: 'cbrt', // Default value for log_transform
+      log_transform: 'cbrt', 
       num_guesses: 5,
-      num_iters: 200,
+      num_iters: 500,
       significance: 0.05,
-      max_k: 4,
-      k: null, // Updated to match backend default
+      max_k: 6,
+      k: null, 
       segment_constrain: true,
     },
   });

@@ -4,14 +4,11 @@ import DataWindow from './components/DataWindow';
 import FilterButtons from './components/FilterButtons';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
 
 const FRDRQuery = () => {
   // State to hold the database data returned by the API.
   const [data, setData] = useState([]);
   const [filters, setFilters] = useState([]);
-  const [downloading, setDownloading] = useState(false); //Stop spam downloading
   const [downloading, setDownloading] = useState(false); //Stop spam downloading
 
   //TESTING, default filters
@@ -56,7 +53,6 @@ const FRDRQuery = () => {
       console.log("Query requestBody", requestBody);
 
       const response = await fetch('http://ratbat.cas.mcmaster.ca/api/frdr-query/query-data/', {
-      const response = await fetch('http://ratbat.cas.mcmaster.ca/api/frdr-query/query-data/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
@@ -87,7 +83,6 @@ const FRDRQuery = () => {
       const requestBody = {
         filters: filters, 
         cache_path: "database/data", 
-        dtypes: "t" //p: path plot data, t: track file data
         dtypes: "t" //p: path plot data, t: track file data
       };
       console.log("FRDR requestBody", requestBody);
@@ -190,97 +185,9 @@ const FRDRQuery = () => {
     }
     setDownloading(false);
   };
-  
-  //Function to handle downloading into a zip file with CSVs for each trial's timeseries
-  const handleDownloadZip = async () => {
-    if (downloading) return; // Prevent additional clicks if already downloading.
-    setDownloading(true);
-    try {
-      // Extract trial_ids from the current data. (Assume that each data entry has a trial_id field)
-      const trialIds = Array.from(new Set(data.map(item => item.trial_id)));
-      if (trialIds.length === 0) {
-        alert("No trial IDs available for download.");
-        setDownloading(false);
-        return;
-      }
-      // Build query string parameters for the get-timeseries view.
-      const queryParams = trialIds.map(id => `trials=${id}`).join('&');
-      const url = `http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/?${queryParams}`;
-
-      console.log("Fetching timeseries data from:", url);
-      const response = await fetch(url);
-
-      // If it's not OK and also not 207, treat it as an error.
-      if (!response.ok && response.status !== 207) {
-        throw new Error(`get-timeseries API responded with status ${response.status}`);
-      }
-
-      // If we got a 207, parse partial success differently.
-      let timeseriesData;
-      if (response.status === 207) {
-        const partialResult = await response.json();
-        console.log("Partial success response:", partialResult);
-
-        if (partialResult["failed downloads"] && partialResult["failed downloads"].length > 0) {
-          alert("Some trials failed to download: " + JSON.stringify(partialResult["failed downloads"]));
-        }
-        timeseriesData = partialResult["timeseries"] || {};
-      } else {
-        // Normal 200 OK
-        timeseriesData = await response.json();
-        console.log("Timeseries data received:", timeseriesData);
-      }
-        
-      const zip = new JSZip();
-
-      // For each trial_id, create a CSV file.
-      trialIds.forEach(trialId => {
-        // Convert trialId to string if necessary
-        const records = timeseriesData[String(trialId)];
-        //console.log(`Trial ${trialId}:`, records);
-        
-        // Check if records is an object and has at least one key.
-        if (records && typeof records === 'object' && Object.keys(records).length > 0) {
-          // Determine the number of rows from one of the arrays.
-          const numRows = records.sample_id.length;
-          const csvHeaders = ['sample_id', 't', 'x', 'y']; // Adjust headers as needed.
-          const csvRows = [csvHeaders.join(',')];
-          
-          // Loop over each index to build rows.
-          for (let i = 0; i < numRows; i++) {
-            const row = csvHeaders.map(header => records[header] ? records[header][i] : '');
-            csvRows.push(row.join(','));
-          }
-          
-          const csvContent = csvRows.join('\n');
-          console.log(`Added CSV for trial ${trialId}`); //with:`, csvContent);
-          zip.file(`trial_${trialId}.csv`, csvContent);
-        } else {
-          console.log(`No valid records for trial ${trialId}`);
-        }
-      });
-
-      // Generate the zip file as a blob and trigger download
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-      saveAs(zipBlob, 'timeseries_data.zip');
-    } catch (error) {
-      console.error("Error downloading zip:", error);
-      alert("Error downloading zip file.");
-    }
-    setDownloading(false);
-  };
 
   return (
     <div className="frdr-query">
-      <h2>Filters</h2>
-      <FilterButtons onApply={handleApplyFilters} />
-      
-      <button className = "frdr-button" onClick={handleFRDRQuery}> Load Data from FRDR </button>
-      <button className = "frdr-button" onClick={handleDownloadZip}>Download Timeseries CSV</button>
-      <h2 className = "filtered-data-entries">Filtered Data Entries</h2>
-    
-      <DataWindow data={data} />
-
       <h2>Filters</h2>
       <FilterButtons onApply={handleApplyFilters} />
       

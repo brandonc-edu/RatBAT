@@ -207,6 +207,8 @@ const ComputeSummaryMeasures = () => {
     calc_HB1_expectedReturn: 'Expected Return Frequency Main Homebase',
     calc_sessionTotalLocalesVisited: 'Total Locales Visited',
     calc_sessionTotalStops: 'Total Stops',
+    calc_distanceTravelled : "Distance Travelled",
+    calc_sessionReturnTimeMean : "Mean Return Time All Locales",
   };
 
   const measureTooltips = {
@@ -221,6 +223,8 @@ const ComputeSummaryMeasures = () => {
     calc_HB1_expectedReturn: 'KPexpReturnfreq01',
     calc_sessionTotalLocalesVisited: 'KP_session_differentlocalesVisited_#',
     calc_sessionTotalStops: 'KP_session_Stops_total#',
+    calc_distanceTravelled : "Calculate_Distance_Travelled",
+    calc_sessionReturnTimeMean : "KP_session_ReturnTime_mean",
   };
 
   // New mapping for full definitions to be shown on the info buttons

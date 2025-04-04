@@ -70,7 +70,6 @@ const CompileDataPage = () => {
     const fetchDataFiles = async () => {
       try {
         const response = await axios.get('/api/summary-measures/data-files/');
-        const response = await axios.get('/api/summary-measures/data-files/');
         setDataFiles(response.data);
       } catch (error) {
         console.error("Error fetching data files:", error);
@@ -91,8 +90,6 @@ const CompileDataPage = () => {
     // Fetch metadata values for each selected data file
     const fetchMetadataValues = async (trialId) => {
       try {
-    const fetchMetadataValues = async (trialId) => {
-      try {
         const payload = {
           filters: [{ field: 'trial_id', lookup: 'exact', value: trialId }],
           fields: selectedMetadataVariables,
@@ -103,11 +100,8 @@ const CompileDataPage = () => {
         return response.data;
       } catch (error) {
         console.error(`Error fetching metadata values for trial ${trialId}:`, error);
-        console.error(`Error fetching metadata values for trial ${trialId}:`, error);
         return [];
       }
-    };
-   
     };
    
   
@@ -137,32 +131,7 @@ const CompileDataPage = () => {
           };
         })
       );
-      const compiled = await Promise.all(
-        selectedDataFiles.map(async (file) => {
-          const metadataResponse = await fetchMetadataValues(file.trial_id); // Use trial_id instead of extracting from file name
-          const metadataRecord = metadataResponse[0] || {};
-          const measuresObj = {};
-    
-          selectedSummaryMeasures.forEach((measure) => {
-            // Use trial_id as the key to access results
-            if (results[file.trial_id] && results[file.trial_id][measure]) {
-              measuresObj[measure] = Array.isArray(results[file.trial_id][measure])
-                ? results[file.trial_id][measure]
-                : [results[file.trial_id][measure]];
-            } else {
-              measuresObj[measure] = ['']; // Default to empty if no result is found
-            }
-          });
-    
-          return {
-            file: file.file_name,
-            metadata: metadataRecord,
-            measures: measuresObj,
-          };
-        })
-      );
       setCompiledData(compiled);
-    };
     };
   
     updateCompiledData();
@@ -336,7 +305,6 @@ const CompileDataPage = () => {
                   <input
                     type="checkbox"
                     value={file.file_name}
-                    value={file.file_name}
                     checked={selectedDataFiles.includes(file)}
                     onChange={() => handleDataFileToggle(file)}
                   />
@@ -427,44 +395,6 @@ const CompileDataPage = () => {
               </tbody>
             </table>
           </div>
-          <div className="preview-section-table-container">
-            <table className="preview-section-table">
-              <thead>
-                <tr>
-                  <th>Data File</th>
-                  {selectedMetadataVariables.map((variable, i) => (
-                    <th key={i}>{variable}</th>
-                  ))}
-                  {selectedSummaryMeasures.map((measure) => {
-                    const display = measureDisplayNames[measure] || measure;
-                    return Array.isArray(display)
-                      ? display.map((d, i) => <th key={`${measure}-${i}`}>{d}</th>)
-                      : <th key={measure}>{display}</th>;
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {compiledData.map(({ file, metadata, measures }, rowIndex) => (
-                  <tr key={rowIndex}>
-                    <td>{file}</td>
-                    {selectedMetadataVariables.map((variable, i) => (
-                      <td key={i}>{metadata[variable]}</td>
-                    ))}
-                    {selectedSummaryMeasures.map((measure) => {
-                      const values = measures[measure] || [''];
-                      return Array.isArray(values)
-                        ? values.map((v, i) => (
-                            <td key={`${measure}-${i}`}>
-                              {formatValue(v, precision, wholeNumberMeasures.includes(measure))}
-                            </td>
-                          ))
-                        : <td>{formatValue(values, precision, wholeNumberMeasures.includes(measure))}</td>;
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
         <div className="preview-section-footer">
           <button onClick={handleDownload}>Download Compiled Data</button>
@@ -475,4 +405,3 @@ const CompileDataPage = () => {
 };
 
 export default CompileDataPage;
-
