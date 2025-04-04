@@ -11,7 +11,7 @@
 .compile-data-page .info-sheet-container {
   display: flex;
   align-items: center;
-  margin-bottom: 20px; /* Spacing from rest of page */
+  margin-bottom: 20px; 
 }
 
 .compile-data-page .download-info-sheet {
@@ -84,9 +84,9 @@
 }
 
 .compile-data-page .preview-section {
-  height: 900px; /* Fixed height */
   display: flex;
   flex-direction: column;
+  height: calc(100vh - 100px); /* Adjust height to fit within the viewport */
   background-color: white;
   border: 10px solid white;
   border-radius: 8px;
@@ -95,20 +95,36 @@
   padding-left: 20px;
   padding-right: 20px;
   padding-top: 20px;
-  overflow: hidden; /* Prevent content from spilling out */
+  overflow: visible; 
 }
 
 .compile-data-page .preview-section-table-container {
-  flex: 1;
-  overflow-x: auto; /* Enable horizontal scrolling */
-  overflow-y: auto; /* Enable vertical scrolling if needed */
+  flex: 1; 
+  overflow-y: auto; 
+  overflow-x: auto; 
+  border: 1px solid #ddd; 
+  box-sizing: border-box; 
+  padding-bottom: 10px; 
+}
+
+.compile-data-page .preview-section-footer {
+  flex-shrink: 0; 
+  padding: 10px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px; 
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+  position: sticky; 
+  bottom: 0;
+  z-index: 10;
 }
 
 .compile-data-page .preview-section-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
-  min-width: 800px; /* Ensure the table has a minimum width */
+  min-width: 800px; 
 }
 
 .compile-data-page .preview-section th {
@@ -124,16 +140,14 @@
   text-align: right;
 }
 
-.compile-data-page .preview-section-footer {
-  flex-shrink: 0;
-  padding-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 20px;
-  background-color: #fff;
-  border-top: 1px solid #ccc;
+/* Add alternating row colors for better readability */
+.compile-data-page .preview-section-table tr:nth-child(even) {
+  background-color: #f9f9f9;
 }
 
+.compile-data-page .preview-section-table tr:nth-child(odd) {
+  background-color: #ffffff;
+}
 
 /* Adding space between each item and its checkbox */
 .compile-data-page .measure-item,

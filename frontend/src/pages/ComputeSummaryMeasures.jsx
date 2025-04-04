@@ -103,10 +103,14 @@ const ComputeSummaryMeasures = () => {
     const selectedData = Object.entries(results).filter(([file]) =>
       selectedResults.includes(file)
     );
-    
+  
+    // Ensure computedMeasureKeys is unique
+    const uniqueComputedMeasureKeys = [...new Set(computedMeasureKeys)];
+  
+    // Generate CSV headers
     const csvHeaders = [
       "Data File",
-      ...computedMeasureKeys.flatMap(key => {
+      ...uniqueComputedMeasureKeys.map(key => {
         if (key === "calc_homebases") {
           return ["Homebases (KPname01)", "Homebases (KPname02)"];
         } else if (key === "calc_HB1_meanDurationStops") {
@@ -114,23 +118,62 @@ const ComputeSummaryMeasures = () => {
             "Mean Duration Stops (KPmeanStayTime01_s)",
             "Mean Duration Stops (KPmeanStayTime01_s_log)"
           ];
+        } else if (key.startsWith("calc_distanceTravelled")) {
+          // Add headers for calc_distanceTravelled sub-keys
+          if (key === "calc_distanceTravelled_totalProgression") {
+            return "Total Distance (Progression) (m)";
+          } else if (key === "calc_distanceTravelled_totalAll") {
+            return "Total Distance (All) (m)";
+          } else if (key === "calc_distanceTravelled_totalDuration") {
+            return "Total Duration (s)";
+          } else if (key === "calc_distanceTravelled_speedProgression") {
+            return "Speed of Progression (m/s)";
+          } else if (key === "calc_distanceTravelled_distancesProgression") {
+            return "Distances (Progression) (5-min intervals)";
+          } else if (key === "calc_distanceTravelled_distancesAll") {
+            return "Distances (All) (5-min intervals)";
+          }
         } else {
-          return [measureDisplayNames[key] || key];
+          return measureDisplayNames[key] || key;
         }
-      })
+      }).flat() // Flatten the array to avoid nested arrays
     ];
-    
+  
+    // Generate CSV content
     const csvContent = [
       csvHeaders.join(","),
       ...selectedData.map(([file, measures]) => {
-        const row = [ `="${file}"` ];
-        computedMeasureKeys.forEach(key => {
+        const row = [`="${file}"`];
+        uniqueComputedMeasureKeys.forEach(key => {
           if (key === "calc_homebases") {
             row.push(formatCSVValue(measures[key] ? measures[key][0] : '', precision, true));
             row.push(formatCSVValue(measures[key] ? measures[key][1] : '', precision, true));
           } else if (key === "calc_HB1_meanDurationStops") {
             row.push(formatCSVValue(measures[key] ? measures[key][0] : '', precision));
             row.push(formatCSVValue(measures[key] ? measures[key][1] : '', precision));
+          } else if (key.startsWith("calc_distanceTravelled")) {
+            const distanceValues = measures["calc_distanceTravelled"] || [];
+            if (key === "calc_distanceTravelled_totalProgression") {
+              row.push(formatCSVValue(distanceValues[0] ? distanceValues[0][0] : '', precision));
+            } else if (key === "calc_distanceTravelled_totalAll") {
+              row.push(formatCSVValue(distanceValues[0] ? distanceValues[0][1] : '', precision));
+            } else if (key === "calc_distanceTravelled_totalDuration") {
+              row.push(formatCSVValue(distanceValues[1] ? distanceValues[1] : '', precision));
+            } else if (key === "calc_distanceTravelled_speedProgression") {
+              row.push(formatCSVValue(distanceValues[2] ? distanceValues[2] : '', precision));
+            } else if (key === "calc_distanceTravelled_distancesProgression") {
+              row.push(
+                distanceValues[3] && Array.isArray(distanceValues[3][0])
+                  ? distanceValues[3][0].map(val => formatValue(val, precision)).join("; ")
+                  : ''
+              );
+            } else if (key === "calc_distanceTravelled_distancesAll") {
+              row.push(
+                distanceValues[3] && Array.isArray(distanceValues[3][1])
+                  ? distanceValues[3][1].map(val => formatValue(val, precision)).join("; ")
+                  : ''
+              );
+            }
           } else {
             row.push(
               formatCSVValue(
@@ -144,7 +187,8 @@ const ComputeSummaryMeasures = () => {
         return row.join(",");
       })
     ].join("\n");
-    
+  
+    // Trigger CSV download
     const encodedUri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -152,7 +196,7 @@ const ComputeSummaryMeasures = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };  
+  };
 
   const handleApply = async () => {
     if (selectedDataFiles.length === 0) {
@@ -208,6 +252,12 @@ const ComputeSummaryMeasures = () => {
     calc_sessionTotalLocalesVisited: 'Total Locales Visited',
     calc_sessionTotalStops: 'Total Stops',
     calc_distanceTravelled : "Distance Travelled",
+    calc_distanceTravelled_totalProgression: "Total Distance (Progression) (m)",
+    calc_distanceTravelled_totalAll: "Total Distance (All) (m)",
+    calc_distanceTravelled_totalDuration: "Total Duration (s)",
+    calc_distanceTravelled_speedProgression: "Speed of Progression (m/s)",
+    calc_distanceTravelled_distancesProgression: "Distances (Progression) (5-min intervals)",
+    calc_distanceTravelled_distancesAll: "Distances (All) (5-min intervals)",
     calc_sessionReturnTimeMean : "Mean Return Time All Locales",
   };
 
@@ -240,6 +290,8 @@ const ComputeSummaryMeasures = () => {
     calc_HB1_expectedReturn: 'Gives the number of stops within the first home base multiplied by number of locales visited during the session (a part of the session) divided by the total number of stops during the session (part of the session)',
     calc_sessionTotalLocalesVisited: 'Gives the number of different locales visited during the session.',
     calc_sessionTotalStops: 'Gives the total number of stops during the session.',
+    calc_sessionReturnTimeMean: 'Calculates a weighted mean return time to all locales.',
+    calc_distanceTravelled : 'Calculates all distances travelled metrics.'
   };
 
   const formatResults = (data) => {
@@ -255,6 +307,13 @@ const ComputeSummaryMeasures = () => {
           displayValue = Array.isArray(value) && value.length === 2 ? value : ['Main - N/A', 'Secondary - N/A'];
         } else if (key === "calc_HB1_meanDurationStops" && Array.isArray(value)) {
           displayValue = value;
+        } else if (key === "calc_distanceTravelled") {
+            displayValue = [
+              value[0], // (totalProgression, totalAll)
+              value[1], // totalDurationSeconds
+              value[2], // speedProgression
+              value[3], // (distancesProgression, distancesAll)
+            ];
         } else {
           displayValue = [value];
         }
@@ -297,6 +356,27 @@ const ComputeSummaryMeasures = () => {
     Object.keys(results).length > 0
       ? Object.keys(results[Object.keys(results)[0]])
       : [];
+
+  // Add sub-keys for calc_distanceTravelled only if they are not already present
+  if (computedMeasureKeys.includes("calc_distanceTravelled")) {
+    const distanceTravelledSubKeys = [
+      "calc_distanceTravelled_totalProgression",
+      "calc_distanceTravelled_totalAll",
+      "calc_distanceTravelled_totalDuration", // Add this
+      "calc_distanceTravelled_speedProgression",
+      "calc_distanceTravelled_distancesProgression",
+      "calc_distanceTravelled_distancesAll",
+    ];
+  
+    distanceTravelledSubKeys.forEach(subKey => {
+      if (!computedMeasureKeys.includes(subKey)) {
+        computedMeasureKeys.push(subKey);
+      }
+    });
+  
+    // Remove the parent key "calc_distanceTravelled" to avoid duplicates
+    computedMeasureKeys.splice(computedMeasureKeys.indexOf("calc_distanceTravelled"), 1);
+  }
   
   const wholeNumberKeys = [
     "calc_HB1_cumulativeReturn",
@@ -434,6 +514,17 @@ const ComputeSummaryMeasures = () => {
                         <th>Mean Duration Stops (KPmeanStayTime01_s_log)</th>
                       </React.Fragment>
                     );
+                  } else if (key === "calc_distanceTravelled") {
+                    return (
+                      <React.Fragment key={key}>
+                        <th>Total Distance (Progression) (m)</th>
+                        <th>Total Distance (All) (m)</th>
+                        <th>Total Duration (s)</th>
+                        <th>Speed of Progression (m/s)</th>
+                        <th>Distances (Progression) (5-min intervals)</th>
+                        <th>Distances (All) (5-min intervals)</th>
+                      </React.Fragment>
+                    );
                   } else {
                     return <th key={key}>{measureDisplayNames[key] || key}</th>;
                   }
@@ -466,6 +557,33 @@ const ComputeSummaryMeasures = () => {
                           <td>{measures[key] ? formatValue(measures[key][1], precision) : ''}</td>
                         </React.Fragment>
                       );
+                    } else if (key.startsWith("calc_distanceTravelled")) {
+                      const distanceValues = measures["calc_distanceTravelled"] || [];
+                      if (key === "calc_distanceTravelled_totalProgression") {
+                        return <td key={key}>{distanceValues[0] ? formatValue(distanceValues[0][0], precision) : ''}</td>;
+                      } else if (key === "calc_distanceTravelled_totalAll") {
+                        return <td key={key}>{distanceValues[0] ? formatValue(distanceValues[0][1], precision) : ''}</td>;
+                      } else if (key === "calc_distanceTravelled_totalDuration") {
+                        return <td key={key}>{distanceValues[1] ? formatValue(distanceValues[1], precision) : ''}</td>; 
+                      } else if (key === "calc_distanceTravelled_speedProgression") {
+                        return <td key={key}>{distanceValues[2] ? formatValue(distanceValues[2], precision) : ''}</td>;
+                      } else if (key === "calc_distanceTravelled_distancesProgression") {
+                        return (
+                          <td key={key}>
+                            {distanceValues[3] && Array.isArray(distanceValues[3][0])
+                              ? distanceValues[3][0].map(val => formatValue(val, precision)).join(", ")
+                              : ''}
+                          </td>
+                        );
+                      } else if (key === "calc_distanceTravelled_distancesAll") {
+                        return (
+                          <td key={key}>
+                            {distanceValues[3] && Array.isArray(distanceValues[3][1])
+                              ? distanceValues[3][1].map(val => formatValue(val, precision)).join(", ")
+                              : ''}
+                          </td>
+                        );
+                      }
                     } else {
                       return (
                         <td key={`${file}-${key}`}>
