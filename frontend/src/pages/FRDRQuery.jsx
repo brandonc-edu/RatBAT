@@ -88,7 +88,7 @@ const FRDRQuery = () => {
     try {
 
       if (filters.length == 0){
-        alert("No trial IDs available for download.");
+        alert("No filters selected.");
         return;
       }
 
@@ -113,7 +113,7 @@ const FRDRQuery = () => {
       console.log("FRDR data loaded:", result);
 
       // FRDR cannot handle large file loads so include partial success to notify users.
-      if (frdrResult.message && frdrResult.message.includes("One or more files failed to download.")) {
+      if (result.message && result.message.includes("One or more files failed to download.")) {
         if (result["failed downloads"] && result["failed downloads"].length > 0) {
           const failedList = result["failed downloads"]
             .map(([trialId, dtype]) => `Trial ${trialId}, type: ${dtype}`)
@@ -146,7 +146,13 @@ const FRDRQuery = () => {
         setDownloading(false);
         return;
       }
-      
+
+      const trialIds = Array.from(new Set(data.map(item => item.trial_id)));
+      if (trialIds.length === 0) {
+        alert("No trial IDs available for download.");
+        setDownloading(false);
+        return;
+      }
 
       const queryParams = trialIds.map(id => `trials=${id}`).join('&');
       const url = `http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/?${queryParams}`;
