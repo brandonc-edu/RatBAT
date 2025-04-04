@@ -4,22 +4,6 @@ import './DataWindow.css';
 
 const DataWindow = ({ data }) => {
   console.log("DataWindow received data:", data);
-
-  const handleDownload = () => {
-    if (!data || data.length === 0) {
-      alert("No data available to download.");
-      return;
-    }
-    const dataStr = JSON.stringify(data, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'filtered_data_entries.json';
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
   const headers = data && data.length > 0 ? Object.keys(data[0]) : [];
 
   return (

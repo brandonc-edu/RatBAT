@@ -201,7 +201,6 @@ function FilterButtons({ onApply }) {
     Array(categories.length).fill(false)
   );
 
-  // State to hold filter values.
   // Structure: { [category]: { [field]: { lookup, value } }, ... }
   const [localFilters, setLocalFilters] = useState({});
 
@@ -226,7 +225,7 @@ function FilterButtons({ onApply }) {
         // If the user clears the input, remove the field entirely
         delete categoryFilters[field];
       } else {
-        // Otherwise, store both lookup and value
+       
         categoryFilters[field] = {
           lookup: existingField.lookup,
           value: newValue
@@ -279,12 +278,11 @@ function FilterButtons({ onApply }) {
   const handleDiscreteChange = (category, field, value) => {
     setLocalFilters(prev => {
       const current = prev[category] || {};
-      // Store the chosen option as the value.
       return {
         ...prev,
         [category]: {
           ...current,
-          [field]: { lookup: 'exact', value } // For discrete, lookup might be fixed or configurable separately.
+          [field]: { lookup: 'exact', value } 
         }
       };
     });
@@ -313,6 +311,8 @@ function FilterButtons({ onApply }) {
         if (lookup === 'range') {
           const min = value.min?.trim();
           const max = value.max?.trim();
+
+          //Note: For range lookup, if min or max is missing change to gte, lte. Not sure if this proper but working.
           if (min && max) {
             filtersArray.push({
               field: field,
@@ -333,7 +333,7 @@ function FilterButtons({ onApply }) {
             });
           }
         } else {
-          // Non-range: skip if empty
+          
           if (value.trim() === '') continue;
           filtersArray.push({
             field: field,
