@@ -92,7 +92,6 @@ def get_preprocessed_urls(trials:list[int], trial_model:ModelBase) -> list[(int,
     
     return urls
 
-
 def get_data(filters:dict, trial_model:ModelBase, fields:list[str]) -> list[dict]:
     """Given a list of filters and fields, get data all for those fields which falls under the filter.
 

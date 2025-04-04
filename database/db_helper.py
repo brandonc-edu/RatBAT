@@ -8,7 +8,7 @@ Description: General use functions and variables to assist with database interac
 
 import django
 import numpy as np
-
+import time
 # All built in django field lookup values to be used as filters.
 FIELD_LOOKUPS = ['exact',
                 'iexact',

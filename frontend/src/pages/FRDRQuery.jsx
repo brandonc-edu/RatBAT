@@ -99,7 +99,7 @@ const FRDRQuery = () => {
       };
       console.log("FRDR requestBody", requestBody);
 
-      const response = await fetch('http://ratbat.cas.mcmaster.ca/api/frdr-query/frdr-query', {
+      const response = await fetch('http://ratbat.cas.mcmaster.ca/api/frdr-query/frdr-query/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
