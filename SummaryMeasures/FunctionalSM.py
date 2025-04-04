@@ -509,10 +509,11 @@ def Calculate_Mean_Return_Time_All_Locales(data, env: fsm.Environment, requiredS
     for i in range(len(data)):
         frame = data[i]
         specimenLocale = env.SpecimenLocation(frame[1], frame[2])
+        specimenLocaleIndex = GetIndexFromLocale(specimenLocale)
         if specimenLocale != mainHomeBase: # If the specimen is not in the main home base
             if frame[4] == 1 and not excursion: # If the specimen is no longer in its main home base, it's on an excursion. Has to be moving in a progressive episode to be counted as an excursion (lingering between main home base and elsewhere doesn't count).
                 excursion = True
-            elif excursion and localeVisits[specimenLocale] > 1: # If the specimen is on an excursion in a locale that it will/has stopped in more than once
+            elif excursion and localeVisits[specimenLocaleIndex] > 1: # If the specimen is on an excursion in a locale that it will/has stopped in more than once
                 totalExcursionDuration += 1
         else:
             excursion = False
@@ -610,8 +611,8 @@ def Calculate_Distance_Travelled(data, env: fsm.Environment, requiredSummaryMeas
     # Get chunk length (in terms of frames) for five minutes worth of time
     chunkLength = 5 * 60 * FRAMES_PER_SECOND
     chunk = 0
-    distancesProgression = [0 for i in range(55 / 5)]
-    distancesAll = [0 for i in range(55 / 5)]
+    distancesProgression = [0 for i in range(11)]
+    distancesAll = [0 for i in range(11)]
     totalDurationOfProgression = 0
 
     for i in range(len(data)):
