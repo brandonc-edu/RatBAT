@@ -26,6 +26,7 @@ const CompileDataPage = () => {
     calc_HB1_expectedReturn: 'Expected Return Frequency Main Homebase',
     calc_sessionTotalLocalesVisited: 'Total Locales Visited',
     calc_sessionTotalStops: 'Total Stops',
+    calc_sessionReturnTimeMean : "Mean Return Time All Locales",
   };
 
   const measureSelectAreaDisplayNames = {
@@ -40,6 +41,8 @@ const CompileDataPage = () => {
     calc_HB1_expectedReturn: 'Expected Return Frequency Main Homebase',
     calc_sessionTotalLocalesVisited: 'Total Locales Visited',
     calc_sessionTotalStops: 'Total Stops',
+    calc_sessionReturnTimeMean : "Mean Return Time All Locales",
+    calc_distanceTravelled : "Distance Travelled",
   };
 
   // Define measure keys that need whole-number formatting
@@ -55,26 +58,30 @@ const CompileDataPage = () => {
     // Fetch metadata variables from the backend
     const fetchMetadataVariables = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/metadata-variables/');
-        setMetadataVariables(response.data);
+        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/frdr-query/get-fields/');
+        // Define the fields you want to remove
+        const unwantedFields = ["sample_id", "t", "x", "y", "x_s", "y_s", "v_s", "movementtype_s"];
+        // Flatten the response and filter out unwanted fields
+        const allFields = Object.values(response.data).flat();
+        setMetadataVariables(allFields.filter(field => !unwantedFields.includes(field)));
       } catch (error) {
         console.error("Error fetching metadata variables:", error);
       }
     };
-
+  
     // Fetch data files from the backend
     const fetchDataFiles = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/data-files/');
+        const response = await axios.get('/api/summary-measures/data-files/');
         setDataFiles(response.data);
       } catch (error) {
         console.error("Error fetching data files:", error);
       }
     };
-
+  
     fetchMetadataVariables();
     fetchDataFiles();
-  }, []);
+  }, []);  
 
   useEffect(() => {
     // Update summary measures based on the results from ComputeSummaryMeasures
@@ -83,27 +90,54 @@ const CompileDataPage = () => {
   }, [results]);
 
   useEffect(() => {
+    // Fetch metadata values for each selected data file
+    const fetchMetadataValues = async (trialId) => {
+      try {
+        const payload = {
+          filters: [{ field: 'trial_id', lookup: 'exact', value: trialId }],
+          fields: selectedMetadataVariables,
+        };
+        console.log("Sending request to query-data with payload:", JSON.stringify(payload, null, 2));
+        const response = await axios.post('http://ratbat.cas.mcmaster.ca/api/frdr-query/query-data/', payload);
+        console.log(`Metadata response for trial ${trialId}:`, response.data);
+        return response.data;
+      } catch (error) {
+        console.error(`Error fetching metadata values for trial ${trialId}:`, error);
+        return [];
+      }
+    };
+   
+  
     // Update compiled data whenever selections change
-    const compiled = selectedDataFiles.map(file => {
-      const metadata = metadataVariables.filter(variable => selectedMetadataVariables.includes(variable));
-      const measuresObj = {};
-      selectedSummaryMeasures.forEach(measure => {
-        if (results[file] && results[file][measure]) {
-          measuresObj[measure] = Array.isArray(results[file][measure])
-            ? results[file][measure]
-            : [results[file][measure]];
-        } else {
-          measuresObj[measure] = [''];
-        }
-      });
-      return {
-        file,
-        metadata,
-        measures: measuresObj
-      };
-    });
-
-    setCompiledData(compiled);
+    const updateCompiledData = async () => {
+      const compiled = await Promise.all(
+        selectedDataFiles.map(async (file) => {
+          const metadataResponse = await fetchMetadataValues(file.trial_id); // Use trial_id instead of extracting from file name
+          const metadataRecord = metadataResponse[0] || {};
+          const measuresObj = {};
+    
+          selectedSummaryMeasures.forEach((measure) => {
+            // Use trial_id as the key to access results
+            if (results[file.trial_id] && results[file.trial_id][measure]) {
+              measuresObj[measure] = Array.isArray(results[file.trial_id][measure])
+                ? results[file.trial_id][measure]
+                : [results[file.trial_id][measure]];
+            } else {
+              measuresObj[measure] = ['']; // Default to empty if no result is found
+            }
+          });
+    
+          return {
+            file: file.file_name,
+            metadata: metadataRecord,
+            measures: measuresObj,
+          };
+        })
+      );
+      setCompiledData(compiled);
+    };
+  
+    updateCompiledData();
   }, [selectedMetadataVariables, selectedDataFiles, selectedSummaryMeasures, metadataVariables, summaryMeasures, results]);
 
   const handleMetadataVariableToggle = (variable) => {
@@ -172,29 +206,57 @@ const CompileDataPage = () => {
   };  
 
   const handleDownload = () => {
-    // Create dynamic headers for CSV
     const csvHeaders = [
       "Data File",
       ...selectedMetadataVariables,
-      ...selectedSummaryMeasures.flatMap(measure => {
-        const display = measureDisplayNames[measure] || measure;
-        return Array.isArray(display) ? display : [display];
-      })
+      ...selectedSummaryMeasures.flatMap((measure) => {
+        if (measure === "calc_distanceTravelled") {
+          return [
+            "Total Distance (Progression) (m)",
+            "Total Distance (All) (m)",
+            "Total Duration (s)",
+            "Speed of Progression (m/s)",
+            "Distances (Progression) (5-min intervals)",
+            "Distances (All) (5-min intervals)",
+          ];
+        } else {
+          const display = measureDisplayNames[measure] || measure;
+          return Array.isArray(display) ? display : [display];
+        }
+      }),
     ];
   
     const csvContent = [
       csvHeaders.join(","),
       ...compiledData.map(({ file, metadata, measures }) => {
         const fileCell = `="${file}"`;
-        const metadataCells = metadata.map(m => m.value);
-        const summaryCells = selectedSummaryMeasures.flatMap(measure => {
-          const vals = measures[measure] || [''];
-          return Array.isArray(vals)
-            ? vals.map(v => formatCSVValue(v, precision, wholeNumberMeasures.includes(measure)))
-            : [formatCSVValue(vals, precision, wholeNumberMeasures.includes(measure))];
+        const metadataCells = selectedMetadataVariables.map(
+          (variable) => metadata[variable] || ''
+        );
+        const summaryCells = selectedSummaryMeasures.flatMap((measure) => {
+          if (measure === "calc_distanceTravelled") {
+            const distanceValues = measures[measure] || [];
+            return [
+              formatCSVValue(distanceValues[0] ? distanceValues[0][0] : '', precision),
+              formatCSVValue(distanceValues[0] ? distanceValues[0][1] : '', precision),
+              formatCSVValue(distanceValues[1] ? distanceValues[1] : '', precision),
+              formatCSVValue(distanceValues[2] ? distanceValues[2] : '', precision),
+              distanceValues[3] && Array.isArray(distanceValues[3][0])
+                ? distanceValues[3][0].map((val) => formatCSVValue(val, precision)).join("; ")
+                : '',
+              distanceValues[3] && Array.isArray(distanceValues[3][1])
+                ? distanceValues[3][1].map((val) => formatCSVValue(val, precision)).join("; ")
+                : '',
+            ];
+          } else {
+            const vals = measures[measure] || [''];
+            return Array.isArray(vals)
+              ? vals.map((v) => formatCSVValue(v, precision, wholeNumberMeasures.includes(measure)))
+              : [formatCSVValue(vals, precision, wholeNumberMeasures.includes(measure))];
+          }
         });
         return [fileCell, ...metadataCells, ...summaryCells].join(",");
-      })
+      }),
     ].join("\n");
   
     const encodedUri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`);
@@ -204,10 +266,11 @@ const CompileDataPage = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };  
+  };
 
   return (
     <div className="compile-data-page">
+
       <div className="selection-section">
         {/* Metadata Variables Section */}
         <div className="selection-group summary-measures">
@@ -265,18 +328,18 @@ const CompileDataPage = () => {
 
         {/* Loaded Data Files Section */}
         <div className="selection-group data-file">
-          <h3>Loaded Data Files</h3>
+          <h3>Preprocessed Trials</h3>
           <div className="selection-group-content">
             {dataFiles.map((file, index) => (
               <div key={index} className="data-item">
                 <label>
                   <input
                     type="checkbox"
-                    value={file}
+                    value={file.file_name}
                     checked={selectedDataFiles.includes(file)}
                     onChange={() => handleDataFileToggle(file)}
                   />
-                  {file}
+                  {file.file_name}
                 </label>
               </div>
             ))}
@@ -290,8 +353,20 @@ const CompileDataPage = () => {
           </div>
         </div>
       </div>
+      
       <div className="preview-section">
         <h3>Preview</h3>
+        <div className="info-sheet-container">
+          <span className="info-icon" title="This info sheet provides definitions and alternate names for all summary measures and metadata variables">
+            i
+          </span>
+          <button
+            className="download-info-sheet"
+            onClick={() => window.location.href = '/info_sheet.xlsx'}
+          >
+            Download Info Sheet
+          </button>
+        </div>
         <div className="precision-selector">
           <label htmlFor="precision">Select Precision:</label>
           <select
@@ -313,18 +388,30 @@ const CompileDataPage = () => {
           </select>
         </div>
         <div className="result-items">
-          <table className="preview-section-table">
+          <div className="preview-section-table-container">
+            <table className="preview-section-table">
             <thead>
               <tr>
                 <th>Data File</th>
                 {selectedMetadataVariables.map((variable, i) => (
                   <th key={i}>{variable}</th>
                 ))}
-                {selectedSummaryMeasures.map((measure) => {
-                  const display = measureDisplayNames[measure] || measure;
-                  return Array.isArray(display)
-                    ? display.map((d, i) => <th key={`${measure}-${i}`}>{d}</th>)
-                    : <th key={measure}>{display}</th>;
+                {selectedSummaryMeasures.flatMap((measure) => {
+                  if (measure === "calc_distanceTravelled") {
+                    return [
+                      "Total Distance (Progression) (m)",
+                      "Total Distance (All) (m)",
+                      "Total Duration (s)",
+                      "Speed of Progression (m/s)",
+                      "Distances (Progression) (5-min intervals)",
+                      "Distances (All) (5-min intervals)",
+                    ].map((header, i) => <th key={`${measure}-${i}`}>{header}</th>);
+                  } else {
+                    const display = measureDisplayNames[measure] || measure;
+                    return Array.isArray(display)
+                      ? display.map((d, i) => <th key={`${measure}-${i}`}>{d}</th>)
+                      : <th key={measure}>{display}</th>;
+                  }
                 })}
               </tr>
             </thead>
@@ -332,23 +419,52 @@ const CompileDataPage = () => {
               {compiledData.map(({ file, metadata, measures }, rowIndex) => (
                 <tr key={rowIndex}>
                   <td>{file}</td>
-                  {metadata.map((m, i) => (
-                    <td key={i}>{m.value}</td>
+                  {selectedMetadataVariables.map((variable, i) => (
+                    <td key={i}>{metadata[variable]}</td>
                   ))}
-                  {selectedSummaryMeasures.map((measure) => {
-                    const values = measures[measure] || [''];
-                    return Array.isArray(values)
-                      ? values.map((v, i) => (
-                          <td key={`${measure}-${i}`}>
-                            {formatValue(v, precision, wholeNumberMeasures.includes(measure))}
-                          </td>
-                        ))
-                      : <td>{formatValue(values, precision, wholeNumberMeasures.includes(measure))}</td>;
+                  {selectedSummaryMeasures.flatMap((measure) => {
+                    if (measure === "calc_distanceTravelled") {
+                      const distanceValues = measures[measure] || [];
+                      return [
+                        <td key={`${measure}-totalProgression`}>
+                          {distanceValues[0] ? formatValue(distanceValues[0][0], precision) : ''}
+                        </td>,
+                        <td key={`${measure}-totalAll`}>
+                          {distanceValues[0] ? formatValue(distanceValues[0][1], precision) : ''}
+                        </td>,
+                        <td key={`${measure}-totalDuration`}>
+                          {distanceValues[1] ? formatValue(distanceValues[1], precision) : ''}
+                        </td>,
+                        <td key={`${measure}-speedProgression`}>
+                          {distanceValues[2] ? formatValue(distanceValues[2], precision) : ''}
+                        </td>,
+                        <td key={`${measure}-distancesProgression`}>
+                          {distanceValues[3] && Array.isArray(distanceValues[3][0])
+                            ? distanceValues[3][0].map((val) => formatValue(val, precision)).join("; ")
+                            : ''}
+                        </td>,
+                        <td key={`${measure}-distancesAll`}>
+                          {distanceValues[3] && Array.isArray(distanceValues[3][1])
+                            ? distanceValues[3][1].map((val) => formatValue(val, precision)).join("; ")
+                            : ''}
+                        </td>,
+                      ];
+                    } else {
+                      const values = measures[measure] || [''];
+                      return Array.isArray(values)
+                        ? values.map((v, i) => (
+                            <td key={`${measure}-${i}`}>
+                              {formatValue(v, precision, wholeNumberMeasures.includes(measure))}
+                            </td>
+                          ))
+                        : <td>{formatValue(values, precision, wholeNumberMeasures.includes(measure))}</td>;
+                    }
                   })}
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
         <div className="preview-section-footer">
           <button onClick={handleDownload}>Download Compiled Data</button>

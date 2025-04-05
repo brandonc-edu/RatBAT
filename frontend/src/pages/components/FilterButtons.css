@@ -1,8 +1,135 @@
+
 .filter-buttons div {
   margin-top: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+}
+
+.filter-buttons .filterBox {
+  border-radius: 8px;
+  background-color: white;
+  border: 10px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 410px; 
+  display: flex;
 }
 
 .filter-buttons .filter {
   margin-left: 5px;
+  padding: 5px 10px; 
+  border: 10px solid #12591b; 
+  border-radius: 3px;
+  background-color: #f9f9f9; 
+  color: #000; 
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.filter-buttons .filter:hover {
+  background-color: #e0e0e0; 
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+}
+
+.filter-buttons .parameters {
+  margin: 5px;
+  
+  overflow-y: auto; 
+  padding-right: 10px;
+   
+}
+
+.filter-buttons .filter-group {
+  margin: 5px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 7px;
+  box-sizing: border-box;
+  
+}
+
+.filter-buttons .filter-item {
+  display: flex;
+  align-items: center;
+}
+
+.filter-buttons .filter-item label{
+  flex: 1 2;
+  min-width: 150px;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.filter-buttons .filter-item select{
+  flex: 3 1;
+  border-radius: 4px;
+  margin-right: 10px;
+  padding: 5px;
+}
+
+.filter-buttons .filter-item input{
+  flex: 16 1;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.filter-buttons .filter-item-label-discrete{
+ max-width: 150px;
+}
+
+.filter-buttons .meta-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px; 
+  padding: 20px;
+  margin: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  height: 350px; 
+  width: 150px;
+  overflow-y: auto; 
+}
+
+.filter-buttons .metaVar {
+  display: flex; 
+  align-items: center; /* Vertical alignment */
+  justify-content: center; /* Horizontal alignment */
+  width: 100%; 
+  height: 40px; 
+  cursor: pointer;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  color: black;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+  line-height: normal;
+}
+
+.filter-buttons .metaVar:hover {
+  background-color: #f0f0f0; 
+}
+
+.filter-buttons .metaVar.toggled {
+  background-color: #0056b3; 
+  border-color: #004085;
+  color: white;
+}
+
+.filter-buttons button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  float: left;
+  margin-left: 5px;
+}
+
+.filter-buttons button:hover {
+  background-color: #0056b3;
 }

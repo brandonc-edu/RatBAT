@@ -23,9 +23,20 @@ class ListSummaryMeasuresView(APIView):
 class ListDataFilesView(APIView):
     def get(self, request, *args, **kwargs):
         try:
-            data_files_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'SummaryMeasures')
-            data_files_directory = os.path.abspath(data_files_directory)
-            data_files = [f for f in os.listdir(data_files_directory) if os.path.isfile(os.path.join(data_files_directory, f)) and f.endswith('.xlsx')]
+            # Directory where preprocessed files are stored
+            preprocessed_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'preprocessing', 'preprocessed')
+            preprocessed_directory = os.path.abspath(preprocessed_directory)
+
+            # Fetch all preprocessed files
+            data_files = [
+                {
+                    "file_name": f,
+                    "trial_id": int(f.split('_')[-1].split('.')[0])  # Extract trial ID from file name
+                }
+                for f in os.listdir(preprocessed_directory)
+                if os.path.isfile(os.path.join(preprocessed_directory, f)) and f.startswith('preprocessed_trial_') and f.endswith('.csv')
+            ]
+
             return Response(data_files, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -33,28 +44,45 @@ class ListDataFilesView(APIView):
 class ComputeSummaryMeasuresView(APIView):
     def post(self, request, *args, **kwargs):
         try:
-            data_file_paths = request.data.get('data_file_paths')
+            trial_ids = request.data.get('trial_ids')  # Accept trial IDs from the request
             summary_measures = request.data.get('summary_measures')
             environment = request.data.get('environment', 'common')
 
-            if not data_file_paths or not summary_measures:
-                return Response({"error": "Data file paths and summary measures are required."}, status=status.HTTP_400_BAD_REQUEST)
+            if not trial_ids or not summary_measures:
+                return Response({"error": "Trial IDs and summary measures are required."}, status=status.HTTP_400_BAD_REQUEST)
 
             results = {}
-            for data_file_path in data_file_paths:
+            for trial_id in trial_ids:
                 try:
-                    # Load the data file
-                    data_file_full_path = os.path.join(os.path.dirname(__file__), '..', '..', 'SummaryMeasures', data_file_path)
-                    data_file_full_path = os.path.abspath(data_file_full_path)
-                    print(f"Data file full path: {data_file_full_path}")
+                    # Locate the preprocessed file for the given trial ID
+                    preprocessed_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'preprocessing', 'preprocessed')
+                    preprocessed_file_name = f"preprocessed_trial_{trial_id}.csv"
+                    preprocessed_file_path = os.path.join(preprocessed_directory, preprocessed_file_name)
 
-                    data = pd.read_excel(data_file_full_path).to_numpy()
+                    if not os.path.exists(preprocessed_file_path):
+                        return Response({"error": f"Preprocessed file for trial {trial_id} not found."}, status=status.HTTP_404_NOT_FOUND)
+
+                    # Load the preprocessed data
+                    print(f"Loading preprocessed file: {preprocessed_file_path}")
+                    data = pd.read_csv(preprocessed_file_path)
+
+                    # Ensure the data is numeric and exclude non-numeric rows (like headers)
+                    data = data.apply(pd.to_numeric, errors='coerce')  # Convert all columns to numeric, replacing invalid values with NaN
+                    data = data.dropna()  # Drop rows with NaN values (e.g., if headers were mistakenly included)
+
+                    # Convert to NumPy array
+                    data = data.to_numpy()
+
+                    # Log the shape of the data for debugging
+                    print(f"Data shape for trial {trial_id}: {data.shape}")
+
+                    # Compute summary measures
                     commander = Commander(data, environment)
                     reordered_measures, data_dependencies = Karpov.ResolveDependencies(summary_measures)
                     calculated_measures = commander.CalculateSummaryMeasures(data, reordered_measures, data_dependencies)
-                    results[data_file_path] = calculated_measures
+                    results[trial_id] = calculated_measures
                 except Exception as e:
-                    return Response({"error": f"Error processing file {data_file_path}: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": f"Error processing trial {trial_id}: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
             return Response(results, status=status.HTTP_200_OK)
         except Exception as e:

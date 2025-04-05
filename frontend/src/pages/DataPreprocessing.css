@@ -1,20 +1,4 @@
-/* src/ComputeSummaryMeasures.css */
-
-/* Adding space between each item and its checkbox */
-.measure-item label input,
-.data-item label input,
-.result-item label input {
-  margin-right: 8px; /* Adjust this spacing as needed */
-}
-
-/* Adding space between items */
-.measure-item,
-.data-item,
-.result-item {
-  margin-bottom: 10px; /* Adjust the spacing between items as needed */
-}
-
-.compute-summary-measures {
+.data-preprocessing-page {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -24,67 +8,158 @@
   background-color: #f8f9fa;
 }
 
-.top-section {
+.data-preprocessing-page .top-section {
   display: flex;
   gap: 20px;
   flex: 1;
 }
 
-.summary-measures,
-.selected-data,
-.result-section {
+.data-preprocessing-page .preprocessing-methods {
+  flex: 2; /* Adjust width to take more space */
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column; /* Ensure the heading is above the methods */
+  gap: 20px; /* Add spacing between the heading and the methods */
 }
 
-.summary-measures,
-.selected-data {
-  flex: 1;
-  max-height: 250px; /* Set a fixed height */
-  overflow-y: auto; /* Enable scrolling */
+.data-preprocessing-page .preprocessing-methods h3 {
+  margin: 0;
+  text-align: center; /* Center the heading */
+  font-size: 18px;
+  color: #343a40;
 }
 
-.data-items {
-  flex: 1;
-  overflow-y: auto;
+.data-preprocessing-page .method-item-container {
+  display: flex;
+  flex-wrap: wrap; /* Allow methods to be side by side */
+  gap: 20px; /* Add spacing between methods */
 }
 
-.data-footer {
+.data-preprocessing-page .method-item {
+  flex: 1 1 calc(33.33% - 20px); /* Make each method take 1/3 of the width */
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.data-preprocessing-page .method-item h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #343a40;
+  text-align: center;
+}
+
+.data-preprocessing-page .parameter-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.data-preprocessing-page .parameter-item label {
+  flex: 1; 
+  min-width: 150px; 
+  margin-right: 10px; 
+  font-weight: bold;
+}
+
+.data-preprocessing-page .parameter-item input[type="checkbox"] {
+  margin-left: 0; 
+}
+
+.data-preprocessing-page .parameter-item select {
+  flex: 2; 
+  padding: 5px; 
+  border: 1px solid #ccc; 
+  border-radius: 4px; 
+  background-color: white; 
+  font-size: 14px; 
+}
+
+.data-preprocessing-page .parameter-item input {
+  flex: 2;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.data-preprocessing-page .data-selection {
+  flex: 1; /* Adjust width to take less space */
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column; /* Ensure the button is positioned at the bottom */
+}
+
+.data-preprocessing-page .data-items {
+  flex: 1; /* Allow the list of files to take up available space */
+  overflow-y: auto; /* Enable scrolling for the file list */
+}
+
+.data-preprocessing-page .data-selection-footer {
   padding-top: 10px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-end; /* Align the buttons to the right */
+  gap: 10px; /* Add spacing between the buttons */
   position: sticky;
   bottom: 0;
-  background-color: #fff;
+  background-color: white;
+  align-items: center;
   border-top: 1px solid #ccc;
 }
 
-.result-section {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 250px);
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.result-items {
+.data-preprocessing-page .results-section {
   flex: 1;
-  overflow-y: auto;
-}
-
-.result-footer {
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-height: 300px; /* Reduce height */
   display: flex;
-  gap: 20px;
-  padding-top: 10px;
-  border-top: 1px solid #ccc;
-  position: sticky;
-  bottom: 35px;
+  flex-direction: column; /* Ensure the button is positioned at the bottom */
 }
 
-button {
+.data-preprocessing-page .result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.data-preprocessing-page .result-item label {
+  flex: 1;
+  font-weight: bold;
+}
+
+.data-preprocessing-page .result-item select {
+  flex: 1;
+  max-width: 150px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.data-preprocessing-page .results-footer {
+  padding-top: 10px;
+  display: flex;
+  justify-content: flex-end; /* Align the button to the right */
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  border-top: 1px solid #ccc;
+}
+
+.data-preprocessing-page button {
   background-color: #007bff;
   color: white;
   border: none;
@@ -94,11 +169,94 @@ button {
   transition: background-color 0.3s ease;
 }
 
-button:hover {
+.data-preprocessing-page button:hover {
   background-color: #0056b3;
 }
 
-h3 {
+.data-preprocessing-page h3 {
   margin-top: 0;
   color: #343a40;
+}
+
+.data-preprocessing-page .tooltip-container {
+  position: relative;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.data-preprocessing-page .tooltip-container .tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #555;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  left: 35px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.data-preprocessing-page .tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.data-preprocessing-page .info-button {
+  background-color: #97a516;
+  color: white;
+  border: none;
+  padding: 0;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: auto;
+  transition: background-color 0.3s ease;
+}
+
+.data-preprocessing-page .info-button:hover {
+  background-color: #5a630d;
+}
+
+/* Loading overlay to restrict interaction during preprocessing */
+.data-preprocessing-page .loading-overlay {
+  position: fixed; /* Ensure it covers the entire viewport */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it appears above all other elements */
+  pointer-events: none; /* Prevent interaction with the overlay */
+}
+
+/* Spinner for the loading overlay */
+.data-preprocessing-page .spinner {
+  border: 8px solid #f3f3f3; 
+  border-top: 8px solid #3498db; /* Blue border for the spinning effect */
+  border-radius: 50%; /* Make it circular */
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite; /* Spinning animation */
+}
+
+/* Keyframes for the spinner animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
