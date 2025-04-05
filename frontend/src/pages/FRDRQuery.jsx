@@ -9,7 +9,7 @@ const FRDRQuery = () => {
   // State to hold the database data returned by the API.
   const [data, setData] = useState([]);
   const [filters, setFilters] = useState([]);
-  const [downloading, setDownloading] = useState(false); //Stop spam downloading
+  const [loading, setLoading] = useState(false); 
 
   //TESTING, default filters
   const defaultFilters = [
@@ -85,6 +85,7 @@ const FRDRQuery = () => {
 
   //Function to call FRDRQueryView API
   const handleFRDRQuery = async () => {
+    if (loading) return;
     try {
 
       if (filters.length == 0){
@@ -92,6 +93,7 @@ const FRDRQuery = () => {
         return;
       }
 
+      setLoading(true);
       const requestBody = {
         filters: filters, 
         cache_path: "database/data", 
@@ -112,7 +114,7 @@ const FRDRQuery = () => {
       const result = await response.json();
       console.log("FRDR data loaded:", result);
 
-      // FRDR cannot handle large file loads so include partial success to notify users.
+      // FRDR cannot handle large file loads so include partial success to notify users
       if (result.message && result.message.includes("One or more files failed to download.")) {
         if (result["failed downloads"] && result["failed downloads"].length > 0) {
           const failedList = result["failed downloads"]
@@ -126,31 +128,32 @@ const FRDRQuery = () => {
         alert("FRDR data loaded successfully!");
       }
       
-      // Backend caches trialIds in the db
     } catch (error) {
       console.error("Error fetching data from FRDR:", error);
       alert("Error loading data from FRDR.");
     }
+
+    setLoading(false);
   };
   
   //Function to handle downloading into a zip file with CSVs for each trial's timeseries
   const handleDownloadZip = async () => {
-    if (downloading) return;
-    setDownloading(true);
+    if (loading) return;
     try {
       
       //Run frdr-query api call first to load into database. ugly.
       try{
         await handleFRDRQuery();
       } catch(error){
-        setDownloading(false);
         return;
       }
+
+      setLoading(true);
 
       const trialIds = Array.from(new Set(data.map(item => item.trial_id)));
       if (trialIds.length === 0) {
         alert("No trial IDs available for download.");
-        setDownloading(false);
+        setLoading(false);
         return;
       }
 
@@ -200,11 +203,17 @@ const FRDRQuery = () => {
       console.error("Error downloading zip:", error);
       alert("Error downloading zip file.");
     }
-    setDownloading(false);
+    setLoading(false);
   };
 
   return (
     <div className="frdr-query">
+      {loading && (
+        <div className = "loading-screen">
+          <div className = "spinny"></div>
+          <p> Loading...</p>  
+        </div>
+      )}
       <h2>Filters</h2>
       <FilterButtons onApply={handleApplyFilters} />
       <button className = "frdr-button" onClick={handleDownloadZip}>Download Timeseries CSV</button>
