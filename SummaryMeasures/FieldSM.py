@@ -242,3 +242,10 @@ Q20S_ENV = None
 Q17_ENV = None
 
 # TESTING
+# print(COMMON_ENV.grid)
+# increases = [21, 41, 81, 121, 161]
+# for x in range(5):
+#     print(f"Row {x}")
+#     for y in range(5):
+#         # print(f"Column {y}")
+#         print(f"Index: {COMMON_ENV.SpecimenLocation(increases[x], increases[y], index=True)}, EW Locale: {COMMON_ENV.SpecimenLocation(increases[x], increases[y])}")

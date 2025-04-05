@@ -79,7 +79,7 @@ class Karpov:
         """
         all_dep = list(chain.from_iterable([SM_DEPENDENCIES[sm] for sm in summary_measures if sm in SM_DEPENDENCIES.keys()])) # Flatten full list of dependencies
         full_dependencies = list(set(all_dep)) # Get rid of duplicate dependences
-        head_SMs = [sm for sm in summary_measures if sm not in full_dependencies] # If sm not a dependency, but is dependent
+        head_SMs = [sm for sm in summary_measures if sm not in full_dependencies and sm in SM_DEPENDENCIES.keys()] # If sm not a dependency, but is dependent
         floater_SMs = [sm for sm in summary_measures if sm not in full_dependencies and sm not in SM_DEPENDENCIES.keys()] # If sm is neither a dependency or dependent
         tail_SMs = [sm for sm in summary_measures if sm in full_dependencies and sm not in SM_DEPENDENCIES.keys()] # If sm is a dependency, but not dependent
         link_SMs = list(set(summary_measures) -  set(head_SMs + floater_SMs + tail_SMs)) # If sm is both a dependency and dependent.
@@ -93,7 +93,7 @@ class Karpov:
             for i in range(len(link_SMs)):
                 link = link_SMs[i]
                 if all(dep in reordered_summary_measures for dep in SM_DEPENDENCIES[link]): # Check if all dependencies for sm already exists in the reordered summary measures list
-                    add_SMs.append(i)
+                    add_SMs.append(link)
             reordered_summary_measures = reordered_summary_measures + add_SMs # Add all summary measures whose dependencies are satisfied to the ordered list
             link_SMs = [sm for sm in link_SMs if sm not in add_SMs] # Remove all added summary measures
 
@@ -120,9 +120,9 @@ class Karpov:
 
 ### TESTING ###
 
-# ls = ['calc_HB1_cumulativeReturn', 'calc_HB1_meanDurationStops']
-# # ordered = Karpov.OrderSummaryMeasures(ls)
-# # added = Karpov.AddRequiredSummaryMeasures(ls)
+# ls = ['calc_expectedMainHomeBaseReturn']
+# ordered = Karpov.OrderSummaryMeasures(ls)
+# added = Karpov.AddRequiredSummaryMeasures(ls)
 # ordered, data = Karpov.ResolveDependencies(ls)
 # print(ordered)
 # print(data)

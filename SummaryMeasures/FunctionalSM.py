@@ -229,6 +229,8 @@ def CalculateHomeBases(data, env: fsm.Environment, requiredSummaryMeasures, preE
     ### Summary Measure Logic
     localeVisits = desiredCalcs['locale_stops_calc'][0]
     localeDuration = desiredCalcs['locale_stops_calc'][1]
+    for i in range(len(localeVisits)):
+        print(f"Locale {GetLocaleFromIndex(i)} was visited {localeVisits[i]} times, for a duration of {localeDuration[i]}")
 
     # Calculate home bases
     topTwoMostVisited = np.argpartition(np.array(localeVisits), len(localeVisits) - 2)[-2:]
@@ -509,10 +511,11 @@ def Calculate_Mean_Return_Time_All_Locales(data, env: fsm.Environment, requiredS
     for i in range(len(data)):
         frame = data[i]
         specimenLocale = env.SpecimenLocation(frame[1], frame[2])
+        specimenLocaleIndex = env.SpecimenLocation(frame[1], frame[2], index=True)
         if specimenLocale != mainHomeBase: # If the specimen is not in the main home base
             if frame[4] == 1 and not excursion: # If the specimen is no longer in its main home base, it's on an excursion. Has to be moving in a progressive episode to be counted as an excursion (lingering between main home base and elsewhere doesn't count).
                 excursion = True
-            elif excursion and localeVisits[specimenLocale] > 1: # If the specimen is on an excursion in a locale that it will/has stopped in more than once
+            elif excursion and localeVisits[specimenLocaleIndex] > 1: # If the specimen is on an excursion in a locale that it will/has stopped in more than once
                 totalExcursionDuration += 1
         else:
             excursion = False
@@ -610,8 +613,8 @@ def Calculate_Distance_Travelled(data, env: fsm.Environment, requiredSummaryMeas
     # Get chunk length (in terms of frames) for five minutes worth of time
     chunkLength = 5 * 60 * FRAMES_PER_SECOND
     chunk = 0
-    distancesProgression = [0 for i in range(55 / 5)]
-    distancesAll = [0 for i in range(55 / 5)]
+    distancesProgression = [0 for i in range(11)]
+    distancesAll = [0 for i in range(11)]
     totalDurationOfProgression = 0
 
     for i in range(len(data)):
@@ -622,7 +625,7 @@ def Calculate_Distance_Travelled(data, env: fsm.Environment, requiredSummaryMeas
         # Add distance to all distances list
         distancesAll[chunk] += distanceData[i]
         if frame[4] == 1: # If it's a progression segment, add it to the progression distances list
-            distancesProgression[chunk] += distanceData
+            distancesProgression[chunk] += distanceData[i]
             totalDurationOfProgression += 1 # Add 1 frame to the total duration of progressions
     totalDurationSeconds = totalDurationOfProgression / FRAMES_PER_SECOND
     # Divide all distances by 100 to get distance in metres
