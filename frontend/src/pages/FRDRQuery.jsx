@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './FRDRQuery.css';
 import DataWindow from './components/DataWindow';
 import FilterButtons from './components/FilterButtons';
+import FieldSelector from './components/FieldSelector';
+import { categories } from '../config/categories';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
@@ -10,6 +12,8 @@ const FRDRQuery = () => {
   const [data, setData] = useState([]);
   const [filters, setFilters] = useState([]);
   const [loading, setLoading] = useState(false); 
+  const [selectedFields, setSelectedFields] = useState([]);
+  const [showFieldSelector, setShowFieldSelector] = useState(false);
 
   //TESTING, default filters
   const defaultFilters = [
@@ -39,11 +43,19 @@ const FRDRQuery = () => {
   const handleApplyFilters = (appliedFilters) => {
     //console.log("Filters from UI:", appliedFilters);
     setFilters(appliedFilters);
-    fetchQueryData(appliedFilters);
+    fetchQueryData(appliedFilters, selectedFields);
   };
+
+  // Called by FieldSelector to update selected fields.
+  const handleFieldSelection = (fields) => {
+    if (!fields.includes("trial_id")) { //Double check trial id is in fields.
+      fields.push("trial_id");}
+    setSelectedFields(fields);
+
+  };  
   
   // Function to call the QueryDataView API and pull data from the database.
-  const fetchQueryData = async (filters) => {
+  const fetchQueryData = async (filters, fields) => {
     try {
       
       if (filters.length == 0){
@@ -53,7 +65,7 @@ const FRDRQuery = () => {
 
       const requestBody = {
         filters: filters,
-        fields: defaultFields
+        fields: selectedFields.length > 1 ? selectedFields : defaultFields
       };
 
       console.log("Query requestBody", requestBody);
@@ -215,7 +227,18 @@ const FRDRQuery = () => {
         </div>
       )}
       <h2>Filters</h2>
-      <FilterButtons onApply={handleApplyFilters} />
+      <FilterButtons categories = {categories} onApply={handleApplyFilters} />
+      <button className="frdr-button" onClick={() => setShowFieldSelector(true)}>
+          Select Fields
+      </button>
+      {showFieldSelector && (
+        <FieldSelector
+          availableFields={categories.flatMap(cat => cat.fields)}
+          onChange={handleFieldSelection}
+          onClose={() => setShowFieldSelector(false)}
+        />
+      )}
+
       <button className = "frdr-button" onClick={handleDownloadZip}>Download Timeseries CSV</button>
       <button className = "frdr-button" onClick={handleFRDRQuery}> Load Data from FRDR </button>
       <h2 className = "filtered-data-entries">Filtered Data Entries</h2>
