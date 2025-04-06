@@ -61,7 +61,7 @@ def session_teardown(request):
 
 def record_execution_times():
     """Export the collected execution times to a CSV file"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     filename = f"./sm_execution_times.csv"
     columns = ["Timestamp"] + calc_names
 
@@ -97,7 +97,8 @@ def run_and_measure(func, *args, **kwargs):
     start = timer()
     result = func(*args, **kwargs)
     end = timer()
-    execution_time = end - start
+    # Execution time; rounded to the thousandth of a second
+    execution_time = round(end - start, 3)
     
     # Get the current test name
     test_name = os.environ.get("PYTEST_CURRENT_TEST", "").split(" ")[0]

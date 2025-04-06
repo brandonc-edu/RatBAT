@@ -131,18 +131,30 @@ def CalculateStops(data, env: fsm.Environment):
     stopLocales = [0 for x in range(25)]
     stopFrames = [0 for x in range(25)]
     stopped = False
+    relevantLocale = False
     locDur = [0 for x in range(25)]
     
     for i in range(len(data)):
         frame = data[i]
-        if frame[4] == 0: # If this is a stop
+        if frame[4] == 0: # Part of a lingering episode
             specimenLocale =  env.SpecimenLocation(frame[1], frame[2], index=True) # Get current locale of specimen
+            if GetLocaleFromIndex(specimenLocale) in [50, 4] and not relevantLocale:
+                print(f"Currently in locale: {GetLocaleFromIndex(specimenLocale)}")
+                relevantLocale = True
+            stopped = True # Lingering episode begins (if it hasn't already begun)
             # Count the stop
-            if not stopped: # If it was previously moving and just now stopped
-                stopped = True
-                locDur = [0 for x in range(25)]
+            # if not stopped: # If it was previously moving and just now stopped
+            #     stopped = True
+                # locDur = [0 for x in range(25)]
             locDur[specimenLocale] += 1
-        elif frame[4] == 1 and stopped: # If it's begun moving and was previously stopped
+        elif frame[4] == 1 and stopped: # lingering episode ends
+            if relevantLocale:
+                relevantLocale = False
+                print("End of lingering containing relevant locales")
+                print(locDur)
+                print(np.argmax(locDur))
+                print(GetLocaleFromIndex(np.argmax(locDur)))
+                print(f"Frame of ending: {frame[0]}")
             stopped = False
             # Get the maximum duration for each locale and add a stop to the max locale
             maxLocale = np.argmax(locDur)
@@ -240,7 +252,7 @@ def CalculateHomeBases(data, env: fsm.Environment, requiredSummaryMeasures, preE
     if localeVisits[localeA] == localeVisits[localeB]:
         mainHomeBase = localeA if localeDuration[localeA] >= localeDuration[localeB] else localeB
     else:
-        mainHomeBase = localeA if localeVisits[localeA] > localeVisits[localeB] else localeB
+        mainHomeBase = localeA if localeVisits[localeA] >= localeVisits[localeB] else localeB
     secondaryHomeBase = localeA if mainHomeBase == localeB else localeB
     if localeA < 2 and localeB < 2: # In case that there's less than two stops for main home base. In this case, the home base would essentially be a random locale that has one stop in it.
         return GetLocaleFromIndex(mainHomeBase), None
