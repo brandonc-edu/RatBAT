@@ -1,6 +1,13 @@
 .frdr-query .filtered-data-entries {
   margin-top: 60px;
 }
+
+.frdr-query .filters-container {
+  display: flex;
+  gap: 20px; /* Adjust spacing as needed */
+  margin-bottom: 20px;
+}
+
 .frdr-query h2{
   margin-bottom: 0px;
   margin-left: 5px;
@@ -73,4 +80,19 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+
+.frdr-query .select-fields{
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  float:left;
+  margin-left: 10px;
+  margin-right: 5px;
+
 }

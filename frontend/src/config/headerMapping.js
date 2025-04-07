@@ -1,9 +1,4 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-//import { headerMapping } from '.../config/categories';
-import './DataWindow.css';
-
-const headerMapping = {
+export const headerMapping = {
   "experimentgroup__experiment__studygroup__study__projectgroup__project__project_id": "Project ID",
   "experimentgroup__experiment__studygroup__study__projectgroup__project__projectdesc": "Project Desc",
   "experimentgroup__experiment__studygroup__study__study_id": "Study ID",
@@ -52,44 +47,3 @@ const headerMapping = {
   "treatment__drugrx_drug3": "Drug Rx Drug 3",
   "treatment__drugrx_dose3": "Drug Rx Dose 3"
 };
-
-const DataWindow = ({ data }) => {
-  console.log("DataWindow received data:", data);
-  const headers = data && data.length > 0 ? Object.keys(data[0]) : [];
-  const displayHeaders = headers.map(header => headerMapping[header] || header);
-  console.log("mappedFields", displayHeaders);
-  return (
-    <div className="data-window">
-      {data && data.length > 0 ? (
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                {displayHeaders.map(header => (
-                  <th key={header}>{header}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((item, index) => (
-                <tr key={index}>
-                  {headers.map(header => (
-                    <td key={header}>{item[header]}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p className="no-matching-entries">No matching entries found.</p>
-      )}
-    </div>
-  );
-};
-
-DataWindow.propTypes = {
-  data: PropTypes.arrayOf(PropTypes.object).isRequired,
-};
-
-export default DataWindow;
