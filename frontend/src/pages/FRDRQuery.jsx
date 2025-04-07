@@ -8,15 +8,9 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
 const FRDRQuery = () => {
-  // State to hold the database data returned by the API.
-  const [data, setData] = useState([]);
-  const [filters, setFilters] = useState([]);
-  const [loading, setLoading] = useState(false); 
-  const [selectedFields, setSelectedFields] = useState([]);
-  const [showFieldSelector, setShowFieldSelector] = useState(false);
 
-  //TESTING, default filters
-  const defaultFilters = [
+   //TESTING, default filters
+   const defaultFilters = [
     { field: "trial_id", lookup: "lt", value: 110 },
     { field: "drugrx_drug1", lookup: "exact", value: "QNP" }
   ];
@@ -39,6 +33,15 @@ const FRDRQuery = () => {
     "projectdesc"
   ];
 
+
+  // State to hold the database data returned by the API.
+  const [data, setData] = useState([]);
+  const [filters, setFilters] = useState([]);
+  const [loading, setLoading] = useState(false); 
+  const [selectedFields, setSelectedFields] = useState(defaultFields);
+  const [showFieldSelector, setShowFieldSelector] = useState(false);
+
+ 
   // Called by FilterButtons "Apply"
   const handleApplyFilters = (appliedFilters) => {
     //console.log("Filters from UI:", appliedFilters);
@@ -49,9 +52,9 @@ const FRDRQuery = () => {
   // Called by FieldSelector to update selected fields.
   const handleFieldSelection = (fields) => {
     if (!fields.includes("trial_id")) { //Double check trial id is in fields.
-      fields.push("trial_id");}
+      fields.push("trial_id");
+    }
     setSelectedFields(fields);
-
   };  
   
   // Function to call the QueryDataView API and pull data from the database.
@@ -65,7 +68,7 @@ const FRDRQuery = () => {
 
       const requestBody = {
         filters: filters,
-        fields: selectedFields.length > 1 ? selectedFields : defaultFields
+        fields: selectedFields.length > 0 ? selectedFields : defaultFields
       };
 
       console.log("Query requestBody", requestBody);
@@ -228,7 +231,7 @@ const FRDRQuery = () => {
       )}
       <h2>Filters</h2>
       <FilterButtons categories = {categories} onApply={handleApplyFilters} />
-      <button className="frdr-button" onClick={() => setShowFieldSelector(true)}>
+      <button className="select-fields" onClick={() => setShowFieldSelector(true)}>
           Select Fields
       </button>
       {showFieldSelector && (
@@ -236,6 +239,7 @@ const FRDRQuery = () => {
           availableFields={categories.flatMap(cat => cat.fields)}
           onChange={handleFieldSelection}
           onClose={() => setShowFieldSelector(false)}
+          initialSelected = {selectedFields}
         />
       )}
 

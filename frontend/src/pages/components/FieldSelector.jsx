@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import './FieldSelector.css';
 
-const FieldSelector = ({ availableFields, onChange, onClose }) => {
+const FieldSelector = ({ availableFields, onChange, onClose, initialSelected}) => {
   // Initialize selection state: trial_id is always selected.
   const [selected, setSelected] = useState(() => {
     const initial = {};
     availableFields.forEach(field => {
-      initial[field.name] = field.name === 'trial_id';
+      initial[field.name] = initialSelected.includes(field.name)|| field.name === 'trial_id';
     });
     return initial;
   });
+
+  useEffect(() => {
+    const newSelected = {};
+    availableFields.forEach(field => {
+      newSelected[field.name] = initialSelected.includes(field.name) || field.name === 'trial_id';
+    });
+    setSelected(newSelected);
+  }, [initialSelected, availableFields]);
 
   // Whenever selection changes, notify parent with the list of selected field names.
   const handleApply = () => {
@@ -35,10 +43,10 @@ const FieldSelector = ({ availableFields, onChange, onClose }) => {
   };
 
   return (
-    <div className="modal-overlay">
+    <div className="field-selector">
         <div className="modal-content">
             <h2>Select Fields</h2>
-            <div className="field-selector">
+            <div className="field-box">
                 {availableFields.map(field => (
                     <button 
                     key={field.name}
@@ -51,8 +59,8 @@ const FieldSelector = ({ availableFields, onChange, onClose }) => {
                 ))}
             </div>
             <div className="modal-actions">
-            <button className="apply-button" onClick={handleApply}>Apply</button>
-            <button className="cancel-button" onClick={handleCancel}>Cancel</button>
+            <button className="apply" onClick={handleApply}>Save</button>
+            <button className="cancel" onClick={handleCancel}>Cancel</button>
             </div>
         </div>
         </div>

@@ -1,4 +1,4 @@
-.modal-overlay {
+.field-selector {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,31 +11,30 @@
   z-index: 1000;
 }
 
-.modal-content {
+.field-selector .modal-content {
   background: #fff;
   padding: 20px;
   border-radius: 8px;
-  width: 300px; /* Adjust as needed */
+  width: 600px; /* Adjust as needed */
   max-width: 90%;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-.field-selector {
+.field-selector .field-box {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
   margin-top: 10px;
   margin-bottom: 10px;
-
   border: 10px solid white;
   border-radius: 5px;
   background-color: white;
-  
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   height: 410px; 
   overflow-y: auto; 
 }
 
-.field-selector .field-button {
+.field-selector .field-box .field-button {
   padding: 8px 12px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -45,15 +44,49 @@
   transition: background-color 0.3s, border-color 0.3s;
 }
 
-.field-selector .field-button.toggled {
+.field-selector .field-box .field-button:hover {
+  background-color: #f0f0f0; 
+}
+
+.field-selector .field-box .field-button.toggled {
   background-color: #0056b3;
   border-color: #004085;
   color: white;
 }
 
-.field-selector .field-button:disabled {
-  background-color: #0056b3;
-  border-color: #004085;
-  color: white;
+.field-selector .field-box .field-button:disabled {
+  background-color: #ccc; 
+  border-color: #ccc;
+  color: #666; 
   cursor: default;
+}
+
+.field-selector .apply {
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.field-selector .cancel {
+  padding: 4px 6px;
+  margin-left: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.field-selector .cancel:hover {
+  background-color: firebrick;
+
+}
+
+.field-selector button:hover {
+  background-color: #0056b3;
 }
