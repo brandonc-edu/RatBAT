@@ -1,6 +1,7 @@
 import pytest
 import pandas as pd
 import os
+from SummaryMeasures.FunctionalSM import SM_DEPENDENCIES, DATA_DEPENDENCIES
 
 CUR_FILE_PATH = os.path.dirname(os.path.abspath(__file__))
 TEST_DATA_SUM_PATH = os.path.join(CUR_FILE_PATH, './data/Q40-Q43_MasterFile_IDCheckingLocoPathSDEBouts_Nov19_2013_workingfile_nonrepeated.xlsx')
@@ -28,3 +29,14 @@ def test_data(): # Return a list of tuples of smoothed data files & their corres
 FILE_1, FILE_2, FILE_3, FILE_4, FILE_5 = test_data()
 
 TEST_CASES = [FILE_1, FILE_2, FILE_3, FILE_4, FILE_5]
+
+def karpov_sm_test_data():
+    return list(SM_DEPENDENCIES.items())
+
+KARPOV_SM_TEST_CASES = karpov_sm_test_data()
+
+def karpov_data_test_data():
+    return list(DATA_DEPENDENCIES.items())
+
+KARPOV_DATA_TEST_CASES = karpov_data_test_data()
+        

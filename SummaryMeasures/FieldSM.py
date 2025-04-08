@@ -177,12 +177,12 @@ class Environment:
         xv, yv = self.grid
         locale = 0
 
-        for i in range(len(yv) - 1):
+        for i in range(len(yv) - 1, 0, -1):
             for j in range(len(xv) - 1):
                 xLower = xv[i, j]
-                yLower = yv[i, j]
+                yLower = yv[i - 1, j]
                 xUpper = xv[i, j + 1]
-                yUpper = yv[i + 1, j]
+                yUpper = yv[i, j]
 
                 # Biased towards the first locale the specimen could be in.
                 ## Biased towards upper left-most locales
