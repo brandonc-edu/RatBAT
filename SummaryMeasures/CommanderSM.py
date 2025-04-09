@@ -5,29 +5,14 @@ This module serves as the main entrypoint for calculating and (temporarily in co
 
 Authors: Brandon Carrasco
 Created on: 13-11-2024
-Modified on: 24-01-2025
+Modified on: 08-04-2025
 """
 
 import numpy as np
 from . import FieldSM as fsm
 from . import FunctionalSM as fcsm
 from . FunctionalSM import DATA_MAPPING, SM_MAPPING
-# import FieldSM as fsm
-# import FunctionalSM as fcsm
-# from FunctionalSM import DATA_MAPPING, SM_MAPPING
 import pandas as pd
-
-### Summary Measure Dependency Helper ###
-
-# Maps reference ids to function names
-
-# SM_MAPPING = {
-#     "calc_homebases" : "CalculateHomeBases"
-# }
-
-# DATA_MAPPING = {
-#     "locale_stop_calc" : "Placeholder"
-# }
 
 
 
@@ -38,7 +23,7 @@ class Commander:
         The Commander class stores the relevant information to calculate summary measures,
         as well as communicating them to whatever functionality calls it.
 
-        Think of the Commander class as a middleman. Very similar to the facade & adaptor design pattern.
+        Think of the Commander class as a middleman.
     """
 
     def __init__(self, preProcessedData, environment):
@@ -47,11 +32,18 @@ class Commander:
         self.storedAuxiliaryInfo = {}
         self.calculatedSummaryMeasures = {}
 
-    def SelectEnvironment(self, environmentName):
-        """
-            Based on the environment name passed, select the environment that will be used by the Commander.
+    def SelectEnvironment(self, environmentName: str) -> fsm.Environment:
+        """Based on the environment name passed, select the environment that will be used by the Commander.
 
-            Available environmentNames are: q20s (Q21 to Q23 environments), q17 (Q17 environment), and common (all other Qs' environment).
+        Parameters
+        ----------
+        environmentName : str
+            Identifier of the environment to be used for calculation of summary measures. Available environmentName values are: common (all non-Q21 to Q23 & non-Q17 environments). 
+
+        Returns
+        -------
+        Environment
+            Environment to be used for the calculation of summary measures.
         """
         if environmentName == "common":
             return fsm.COMMON_ENV
@@ -62,38 +54,43 @@ class Commander:
         else:
             raise Exception("Invalid environmentName passed: please pass common, q20s, or q17 as the environmentName.")
         
-    def PerformPreCalculations(self, data, env: fsm.Environment, commonCalculations):
-        """
-            Scans the list of summary measures that the Commander wants calculated and determines if there are any pre-calculations of important data that could be done to reduce calculating the same thing over and over again.
-            Criterion is that there are two or more summaryMeasures that use the same data -> fulfilled = that important data is calculated and stored for use in the actual summary measure calcuation.
+    # Goal for the below function is to: pre-calculate of important data that's used among several summary measures to reduce calculating the same thing over and over again.
+    def PerformPreCalculations(self, data: np.ndarray, env: fsm.Environment, commonCalculations: list[str]):
+        """Performs common calculations using the data and environment to avoid unnecessary recalculations.
             
             Updates self.storedAuxiliaryInfo with the store auxiliary calculations.
 
-            summaryMeasures is a list of strings that correspond to the summary measures that will be calculated.
+            Parameters
+            ----------
+            data : numpy.ndarray
+                Preprocessed data array, of the format: 0 = frame, 1 = x-coord, 2 = y-coord, 3 = velocity, 4 = movement type (lingering or progression)
+            env : Environment
+                Testing environment for the given specimen (and data array)
+            commonCalculations : list[str]
+                A list of strings that correspond to the common calculations (between summary measures) that will be calculated.
         """
         # Run through each calculation and add them to the storedAuxiliaryInfo dictionary
         for cCalc in commonCalculations:
             func = getattr(fcsm, DATA_MAPPING[cCalc])
             self.storedAuxiliaryInfo[cCalc] = func(data, env)
-
-    # def SortCheckSMDependencies(self, summaryMeasures):
-    #     """
-    #         Given a list of summary measures, check if all summary measures that use summary measures for their calcuations:
-    #             1. That the required summary measure is going to be calculated.
-    #             2. That the required summary measure is going to be calculated before the dependent summary measure.
-
-    #         In the case that (1) isn't satisfied, the summary measure is removed from the list with a warning.
-    #         In the case that (2) isn't satisfied, the list of summary measures are reordered such that all dependencies come before their requirements. 
-    #     """
-    #     for i in range(len(summaryMeasures)):
-    #         sm = summaryMeasures[i]
             
-    def AccountForJitter(self, data: np.ndarray, min=20, max=180):
-        """
-            Given the preprocessed data, it will return the dataset with all x & y coordinates capped between 20 & 180 (the coordinate system used by the supervisors).
+    def AccountForJitter(self, data: np.ndarray, min=20, max=180) -> np.ndarray:
+        """Given the preprocessed data, it will return the dataset with all x & y coordinates capped between 20 & 180 (the coordinate system used by the supervisors).
             This accounts for the rat being on the edges of the field -> the jitter of the tracking device sometimes makes the rat look like its crossing those boundaries, but its not.
 
-            This is only being handled here for the purposes of the PoC -> Future iterations of the platform will handle jitter in the preprocessing step.
+            Parameters
+            ----------
+            data : numpy.ndarray
+                Preprocessed data array, of the format: 0 = frame, 1 = x-coord, 2 = y-coord, 3 = velocity, 4 = movement type (lingering or progression)
+            min : Number
+                Minimum value to clip the jitter values. Defaults to 20.
+            max : Number
+                Maximum value to clip the jitter values. Defaults to 180.
+            
+            Returns
+            -------
+            data : numpy.ndarray
+                Data array with any invalid values clipped to the minimum and maximum values.
         """
         # x-coord
         data[:, 1] = np.clip(data[:, 1], min, max)
@@ -102,13 +99,31 @@ class Commander:
         return data        
         
 
-    def CalculateSummaryMeasures(self, data, summaryMeasures, commonCalculations):
-        """
-            Calculates the list of summary measures that the Commander wants calculated on the dataset.
+    ## 0 = frame
+    ## 1 = x-coord
+    ## 2 = y-coord
+    ## 3 = velocity
+    ## 4 = segmentType (lingering vs. progression)
 
-            summaryMeasures is a list of strings specifying which functions 
+    def CalculateSummaryMeasures(self, data: np.ndarray, summaryMeasures: list[str], commonCalculations: list[str]) -> dict:
+        """
+            Calculates the list of summary measures (and common calculations) passed to it using the data provided.
 
             Updates self.calculatedSummaryMeasures with calculated summary measures.
+
+            Parameters
+            ----------
+            data : numpy.ndarray
+                Preprocessed data array, of the format: 0 = frame, 1 = x-coord, 2 = y-coord, 3 = velocity, 4 = movement type (lingering or progression)
+            summaryMeasures : list[str]
+                List of strings representing summary measures to be calculated on the dataset. Summary measures must be in the correct order and have all their dependent summary measures.
+            commonCalculations : list[str]
+                List of strings representing common calculations to be used in the summary measures passed.
+
+            Returns
+            -------
+            calculatedSummaryMeasures
+                Dictionary mapping summary measure ref. ids (see FunctionalSM) to their calculated outputs.
         """
         # Handle data jitter
         data = self.AccountForJitter(data)
@@ -122,36 +137,7 @@ class Commander:
             self.calculatedSummaryMeasures[sm] = func(data, self.env, self.calculatedSummaryMeasures, self.storedAuxiliaryInfo)
 
         return self.calculatedSummaryMeasures
-        ## 0 = frame
-        ## 1 = x-coord
-        ## 2 = y-coord
-        ## 3 = velocity
-        ## 4 = segmentType (lingering vs. progression)
-        # for sm in summaryMeasures: ## Developer's note
-        #     if sm == "calc_homebases": # Takes in x, y, segmentType + environment
-        #         self.calculatedSummaryMeasures[sm] = fcsm.CalculateHomeBases(data[:, [1, 2, 4]], self.env)
-        #     elif sm == "calc_HB1_cumulativeReturn": # Takes in x, y, segmentType + mainHomeBase + environment
-        #         self.calculatedSummaryMeasures[sm] = fcsm.CalculateFreqHomeBaseStops(data[:, [1, 2, 4]],
-        #                                                                              self.calculatedSummaryMeasures["calc_homebases"][0],
-        #                                                                              self.env)
-        #     elif sm == "calc_HB1_meanDurationStops": # Takes in x, y, segmentType + mainHomeBase + environment
-        #         self.calculatedSummaryMeasures[sm] = fcsm.CalculateMeanDurationHomeBaseStops(data[:, [1, 2, 4]],
-        #                                                                              self.calculatedSummaryMeasures["calc_homebases"][0],
-        #                                                                              self.env)
-        #     elif sm == "calc_HB1_meanReturn": # Takes in x, y + mainHomeBase + environment
-        #         if self.calculatedSummaryMeasures["calc_homebases"][1] == None:
-        #             print("WARNING: Cannot calculate mean return time to main home base, as second home base does not exist!")
-        #         else:
-        #             self.calculatedSummaryMeasures[sm] = fcsm.CalculateMeanReturnHomeBase(data[:, [1, 2]],
-        #                                                                                 self.calculatedSummaryMeasures["calc_homebases"][0],
-        #                                                                                 self.env)
-        #     elif sm == "calc_HB1_meanExcursionStops": # Takes in x, y, segmentType + mainHomeBase + environment
-        #         if self.calculatedSummaryMeasures["calc_homebases"][1] == None:
-        #             print("WARNING: Cannot calculate mean number of stops during excursions (from main home base), as second home base does not exist!")
-        #         else:
-        #             self.calculatedSummaryMeasures[sm] = fcsm.CalculateMeanStopsExcursions(data[:, [1, 2, 4]],
-        #                                                                              self.calculatedSummaryMeasures["calc_homebases"][0],
-        #                                                                              self.env)
+        
 
 ### TESTING ###
 # from DependenciesSM import Karpov

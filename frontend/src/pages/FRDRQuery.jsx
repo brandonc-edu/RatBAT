@@ -176,7 +176,7 @@ const FRDRQuery = () => {
       const url = `http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/?${queryParams}`;
 
       console.log("Fetching timeseries data from:", url);
-      const response = await fetch(url);
+      const response = await fetch(url, { method: 'GET' } );
 
       if (!response.ok) {
         throw new Error(`get-timeseries API responded with status ${response.status}`);
