@@ -11,3 +11,10 @@ Researchers, such as our supervisors or others aiming to use the rat data hosted
 
 This project is temporarily hosted on: http://ratbat.cas.mcmaster.ca/  
 (Note that in order to access this website you must be either on McMaster campus or using the McMaster VPN)
+
+## Quick guide for TAs to go through the webapp end-to-end fast:
+In STEP 1: FRDR Query select the Trial filter → type in a number like 13186 in the first textbox (trial id:) → Apply button → Load Data from FRDR button. 
+Then in STEP 2: Data Preprocessing select the trial and click Fetch Preprocessed button.
+Proceed to step 3 and 4.
+
+Why?: Some trials such as 13186 already have preprocessed data in the database, this saves around 7-10 minutes of waiting for preprocessing to complete.
