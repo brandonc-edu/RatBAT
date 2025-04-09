@@ -54,6 +54,56 @@ const CompileDataPage = () => {
     "calc_HB2_cumulativeReturn"
   ];
 
+  const metadataFieldMapping = {
+    "animal__animal_id": "animal_id",
+    "animal__lightcyclecolony__lightcyclecolony_id": "lightcyclecolony_id",
+    "animal__lightcyclecolony__lightcyclecolonydesc": "lightcyclecolonydesc",
+    "animal__lightcycletest__lightcycletest_id": "lightcycletest_id",
+    "animal__lightcycletest__lightcycletestdesc": "lightcycletestdesc",
+    "apparatus__apparatus_id": "apparatus_id",
+    "apparatus__arenaloc__arenaloc_id": "arenaloc_id",
+    "apparatus__arenaloc__arenalocdesc": "arenalocdesc",
+    "apparatus__arenaobjects__arenaobjects_id": "arenaobjects_id",
+    "apparatus__arenaobjects__arenaobjectsdesc": "arenaobjectsdesc",
+    "apparatus__arenatype__arenatype_id": "arenatype_id",
+    "apparatus__arenatype__arenatypedesc": "arenatypedesc",
+    "apparatus__lightconditions__lightconditions_id": "lightconditions_id",
+    "apparatus__lightconditions__lightconditionsdesc": "lightconditionsdesc",
+    "treatment__surgerymanipulation__surgerymanipulation_id": "surgerymanipulation_id",
+    "treatment__surgerymanipulation__surgerymanipulationdesc": "surgerymanipulationdesc",
+    "treatment__surgeryoutcome__surgeryoutcome_id": "surgeryoutcome_id",
+    "treatment__surgeryoutcome__surgeryoutcomedesc": "surgeryoutcomedesc",
+    "eventtype__eventtype_id": "eventtype_id",
+    "eventtype__eventtypedesc": "eventtypedesc",
+    "experimentgroup__experiment__experiment_id": "experiment_id",
+    "experimentgroup__experiment__experimentdesc": "experimentdesc",
+    "experimentgroup__experiment__studygroup__study__study_id": "study_id",
+    "experimentgroup__experiment__studygroup__study__studydesc": "studydesc",
+    "experimentgroup__experiment__studygroup__study__projectgroup__project__project_id": "project_id",
+    "experimentgroup__experiment__studygroup__study__projectgroup__project__projectdesc": "projectdesc",
+    "treatment__drugrx_drug1": "drugrx_drug1",
+    "treatment__drugrx_dose1": "drugrx_dose1",
+    "treatment__drugrx_drug2": "drugrx_drug2",
+    "treatment__drugrx_dose2": "drugrx_dose2",
+    "treatment__drugrx_drug3": "drugrx_drug3",
+    "treatment__drugrx_dose3": "drugrx_dose3",
+    "trial_id": "trial_id",
+    "dateandtime": "dateandtime",
+    "animalweight": "animalweight",
+    "injectionnumber": "injectionnumber",
+    "oftestnumber": "oftestnumber",
+    "drugrxnumber": "drugrxnumber",
+    "experimenter": "experimenter",
+    "duration": "duration",
+    "fallsduringtest": "fallsduringtest",
+    "notes": "notes",
+    "preprocessed": "preprocessed",
+    "trackfile": "trackfile",
+    "pathplot": "pathplot",
+    "video": "video",
+    "video_id": "video_id",
+    "fall__timewhenfell": "timewhenfell",
+  };
   useEffect(() => {
     // Fetch metadata variables from the backend
     const fetchMetadataVariables = async () => {
@@ -106,30 +156,34 @@ const CompileDataPage = () => {
         return [];
       }
     };
-   
-  
-    // Update compiled data whenever selections change
+
     const updateCompiledData = async () => {
       const compiled = await Promise.all(
         selectedDataFiles.map(async (file) => {
-          const metadataResponse = await fetchMetadataValues(file.trial_id); // Use trial_id instead of extracting from file name
+          const metadataResponse = await fetchMetadataValues(file.trial_id);
           const metadataRecord = metadataResponse[0] || {};
-          const measuresObj = {};
     
+          // Transform metadata keys using the mapping
+          const transformedMetadata = {};
+          Object.keys(metadataRecord).forEach((key) => {
+            const mappedKey = metadataFieldMapping[key] || key; // Use the mapped key or fallback to the original key
+            transformedMetadata[mappedKey] = metadataRecord[key];
+          });
+    
+          const measuresObj = {};
           selectedSummaryMeasures.forEach((measure) => {
-            // Use trial_id as the key to access results
             if (results[file.trial_id] && results[file.trial_id][measure]) {
               measuresObj[measure] = Array.isArray(results[file.trial_id][measure])
                 ? results[file.trial_id][measure]
                 : [results[file.trial_id][measure]];
             } else {
-              measuresObj[measure] = ['']; // Default to empty if no result is found
+              measuresObj[measure] = [''];
             }
           });
     
           return {
             file: file.file_name,
-            metadata: metadataRecord,
+            metadata: transformedMetadata,
             measures: measuresObj,
           };
         })
@@ -208,7 +262,7 @@ const CompileDataPage = () => {
   const handleDownload = () => {
     const csvHeaders = [
       "Data File",
-      ...selectedMetadataVariables,
+      ...selectedMetadataVariables.map((variable) => variable), // Use selected metadata variables
       ...selectedSummaryMeasures.flatMap((measure) => {
         if (measure === "calc_distanceTravelled") {
           return [
@@ -227,12 +281,21 @@ const CompileDataPage = () => {
     ];
   
     const csvContent = [
-      csvHeaders.join(","),
+      csvHeaders.join(","), // Add headers
       ...compiledData.map(({ file, metadata, measures }) => {
-        const fileCell = `="${file}"`;
-        const metadataCells = selectedMetadataVariables.map(
-          (variable) => metadata[variable] || ''
-        );
+        const fileCell = `="${file}"`; // Ensure file name is included
+  
+        // Transform metadata keys using metadataFieldMapping
+        const metadataCells = selectedMetadataVariables.map((variable) => {
+          // Find the original key using metadataFieldMapping
+          const originalKey = Object.keys(metadataFieldMapping).find(
+            (key) => metadataFieldMapping[key] === variable
+          ) || variable;
+  
+          // Use the original key to access metadata
+          return metadata[originalKey] || '';
+        });
+  
         const summaryCells = selectedSummaryMeasures.flatMap((measure) => {
           if (measure === "calc_distanceTravelled") {
             const distanceValues = measures[measure] || [];
@@ -255,6 +318,7 @@ const CompileDataPage = () => {
               : [formatCSVValue(vals, precision, wholeNumberMeasures.includes(measure))];
           }
         });
+  
         return [fileCell, ...metadataCells, ...summaryCells].join(",");
       }),
     ].join("\n");
@@ -420,7 +484,7 @@ const CompileDataPage = () => {
                 <tr key={rowIndex}>
                   <td>{file}</td>
                   {selectedMetadataVariables.map((variable, i) => (
-                    <td key={i}>{metadata[variable]}</td>
+                    <td key={i}>{metadata[variable] || ''}</td>
                   ))}
                   {selectedSummaryMeasures.flatMap((measure) => {
                     if (measure === "calc_distanceTravelled") {
