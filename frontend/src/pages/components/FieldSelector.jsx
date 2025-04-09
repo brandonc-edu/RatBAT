@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './FieldSelector.css';
 
-const FieldSelector = ({ availableFields, onChange, onClose, initialSelected}) => {
+const FieldSelector = ({ availableFields, onChange, onClose, initialSelected = []}) => {
   // Initialize selection state: trial_id is always selected.
   const [selected, setSelected] = useState(() => {
     const initial = {};

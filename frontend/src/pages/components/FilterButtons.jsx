@@ -196,7 +196,7 @@ function FilterButtons({ categories, onApply }) {
                     const fieldData = localFilters[group.category]?.[field.name] || { value: '' };
                     return (
                       <div key={field.name} className="filter-item">
-                        <label className="filter-item-label-discrete">{field.name}:</label>
+                        <label className="filter-item-label-discrete">{field.displayName || field.name}:</label>
                         <select
                           value={fieldData.value}
                           onChange={(e) => handleDiscreteChange(group.category, field.name, e.target.value)}
@@ -224,7 +224,7 @@ function FilterButtons({ categories, onApply }) {
                     const fieldData = localFilters[group.category]?.[field.name] || { lookup: 'exact', value: '' };
                     return (
                       <div key={field.name} className="filter-item">
-                        <label>{field.displayName || field.name}:</label>
+                        <label htmlFor={field.name}>{field.displayName || field.name}:</label>
                         <select
                           value={fieldData.lookup}
                           onChange={(e) => handleLookupChange(group.category, field.name, e.target.value)}
@@ -252,6 +252,7 @@ function FilterButtons({ categories, onApply }) {
                           </div>
                         ) : (
                           <input
+                            id = {field.name} //ugly but needed for testing. Make sure field.name is unique!
                             type={field.type === "number" ? "number" : "text"}
                             value={typeof fieldData.value === 'string' ? fieldData.value : ''}
                             onChange={(e) => handleFieldChange(group.category, field.name, e.target.value)}
