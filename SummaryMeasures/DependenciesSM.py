@@ -5,7 +5,7 @@ This module contains all of the required functionality in regards to proper plan
 
 Authors: Brandon Carrasco
 Created on: 15-01-2025
-Modified on: 24-01-2025
+Modified on: 08-04-2025
 """
 
 # Summary Measure Dependencies
@@ -14,39 +14,7 @@ from . FunctionalSM import DATA_DEPENDENCIES, SM_DEPENDENCIES
 from itertools import chain
 
 
-# Helper Class - Chain
-
-# class Node:
-    
-#     def __init__(self, name):
-#         self.name = name
-#         self.needed = []
-#         self.neededFor = []
-
-#     def AddDependency(self, node):
-#         self.needed.append(node)
-    
-#     def AddRequiredFor(self, node):
-#         self.neededFor(node)
-    
-#     def GetName(self):
-#         return self.name
-
-# class Threads:
-
-#     def __init__(self):
-#         self.tails = []
-#         self.heads = []
-#         self.floaters = []
-#         self.links = []
-
-#     def FindSM(self):
-
-
-#     def AddSM(name):
-
-#     def CategorizeSMs(self):
-
+### On resolving summary measure dependencies (on other summary measures being calculated before hand) ###
 
 # SMs can be floaters (no dependencies nor does anything depend on it) -> Automatically shoved to the back of the list
 # SMs can be tails (no dependencies, but some SMs depend on it) -> Automatically shoved to the back of the list (in front of or behind the floaters; it doesn't matter)
@@ -56,13 +24,24 @@ from itertools import chain
 #   -> Otherwise, skip over it and move onto the next one. Do so until all links have been added to the list. 
 ## O(n^2) time! But considering how few summary measures we'll be really calculating, I think it's alright.
 
+### End of digression
+
 # Karpov (The Summary Measure Dependency Resolver)
 
 class Karpov:
 
-    def AddRequiredSummaryMeasures(summary_measures):
-        """
-            Given a list of summary measures, checks and produces a list of all dependencies (other summary measures) that must be calculated prior to them.
+    def AddRequiredSummaryMeasures(summary_measures: list[str]) -> list[str]:
+        """Given a list of summary measures, checks and produces a list of all dependencies (other summary measures) that must be calculated prior to them.
+
+        Parameters
+        ----------
+        summary_measures : list[str]
+            List of summary measures to be calculated.
+
+        Returns
+        -------
+        requiredSMs : list[str]
+            Summary measures that will be calculated as well as the summary measures necessary to calculate them.
         """
         requiredSMs = []
         for sm in summary_measures:
@@ -73,9 +52,18 @@ class Karpov:
                 requiredSMs = requiredSMs + [dep for dep in dependencies if dep not in summary_measures] # If dependency not already in summary measures, add it
         return list(set(requiredSMs))
 
-    def OrderSummaryMeasures(summary_measures):
-        """
-            Given a list of summary measures, re-orders such that all dependencies are calculated prior to their dependent summary measure.
+    def OrderSummaryMeasures(summary_measures: list[str]) -> list[str]:
+        """Given a list of summary measures, re-orders the summary measures list such that all dependencies will be  calculated prior to their dependent summary measure.
+        
+        Parameters
+        ----------
+        summary_measures : list[str]
+            List of summary measures to be calculated.
+
+        Returns
+        -------
+        reordered_summary_measures : list[str]
+            Summary measures that will be calculated in an order that will prevent dependent summary measures from being calculated prior to the summary measure(s) they're dependent on.
         """
         all_dep = list(chain.from_iterable([SM_DEPENDENCIES[sm] for sm in summary_measures if sm in SM_DEPENDENCIES.keys()])) # Flatten full list of dependencies
         full_dependencies = list(set(all_dep)) # Get rid of duplicate dependences
@@ -101,9 +89,20 @@ class Karpov:
         reordered_summary_measures = reordered_summary_measures + head_SMs
         return reordered_summary_measures
 
-    def ResolveDependencies(summary_measures):
-        """
-            Given a list of summary_measures, return list of data dependencies (aka. data that should be pre-calc'd for efficiency's sake) and the full re-ordered list of SMs that satisfy all SM dependencies.
+    def ResolveDependencies(summary_measures: list[str]) -> tuple[list[str], list[str]]:
+        """Given a list of summary_measures, return list of data dependencies (aka. data that should be pre-calc'd for efficiency's sake) and the full re-ordered list of SMs that satisfy all SM dependencies.
+
+        Parameters
+        ----------
+        summary_measures : list[str]
+            List of summary measures to be calculated.
+
+        Returns
+        -------
+        summary_reordered : list[str]
+            Summary measures that will be calculated (with dependencies added and ordered in a way to prevent out-of-order summary measure calculations)
+        data_depend : list[str]
+            Common calculations that will be performed to ensure efficient calculation of data.
         """
         data_depend = set()
         summary_reordered = []

@@ -5,22 +5,19 @@ This module contains all of the required functionality in regards to Summary Mea
 
 Authors: Brandon Carrasco
 Created on: 07-11-2024
-Modified on: 07-03-2025
+Modified on: 08-04-2025
 """
 
 # Imports
 import numpy as np
-# import pandas as pd
 from . import FieldSM as fsm
 from . FieldSM import GetLocaleFromIndex, GetIndexFromLocale
-# import FieldSM as fsm
-# from FieldSM import GetLocaleFromIndex, GetIndexFromLocale
 
 # Constants
 
 FRAMES_PER_SECOND = 29.97
 
-## Ref ids for Data & SMs
+## Ref ids for Data & SMs -> Easier way to call the summary measure functions
 
 SM_MAPPING = {
     "calc_homebases" : "CalculateHomeBases",
@@ -121,81 +118,6 @@ def HandleMissingInputs(refId: str, data, env: fsm.Environment, calculatedSummar
     desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
     return desiredCalcs
 
-### Calculating metrics
-
-
-def CalculateStops(data, env: fsm.Environment):
-    """
-        Given the raw time-series data and environment of the experiment, calculates the stops in each locale, as well as the total duration of the stops (in frames) for each locale.
-    """
-    stopLocales = [0 for x in range(25)]
-    stopFrames = [0 for x in range(25)]
-    stopped = False
-    relevantLocale = False
-    locDur = [0 for x in range(25)]
-    
-    for i in range(len(data)):
-        frame = data[i]
-        if frame[4] == 0: # Part of a lingering episode
-            specimenLocale =  env.SpecimenLocation(frame[1], frame[2], index=True) # Get current locale of specimen
-            if GetLocaleFromIndex(specimenLocale) in [50, 4] and not relevantLocale:
-                print(f"Currently in locale: {GetLocaleFromIndex(specimenLocale)}")
-                relevantLocale = True
-            stopped = True # Lingering episode begins (if it hasn't already begun)
-            # Count the stop
-            # if not stopped: # If it was previously moving and just now stopped
-            #     stopped = True
-                # locDur = [0 for x in range(25)]
-            locDur[specimenLocale] += 1
-        elif frame[4] == 1 and stopped: # lingering episode ends
-            if relevantLocale:
-                relevantLocale = False
-                print("End of lingering containing relevant locales")
-                print(locDur)
-                print(np.argmax(locDur))
-                print(GetLocaleFromIndex(np.argmax(locDur)))
-                print(f"Frame of ending: {frame[0]}")
-            stopped = False
-            # Get the maximum duration for each locale and add a stop to the max locale
-            maxLocale = np.argmax(locDur)
-            stopLocales[maxLocale] += 1
-            # Add stop frames to total stop durations
-            # stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
-            stopFrames[maxLocale] += sum(locDur) 
-            # Reset local locale stop durations (for a stop episode)
-            locDur = [0 for x in range(25)]
-
-    if stopped: # if the search for stops ends on a stop, then sum it up and calculate the necessary stuff
-        maxLocale = np.argmax(locDur)
-        stopLocales[maxLocale] += 1
-        # Add stop frames to total stop durations
-        # stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
-        stopFrames[maxLocale] += sum(locDur) 
-    return stopLocales, stopFrames
-
-
-def CalcuateDistances(data, env: fsm.Environment):
-    """
-        Given the raw time-series data and environment, calculates the distance travelled from one frame to the next.
-
-        Frame 0 will always be 0.
-    """
-    distanceFrames = [0]
-    prevFrameX = data[0][1]
-    prevFrameY = data[0][2]
-    for i in range(1, len(data)):
-        curFrameX = data[i][1]
-        curFrameY = data[i][2]
-        dist = np.sqrt(np.square(curFrameX - prevFrameX) + np.square(curFrameY - prevFrameY))
-        distanceFrames.append(dist)
-        prevFrameX = curFrameX
-        prevFrameY = curFrameY
-    return distanceFrames
-        
-        
-
-### NEW Functions to Calculate Summary Measures
-
 def CalculateMissingCalcs(data, env: fsm.Environment, preExistingCalcs, calcs):
     """
         Given a list calcuations, determin
@@ -218,11 +140,109 @@ def CalculateMissingCalcs(data, env: fsm.Environment, preExistingCalcs, calcs):
     
     return desiredCalcs
 
+### Calculating metrics ###
+
+## Metrics/Data Calculation Schema ##
+#   All calculations of common data that's used across one or more summary measures share the following input schema:
+#       data : numpy.ndarray
+#           Preprocessed data array, of the format: 0 = frame, 1 = x-coord, 2 = y-coord, 3 = velocity, 4 = movement type (lingering or progression)
+#       env : Environment
+#           Testing environment for the given specimen (and data array)
+#   This schema is ensures that these functions can be called generically. Data Pre-calc functions shouldn't need anything but these two inputs.
+## End of Data Calculation Schema ##
 
 
+def CalculateStops(data: np.ndarray, env: fsm.Environment) -> tuple[list[int], list[int]]:
+    """
+        Given the raw time-series data and environment of the experiment, calculates the stops in each locale, as well as the total duration of the stops (in frames) for each locale.
+    """
+    stopLocales = [0 for x in range(25)]
+    stopFrames = [0 for x in range(25)]
+    stopped = False
+    relevantLocale = False
+    locDur = [0 for x in range(25)]
+    
+    for i in range(len(data)):
+        frame = data[i]
+        if frame[4] == 0: # Part of a lingering episode
+            specimenLocale =  env.SpecimenLocation(frame[1], frame[2], index=True) # Get current locale of specimen
+            # if GetLocaleFromIndex(specimenLocale) in [50, 4] and not relevantLocale:
+            #     print(f"Currently in locale: {GetLocaleFromIndex(specimenLocale)}")
+            #     relevantLocale = True
+            stopped = True # Lingering episode begins (if it hasn't already begun)
+            # Count the stop
+            # if not stopped: # If it was previously moving and just now stopped
+            #     stopped = True
+                # locDur = [0 for x in range(25)]
+            locDur[specimenLocale] += 1
+        elif frame[4] == 1 and stopped: # lingering episode ends
+            # if relevantLocale:
+            #     relevantLocale = False
+            #     print("End of lingering containing relevant locales")
+            #     print(locDur)
+            #     print(np.argmax(locDur))
+            #     print(GetLocaleFromIndex(np.argmax(locDur)))
+            #     print(f"Frame of ending: {frame[0]}")
+            stopped = False
+            # Get the maximum duration for each locale and add a stop to the max locale
+            maxLocale = np.argmax(locDur)
+            stopLocales[maxLocale] += 1
+            # Add stop frames to total stop durations
+            # stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
+            stopFrames[maxLocale] += sum(locDur) 
+            # Reset local locale stop durations (for a stop episode)
+            locDur = [0 for x in range(25)]
+
+    if stopped: # if the search for stops ends on a stop, then sum it up and calculate the necessary stuff
+        maxLocale = np.argmax(locDur)
+        stopLocales[maxLocale] += 1
+        # Add stop frames to total stop durations
+        # stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
+        stopFrames[maxLocale] += sum(locDur) 
+    return stopLocales, stopFrames
+
+
+def CalcuateDistances(data: np.ndarray, env: fsm.Environment) -> list[int]:
+    """
+        Given the raw time-series data and environment, calculates the distance travelled from one frame to the next.
+
+        Frame 0 will always be 0.
+    """
+    distanceFrames = [0]
+    prevFrameX = data[0][1]
+    prevFrameY = data[0][2]
+    for i in range(1, len(data)):
+        curFrameX = data[i][1]
+        curFrameY = data[i][2]
+        dist = np.sqrt(np.square(curFrameX - prevFrameX) + np.square(curFrameY - prevFrameY))
+        distanceFrames.append(dist)
+        prevFrameX = curFrameX
+        prevFrameY = curFrameY
+    return distanceFrames
+        
+        
 ### Functions to Calculate Summary Measures ###
 
-def CalculateHomeBases(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+### On Summary Measures format ###
+#   All summary measures follow the same parameters format:
+#       data : numpy.ndarray
+#           Preprocessed data array, of the format: 0 = frame, 1 = x-coord, 2 = y-coord, 3 = velocity, 4 = movement type (lingering or progression)
+#       env : Environment
+#           Testing environment for the given specimen (and data array)
+#       requiredSummaryMeasures : dict
+#           Dict containing all summary measures (matching name to outputs) previously calculated by the interface (or by some other method). Must contain the summary measures that the current summary measure being calculated depends on.
+#       preExisitingCalcs : dict | None
+#           Dict containing all the data calculations (locale stops, etc.) that the summary measure requires. Optional, but saves time if pre-calculated and shared with all dependent summary measures.
+#   The above schema ensures that summary measures can be run by the interface generically (or be handled by a bespoke solution generically).
+### End of Summary Measures format explanation ###
+
+## Minor Notes ##
+#   SM descriptions contain the following two ids:
+#   1. 'Also referred to as...', which describes what official name for the summary measures are when downloaded. Defined by Dr. Anna Dvorkin & Dr. Henry Szetchman. 
+#   2. 'Reference ID for Commander:...', which describes the shorthand we use to call those summary measures (from the Commander class).
+## End of Minor Notes ##
+
+def CalculateHomeBases(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> tuple[int, int | None]:
     """
         Given an environment and matrix containing columns specifying the x-coords, y-coords, and movement type (lingering or progression) of the specimen per frame (every sample is one frame),
         return the two locales (main home base & secondary home base) of the specimen.
@@ -260,7 +280,7 @@ def CalculateHomeBases(data, env: fsm.Environment, requiredSummaryMeasures, preE
         return GetLocaleFromIndex(mainHomeBase), GetLocaleFromIndex(secondaryHomeBase)
 
 
-def CalculateFreqHomeBaseStops(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def CalculateFreqHomeBaseStops(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> int:
     """
         Calculates the cumulative number of stops within the first home base. Requires the First Home Base to have been calculated (ref. id. calc_homebases)
 
@@ -286,7 +306,7 @@ def CalculateFreqHomeBaseStops(data, env: fsm.Environment, requiredSummaryMeasur
     ind = GetIndexFromLocale(mainHomeBase)
     return localeVisits[ind]
 
-def CalculateMeanDurationHomeBaseStops(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def CalculateMeanDurationHomeBaseStops(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> tuple[float, float]:
     """
         Calculates the mean duration (in seconds) of the specimen remaining in the main home base. Additionally returns the log (base 10) of this duration as well.
 
@@ -312,7 +332,7 @@ def CalculateMeanDurationHomeBaseStops(data, env: fsm.Environment, requiredSumma
     duration_in_seconds = (totalDuration / numStops) / FRAMES_PER_SECOND
     return duration_in_seconds, np.log10(duration_in_seconds)
 
-def CalculateMeanReturnHomeBase(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def CalculateMeanReturnHomeBase(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> float:
     """
         Calculates the mean return time to the main home base (in seconds). Also can be thought of as the mean duration of execursions.
 
@@ -342,7 +362,7 @@ def CalculateMeanReturnHomeBase(data, env: fsm.Environment, requiredSummaryMeasu
     totalExcursions = sum(localeVisits) - localeVisits[ind]
     return (totalDuration / totalExcursions) / FRAMES_PER_SECOND
 
-def CalculateMeanStopsExcursions(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def CalculateMeanStopsExcursions(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> float:
     """
         Calculates the mean number of stops during excursions (away from the Main Home Base).
 
@@ -382,7 +402,7 @@ def CalculateMeanStopsExcursions(data, env: fsm.Environment, requiredSummaryMeas
             excursion = False
     return totalStops / totalExcursions
 
-def Calculate_Main_Homebase_Stop_Duration(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def Calculate_Main_Homebase_Stop_Duration(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> float:
     """
         Calculates the cumulative duration of stops within the first home base, measured in seconds.
 
@@ -404,7 +424,7 @@ def Calculate_Main_Homebase_Stop_Duration(data, env: fsm.Environment, requiredSu
     ind = GetIndexFromLocale(mainHomeBase)
     return localeDuration[ind] / FRAMES_PER_SECOND
 
-def Calculate_Secondary_Homebase_Stop_Duration(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def Calculate_Secondary_Homebase_Stop_Duration(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> float:
     """
         Calculates the cumulative duration of stops within the second home base, measured in seconds.
 
@@ -434,7 +454,7 @@ def Calculate_Secondary_Homebase_Stop_Duration(data, env: fsm.Environment, requi
     return localeDuration[ind] / FRAMES_PER_SECOND
 
 
-def Calculate_Frequency_Stops_Secondary_Homebase(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def Calculate_Frequency_Stops_Secondary_Homebase(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> int:
     """
         Calculates the cumulative number of stops within the second home base.
 
@@ -463,7 +483,7 @@ def Calculate_Frequency_Stops_Secondary_Homebase(data, env: fsm.Environment, req
     ind = GetIndexFromLocale(secondaryHomeBase)
     return localeVisits[ind]
 
-def Calculated_Expected_Return_Frequency_Main_Homebase(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def Calculated_Expected_Return_Frequency_Main_Homebase(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> float:
     """
         Calculates the expected return frequency to the first home base.
 
@@ -493,7 +513,7 @@ def Calculated_Expected_Return_Frequency_Main_Homebase(data, env: fsm.Environmen
     
     return (mainVisits * totalLocalesVisited) / sum(localeVisits)
 
-def Calculate_Mean_Return_Time_All_Locales(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def Calculate_Mean_Return_Time_All_Locales(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> float:
     """
         Calculates the mean return time to all locales,
 
@@ -534,7 +554,7 @@ def Calculate_Mean_Return_Time_All_Locales(data, env: fsm.Environment, requiredS
     return (totalExcursionDuration / sum(localeVisits)) / FRAMES_PER_SECOND
 
 
-def Expected_Return_Time_Main_Homebase(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def Expected_Return_Time_Main_Homebase(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> float:
     """
         Calculates the expected return time to the main homebase.
 
@@ -561,7 +581,7 @@ def Expected_Return_Time_Main_Homebase(data, env: fsm.Environment, requiredSumma
     return mainHomeBaseMeanReturn / sessionMeanReturn
     
 
-def Calculate_Total_Locales_Visited(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def Calculate_Total_Locales_Visited(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> int:
     """
         Calculates the total number of locales visited (1 to 25) throughout a session.
 
@@ -581,7 +601,7 @@ def Calculate_Total_Locales_Visited(data, env: fsm.Environment, requiredSummaryM
     visitedLocales = [1 if visits > 0 else 0 for visits in localeVisits]
     return sum(visitedLocales)
 
-def Calculate_Total_Stops(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def Calculate_Total_Stops(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> int:
     """
         Calculates total number of stops in a session.
 
@@ -602,7 +622,7 @@ def Calculate_Total_Stops(data, env: fsm.Environment, requiredSummaryMeasures, p
 
 ###  Distance & Locomotion Summary Measures ###
 
-def Calculate_Distance_Travelled(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+def Calculate_Distance_Travelled(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None):
     """
         Calculates all distances travelled metrics. Returns a tuple of (total distance for progression segments only, total distance for all segments),
         total distance travelled, speed of progression, 
@@ -648,7 +668,8 @@ def Calculate_Distance_Travelled(data, env: fsm.Environment, requiredSummaryMeas
     totalDistanceProgression = sum(distancesProgression)
     return (totalDistanceProgression, totalDistanceAll), totalDurationSeconds, totalDistanceProgression / (totalDurationSeconds), (distancesProgression, distancesAll)
 
-def Calculate_Bouts(data, env: fsm.Environment, requiredSummaryMeasures, preExistingCalcs=None):
+# Below summary isn't finished yet! Do not call it. Ever. For now.
+def Calculate_Bouts(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None):
     """
         Calculates the bouts of checking. Not sure of what to return yet
 
