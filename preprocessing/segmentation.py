@@ -65,7 +65,7 @@ def segment_path(data:np.ndarray, arrests:list, half_window:int, log_transform:F
     starts = np.array(np.where(segment_borders == -1))
     ends = np.array(np.where(segment_borders == 1))
     segments = np.hstack((starts.T, ends.T - 1))
-    print(segments)
+    
     m = segments.shape[0]
 
     # If there are no arrests or only arrests then there is only 1 segment/movment type.    
@@ -242,7 +242,10 @@ def em_auto(data:np.ndarray, k:int, num_guesses:int, num_iters:int):
         # If EM produces a better likelihood than all previous iterations, update optimal parameters.
         if log_likelihood > opt_likelihood: 
             opt_params, opt_likelihood = params.copy(), log_likelihood
-    
+
+        # debug code
+        # print(f"(k = {k}) opt likelihood: {opt_likelihood:.2f}\t current likelihood: {log_likelihood:.2f}")
+
     return opt_params, opt_likelihood
 
 def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:float, max_k:int):
@@ -279,13 +282,15 @@ def em_full_auto(data:np.ndarray, num_guesses:int, num_iters:int, significance:f
     for k in range(1, max_k + 2):
         params, log_likelihood = em_auto(data, k, num_guesses, num_iters)
 
+        print(f"p-value for improvment for (k={k}) modes: {1 - stats.chi2.cdf(log_likelihood - prev_likelihood,2)}")
+
         # Use log likelihood test to determine whether improvements from
         # increasing k are statistically significant.
         if 1 - stats.chi2.cdf(log_likelihood - prev_likelihood, 2) > significance:
             print(f"Optimal model found with {k - 1} gaussians:")
             print(f"Optimal parameters are: {prev_params}")
             return prev_params, prev_likelihood
-
+        
         prev_params = params
         prev_likelihood = log_likelihood
 

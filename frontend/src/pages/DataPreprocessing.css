@@ -63,23 +63,23 @@
 }
 
 .data-preprocessing-page .parameter-item label {
-  flex: 1; /* Ensures labels take consistent space */
-  min-width: 150px; /* Set a fixed width for labels */
-  margin-right: 10px; /* Add spacing between label and input */
+  flex: 1; 
+  min-width: 150px; 
+  margin-right: 10px; 
   font-weight: bold;
 }
 
 .data-preprocessing-page .parameter-item input[type="checkbox"] {
-  margin-left: 0; /* Remove auto margin to align checkboxes consistently */
+  margin-left: 0; 
 }
 
 .data-preprocessing-page .parameter-item select {
-  flex: 2; /* Match the width of input fields */
-  padding: 5px; /* Same padding as input fields */
-  border: 1px solid #ccc; /* Same border as input fields */
-  border-radius: 4px; /* Same border radius as input fields */
-  background-color: white; /* Ensure consistent background */
-  font-size: 14px; /* Match font size with input fields */
+  flex: 2; 
+  padding: 5px; 
+  border: 1px solid #ccc; 
+  border-radius: 4px; 
+  background-color: white; 
+  font-size: 14px; 
 }
 
 .data-preprocessing-page .parameter-item input {
@@ -108,10 +108,12 @@
 .data-preprocessing-page .data-selection-footer {
   padding-top: 10px;
   display: flex;
-  justify-content: flex-end; /* Align the button to the right */
+  justify-content: flex-end; /* Align the buttons to the right */
+  gap: 10px; /* Add spacing between the buttons */
   position: sticky;
   bottom: 0;
   background-color: white;
+  align-items: center;
   border-top: 1px solid #ccc;
 }
 
@@ -174,4 +176,87 @@
 .data-preprocessing-page h3 {
   margin-top: 0;
   color: #343a40;
+}
+
+.data-preprocessing-page .tooltip-container {
+  position: relative;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.data-preprocessing-page .tooltip-container .tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #555;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  left: 35px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.data-preprocessing-page .tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.data-preprocessing-page .info-button {
+  background-color: #97a516;
+  color: white;
+  border: none;
+  padding: 0;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: auto;
+  transition: background-color 0.3s ease;
+}
+
+.data-preprocessing-page .info-button:hover {
+  background-color: #5a630d;
+}
+
+/* Loading overlay to restrict interaction during preprocessing */
+.data-preprocessing-page .loading-overlay {
+  position: fixed; /* Ensure it covers the entire viewport */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it appears above all other elements */
+  pointer-events: none; /* Prevent interaction with the overlay */
+}
+
+/* Spinner for the loading overlay */
+.data-preprocessing-page .spinner {
+  border: 8px solid #f3f3f3; 
+  border-top: 8px solid #3498db; /* Blue border for the spinning effect */
+  border-radius: 50%; /* Make it circular */
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite; /* Spinning animation */
+}
+
+/* Keyframes for the spinner animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

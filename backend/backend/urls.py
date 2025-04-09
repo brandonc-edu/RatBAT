@@ -18,7 +18,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('api/summary-measures/', include('summary_measures.urls')),  
-    path('', include('frdr_query.urls')),  
     path('api/data-preprocessing/', include('data_preprocessing.urls')),  
+    path('api/frdr-query/', include('frdr_query.urls')),  
 ]
 

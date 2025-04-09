@@ -543,7 +543,7 @@ def Calculate_Mean_Return_Time_All_Locales(data: np.ndarray, env: fsm.Environmen
     for i in range(len(data)):
         frame = data[i]
         specimenLocale = env.SpecimenLocation(frame[1], frame[2])
-        specimenLocaleIndex = env.SpecimenLocation(frame[1], frame[2], index=True)
+        specimenLocaleIndex = GetIndexFromLocale(specimenLocale)
         if specimenLocale != mainHomeBase: # If the specimen is not in the main home base
             if frame[4] == 1 and not excursion: # If the specimen is no longer in its main home base, it's on an excursion. Has to be moving in a progressive episode to be counted as an excursion (lingering between main home base and elsewhere doesn't count).
                 excursion = True

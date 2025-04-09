@@ -1,13 +1,13 @@
 .compute-summary-measures .measure-item label input,
 .compute-summary-measures .data-item label input,
 .compute-summary-measures .result-item label input {
-  margin-right: 8px; /* Adjust this spacing as needed */
+  margin-right: 8px; 
 }
 
 .compute-summary-measures .measure-item,
 .compute-summary-measures .data-item,
 .compute-summary-measures .result-item {
-  margin-bottom: 15px; /* Adjust the spacing between items as needed */
+  margin-bottom: 15px; 
 }
 
 .compute-summary-measures .tooltip-container {
@@ -41,7 +41,7 @@
   background-color: #97a516;
   color: white;
   border: none;
-  padding: 0; /* Remove default padding */
+  padding: 0; 
   border-radius: 50%;
   width: 20px;
   height: 20px;
@@ -107,7 +107,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   padding: 20px;
-  cursor: move; /* Change cursor to move */
+  cursor: move; 
 }
 
 .compute-summary-measures .modal-content {
@@ -139,7 +139,6 @@
   color: #000;
 }
 
-/* Draggable styles */
 .compute-summary-measures .draggable {
   cursor: move;
 }
@@ -247,12 +246,12 @@
 
 /* Data file rows */
 .compute-summary-measures .result-table .data-file-row {
-  background-color: #8db4db; /* Light grey */
+  background-color: #8db4db; 
 }
 
 /* Measure and value header rows */
 .compute-summary-measures .result-table .measure-header-row {
-  background-color: #e0e0e0; /* Slightly darker grey */
+  background-color: #e0e0e0; 
 }
 
 /* Ensure alternating row colors do not affect specific rows */
@@ -262,7 +261,7 @@
 
 /* Actual value rows */
 .compute-summary-measures .result-table .value-row {
-  background-color: #ffffff; /* Default background color */
+  background-color: #ffffff; 
 }
 
 .compute-summary-measures .result-items {

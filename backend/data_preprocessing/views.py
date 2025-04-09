@@ -4,120 +4,203 @@ from rest_framework import status
 import os
 import pandas as pd
 import numpy as np
+import requests
 from preprocessing.Preprocessor import Preprocessor
+from django.http import FileResponse
+from preprocessing.Preprocessor import LOG_TRANSFORM_FUNCTIONS
 
-class ListDataFilesView(APIView):
-    def get(self, request, *args, **kwargs):
-        try:
-            data_files_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'preprocessing')
-            data_files_directory = os.path.abspath(data_files_directory)
-            data_files = [f for f in os.listdir(data_files_directory) if os.path.isfile(os.path.join(data_files_directory, f)) and f.endswith('.csv')]
-            return Response(data_files, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+class DownloadFileView(APIView):
+    def get(self, request, filename, *args, **kwargs):
+        # Define the directory where preprocessed files are stored
+        file_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'preprocessing', 'preprocessed')
+        file_path = os.path.join(file_directory, filename)
 
+        # Check if the file exists
+        if os.path.exists(file_path):
+            # Return the file as a response
+            response = FileResponse(open(file_path, 'rb'))
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+        else:
+            # Return a 404 response if the file is not found
+            return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+          
 class PreprocessDataView(APIView):
     def post(self, request, *args, **kwargs):
         try:
             # Log the incoming request data
             print("Request data:", request.data)
 
-            # Get the selected data files and parameters from the request
-            selected_files = request.data.get('selectedFiles', [])
+            # Get the parameters and selected trials from the request
             parameters = request.data.get('parameters', {})
             determine_k_automatically = request.data.get('determineKAutomatically', False)
+            selected_trials = request.data.get('selectedTrials', [])
+            selected_trials = [int(trial) for trial in selected_trials]  # Convert to integers
 
-            if not selected_files or not parameters:
-                return Response({"error": "Missing selectedFiles or parameters"}, status=status.HTTP_400_BAD_REQUEST)
+            # Ensure selectedTrials is provided
+            if not selected_trials:
+                return Response({"error": "No trials provided in the request."}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Convert parameters to the correct types
-            def convert_parameters(params):
-                for method, method_params in params.items():
-                    for key, value in method_params.items():
-                        # Convert to int if possible, otherwise to float
-                        if isinstance(value, str):
-                            if value.isdigit():
-                                params[method][key] = int(value)
-                            else:
-                                try:
-                                    params[method][key] = float(value)
-                                except ValueError:
-                                    pass
-                return params
-
-            parameters = convert_parameters(parameters)
+            print(f"Using provided trial IDs: {selected_trials}")
 
             # Handle "Determine k Automatically"
             if determine_k_automatically:
                 parameters["EM"]["k"] = None
 
-            # Map log_transform options to Python functions
-            log_transform_mapping = {
-                "cbrt": np.cbrt,
-                "log": np.log,
-                "sqrt": np.sqrt,
-                "log10": np.log10,
-                "log2": np.log2,
-                "log1p": np.log1p,
-                "None": None,
-            }
-
-            # Apply the mapping to the EM parameters
-            if "log_transform" in parameters["EM"]:
-                log_transform_option = parameters["EM"]["log_transform"]
-                parameters["EM"]["log_transform"] = log_transform_mapping.get(log_transform_option, np.cbrt)  # Default to np.cbrt
+            # Ensure log_transform is a valid string
+            if "log_transform" in parameters["EM"] and parameters["EM"]["log_transform"] not in LOG_TRANSFORM_FUNCTIONS.keys():
+                parameters["EM"]["log_transform"] = "cbrt"  # Default to "cbrt"
 
             # Debug: Print the parameters to verify that "k" is set to None and log_transform is mapped
             print("Updated parameters after handling 'Determine k Automatically' and 'log_transform':", parameters)
 
+            # Query the time series data for the provided trials
+            timeseries_url = "http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/"
+            response = requests.get(timeseries_url, params={"trials": ",".join(map(str, selected_trials))})
+
+            if response.status_code != 200:
+                return Response({"error": f"Failed to fetch time series data: {response.text}"}, status=response.status_code)
+
+            timeseries_data = response.json()
+            print(f"Fetched time series data for trials: {selected_trials}")
+
             # Directory paths
-            data_files_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'preprocessing')
-            output_directory = os.path.join(data_files_directory, 'preprocessed')
+            output_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'preprocessing', 'preprocessed')
             os.makedirs(output_directory, exist_ok=True)
 
             # Initialize the preprocessor with the converted parameters
             preprocessor = Preprocessor(function_params=parameters)
 
-            # Process each selected file
+            # Process each trial's time series data
             preprocessed_files = []
-            for file_name in selected_files:
-                file_path = os.path.join(data_files_directory, file_name)
-                print(f"Processing file: {file_path}")
-                if not os.path.exists(file_path):
-                    print(f"File not found: {file_path}")
-                    return Response({"error": f"File {file_name} not found"}, status=status.HTTP_400_BAD_REQUEST)
+            for trial_id, trial_data in timeseries_data.items():
+                print(f"Processing trial: {trial_id}")
 
-                # Load the data
-                data = pd.read_csv(file_path)
-                print(f"Loaded data from {file_name}:\n", data.head())
-                print(f"Columns in {file_name}: {data.columns.tolist()}")
-
-                # Ensure the data is in the required format: [frame, x-coordinates, y-coordinates]
-                if {'Sample no.', 'X', 'Y'}.issubset(data.columns):
-                    # Convert columns to numeric types
-                    data['Sample no.'] = pd.to_numeric(data['Sample no.'], errors='coerce')
-                    data['X'] = pd.to_numeric(data['X'], errors='coerce')
-                    data['Y'] = pd.to_numeric(data['Y'], errors='coerce')
+                # Extract required columns: sample_id, x, y
+                if {'sample_id', 'x', 'y'}.issubset(trial_data):
+                    data = pd.DataFrame({
+                        'frame': trial_data['sample_id'],
+                        'x': trial_data['x'],
+                        'y': trial_data['y']
+                    })
 
                     # Drop rows with invalid (NaN) values
-                    data = data.dropna(subset=['Sample no.', 'X', 'Y'])
+                    data = data.dropna(subset=['frame', 'x', 'y'])
 
-                    formatted_data = data[['Sample no.', 'X', 'Y']].rename(
-                        columns={'Sample no.': 'frame', 'X': 'x', 'Y': 'y'}
-                    ).to_numpy()
+                    formatted_data = data[['frame', 'x', 'y']].to_numpy()
                 else:
-                    return Response({"error": f"File {file_name} does not have the required columns: Sample no., X, Y"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": f"Trial {trial_id} does not have the required columns: sample_id, x, y"}, status=status.HTTP_400_BAD_REQUEST)
 
                 # Preprocess the data
                 preprocessed_data = preprocessor.preprocess_data(formatted_data)
 
                 # Save the preprocessed data to a new CSV file
-                output_file_name = f"preprocessed_{file_name}"
+                output_file_name = f"preprocessed_trial_{trial_id}.csv"
                 output_file_path = os.path.join(output_directory, output_file_name)
                 pd.DataFrame(preprocessed_data, columns=['frame', 'x', 'y', 'velocity', 'segment_type']).to_csv(output_file_path, index=False)
                 preprocessed_files.append(output_file_name)
+                
+            # Create parameter files for each trial
+            parameter_files = []
+            for trial_id in selected_trials:
+                parameter_file_name = f"parameters_trial_{trial_id}.csv"
+                parameter_file_path = os.path.join(output_directory, parameter_file_name)
+                pd.DataFrame([parameters]).to_csv(parameter_file_path, index=False)
+                parameter_files.append(parameter_file_name)
 
-            return Response(preprocessed_files, status=status.HTTP_200_OK)
+            return Response({"preprocessed_files": preprocessed_files, "parameter_files": parameter_files}, status=status.HTTP_200_OK)
         except Exception as e:
             print("Error during preprocessing:", str(e))
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+          
+class FetchPreprocessedDataView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            # Get the selected trials from the request
+            selected_trials = request.data.get('trials', [])
+            selected_trials = [int(trial) for trial in selected_trials]  # Convert to integers
+
+            if not selected_trials:
+                return Response({"error": "No trials provided in the request."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Call the FRDR service to fetch preprocessed data
+            frdr_url = "http://ratbat.cas.mcmaster.ca/api/frdr-query/frdr-query-preprocessed/"
+            response = requests.post(frdr_url, json={"trials": selected_trials})
+
+            if response.status_code != 200:
+                return Response({"error": f"Failed to fetch data from FRDR: {response.text}"}, status=response.status_code)
+
+            # Parse the response from the FRDR service
+            fetched_data = response.json()
+            fetched_urls = fetched_data.get("urls", [])  # Retrieve the URLs
+
+            # Directory where preprocessed files will be saved
+            output_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'preprocessing', 'preprocessed')
+            os.makedirs(output_directory, exist_ok=True)
+
+            saved_files = []
+
+            if fetched_urls:
+                # Download and save the files locally
+                for trial_id, _, file_url in fetched_urls:
+                    # Extract the original file name
+                    original_file_name = file_url.split("/")[-1]
+                    # Rename the file to follow the preprocessed_trial_<trial_id>.csv format
+                    new_file_name = f"preprocessed_trial_{trial_id}.csv"
+                    file_path = os.path.join(output_directory, new_file_name)
+
+                    # Download the file
+                    file_response = requests.get(file_url)
+                    if file_response.status_code == 200:
+                        with open(file_path, 'wb') as f:
+                            f.write(file_response.content)
+                        saved_files.append(new_file_name)
+                        print(f"File saved and renamed: {file_path}")
+                    else:
+                        print(f"Failed to download file: {file_url}")
+            elif response.status_code == 200 and fetched_urls == []:
+                # If the API call succeeded and returned an empty list, fetch smoothed data
+                timeseries_url = "http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/"
+                response = requests.get(timeseries_url, params={"trials": ",".join(map(str, selected_trials))})
+
+                if response.status_code != 200:
+                    return Response({"error": f"Failed to fetch time series data: {response.text}"}, status=response.status_code)
+
+                timeseries_data = response.json()
+
+                for trial_id, trial_data in timeseries_data.items():
+                    print(f"Processing trial: {trial_id}")
+
+                    # Check if smoothed data exists
+                    x_s_values = trial_data.get("x_s")
+                    if x_s_values is None or all(value is None for value in x_s_values):
+                        return Response(
+                            {"error": f"No smoothed data exists for trial {trial_id}."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    # Extract the required fields
+                    if {'sample_id', 'x_s', 'y_s', 'v_s', 'movementtype_s'}.issubset(trial_data):
+                        smoothed_data = {
+                            "sample_id": trial_data.get("sample_id"),
+                            "x_s": trial_data.get("x_s"),
+                            "y_s": trial_data.get("y_s"),
+                            "v_s": trial_data.get("v_s"),
+                            "movementtype_s": trial_data.get("movementtype_s"),
+                        }
+                    else:
+                        return Response(
+                            {"error": f"Trial {trial_id} does not have all required smoothed data fields."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    # Save the smoothed data directly to a CSV file
+                    output_file_name = f"preprocessed_trial_{trial_id}.csv"
+                    output_file_path = os.path.join(output_directory, output_file_name)
+                    pd.DataFrame(smoothed_data).to_csv(output_file_path, index=False, header=False)  # No headers
+                    saved_files.append(output_file_name)
+
+            return Response({"message": "All files successfully fetched and saved.", "trial_ids": saved_files}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("Error fetching and saving preprocessed data:", str(e))
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
