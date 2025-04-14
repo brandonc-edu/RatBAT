@@ -285,17 +285,13 @@ const CompileDataPage = () => {
       ...compiledData.map(({ file, metadata, measures }) => {
         const fileCell = `="${file}"`; // Ensure file name is included
   
-        // Transform metadata keys using metadataFieldMapping
         const metadataCells = selectedMetadataVariables.map((variable) => {
-          // Find the original key using metadataFieldMapping
-          const originalKey = Object.keys(metadataFieldMapping).find(
-            (key) => metadataFieldMapping[key] === variable
-          ) || variable;
-  
-          // Use the original key to access metadata
-          return metadata[originalKey] || '';
+          // Directly access using the transformed key
+          const value = metadata[variable] || '';
+          // Wrap the text value in quotes (and prepend an equal sign to force text format in Excel if needed)
+          return `="${value}"`;
         });
-  
+        
         const summaryCells = selectedSummaryMeasures.flatMap((measure) => {
           if (measure === "calc_distanceTravelled") {
             const distanceValues = measures[measure] || [];
@@ -323,7 +319,7 @@ const CompileDataPage = () => {
       }),
     ].join("\n");
   
-    const encodedUri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`);
+    const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "compiled_data.csv");
