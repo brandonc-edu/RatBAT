@@ -134,3 +134,33 @@ class Test_SM_Package:
 
         # Compare results
         assert results["calc_sessionTotalStops"] == actual_summ_measures["KP_session_Stops_total#"]
+
+
+    ## Bout tests begin ##
+
+    @pytest.mark.parametrize("smoothed_data, actual_summ_measures", TEST_CASES)
+    def test_bout_totalBouts(self, smoothed_data, actual_summ_measures):
+        # Calculate total number of bouts in a session.
+        sm_deps, data_deps = Karpov.ResolveDependencies(["calc_bout_totalBouts"])
+        results = run_and_measure(self.interface.CalculateSummaryMeasures, smoothed_data, sm_deps, data_deps)
+
+        # Compare results
+        assert results["calc_bout_totalBouts"] == actual_summ_measures["BoutNumber_max#"]
+
+    @pytest.mark.parametrize("smoothed_data, actual_summ_measures", TEST_CASES)
+    def test_bout_totalBoutDuration(self, smoothed_data, actual_summ_measures):
+        # Calculate total sum duration of bouts in a session.
+        sm_deps, data_deps = Karpov.ResolveDependencies(["calc_bout_totalBoutDuration"])
+        results = run_and_measure(self.interface.CalculateSummaryMeasures, smoothed_data, sm_deps, data_deps)
+
+        # Compare results
+        assert results["calc_bout_totalBoutDuration"] == actual_summ_measures["DurationOfBout_s_sum"]
+
+    @pytest.mark.parametrize("smoothed_data, actual_summ_measures", TEST_CASES)
+    def test_bout_meanRateOfChecks(self, smoothed_data, actual_summ_measures):
+        # Calculate mean rate of bout checking in a session.
+        sm_deps, data_deps = Karpov.ResolveDependencies(["calc_bout_meanRateOfChecks"])
+        results = run_and_measure(self.interface.CalculateSummaryMeasures, smoothed_data, sm_deps, data_deps)
+
+        # Compare results
+        assert abs(results["calc_bout_meanRateOfChecks"] - actual_summ_measures["RateOfChecksInBout_Hz"]) <= 1
