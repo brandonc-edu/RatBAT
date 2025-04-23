@@ -24,6 +24,11 @@ TEST_TO_SM_MAPPING = {
     "test_expectedMainHomeBaseReturn" : "calc_expectedMainHomeBaseReturn",
     "test_distanceTravelled" : "calc_distanceTravelled",
     "test_boutsOfChecking" : "calc_boutsOfChecking",
+    "test_bout_totalBouts" : "calc_bout_totalBouts",
+    "test_bout_totalBoutDuration" : "calc_bout_totalBoutDuration",
+    "test_bout_meanTimeUntilNextBout" : "calc_bout_meanTimeUntilNextBout",
+    "test_bout_meanCheckFreq" : "calc_bout_meanCheckFreq",
+    "test_bout_meanRateOfChecks" : "calc_bout_meanRateOfChecks"
 }
 
 calc_names = list(TEST_TO_SM_MAPPING.values())

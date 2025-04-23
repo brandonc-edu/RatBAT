@@ -34,12 +34,7 @@ SM_MAPPING = {
     "calc_sessionTotalStops" : "Calculate_Total_Stops",
     "calc_expectedMainHomeBaseReturn" : "Expected_Return_Time_Main_Homebase",
     "calc_distanceTravelled" : "Calculate_Distance_Travelled",
-    "calc_boutsOfChecking" : "Calculate_Bouts",
-    "calc_bout_totalBouts" : "Calculate_Bout_Total",
-    "calc_bout_totalBoutDuration" : "Calculate_Bout_Total_Duration",
-    "calc_bout_meanTimeUntilNextBout" : "Calculate_Bout_Mean_Time_Until_Next_Bout",
-    "calc_bout_meanCheckFreq" : "Calculate_Bout_Mean_Check_Frequency",
-    "calc_bout_meanRateOfChecks" : "Calculate_Bout_Mean_Rate_Of_Checks"
+    "calc_boutsOfChecking" : "Calculate_Bouts"
 }
 
 DATA_MAPPING = {
@@ -64,11 +59,6 @@ SM_DEPENDENCIES = {
     "calc_sessionReturnTimeMean" : ["calc_homebases"],
     "calc_expectedMainHomeBaseReturn" : ["calc_homebases", "calc_HB1_meanReturn", "calc_sessionReturnTimeMean"],
     "calc_boutsOfChecking" : ["calc_homebases", "calc_HB1_meanReturn"],
-    "calc_bout_totalBouts" : ["calc_boutsOfChecking"],
-    "calc_bout_totalBoutDuration" : ["calc_boutsOfChecking"],
-    "calc_bout_meanTimeUntilNextBout" : ["calc_boutsOfChecking"],
-    "calc_bout_meanCheckFreq" : ["calc_homebases", "calc_boutsOfChecking"],
-    "calc_bout_meanRateOfChecks" : ["calc_homebases", "calc_boutsOfChecking"],
 }
 
 ## Data Dependencies
@@ -404,7 +394,7 @@ def CalculateMeanStopsExcursions(data: np.ndarray, env: fsm.Environment, require
                 totalExcursions += 1
                 excursion = True
             if frame[4] == 0 and excursion and not stopped: # If the specimen is lingering while on an excursion
-                totalStops += 1 ## UPDATE WITH PROPER STOP CALCULATION METHODS. NEEDS TO CALCULATE ACCORDING TO REAL STOP METHOD.
+                totalStops += 1
                 stopped = True
             elif frame[4] == 1:
                 stopped = False 
@@ -695,6 +685,7 @@ def Calculate_Bouts(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasu
 
     ### Summary Measure Logic
     mainHomeBase = requiredSummaryMeasures["calc_homebases"][0]
+    mainHomeBaseReturn = requiredSummaryMeasures["calc_HB1_meanReturn"]
 
     ## Need to find all long lingering episodes and filter them out to get bouts of activity
     # Find mean time + IQR of lingering episodes
@@ -702,342 +693,63 @@ def Calculate_Bouts(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasu
     ling = False
     currentLing = []
 
-    # Get the start (inclusive) and end (exclusive) points of all lingering episodes
+    # Get the start and end points of all lingering episodes
     for i in range(len(data)):
         frame = data[i]
-        if frame[4] == 0 and ling == False:
+        if frame[4] == 0:
             ling = True
             currentLing.append(i)
         elif frame[4] == 1 and ling == True:
             ling = False
             currentLing.append(i)
-            allLing.append(currentLing) # Append [start, end) points to the all lingering episodes thingy 
+            allLing.append(currentLing)
             currentLing = []
     if len(currentLing) != 0: # In case the loop ends on a lingering episode
         allLing.append(len(data))
 
     # Calculate means for lingering episode duration
-    timeForEpi = [start - end for epi in allLing for start, end in epi] # Calculate the total duration for each lingering episode
-    meanTimeLing = sum(timeForEpi) / len(allLing) # Mean time of lingering episode
+    timeForEpi = [start - end for epi in allLing for start, end in epi] # Calculate the total duration
+    meanTimeLing = sum(timeForEpi) / len(allLing)
     q75Mean, q25Mean = np.percentile(timeForEpi, [75, 25])
     iqrMean = q75Mean - q25Mean
 
     # Get outlier lingering episodes (time of epi is >= mean + 1.5 * iqr)
     outlierIndices = np.array(timeForEpi)
-    outlierIndices = outlierIndices[outlierIndices >= (meanTimeLing + 1.5 * iqrMean)] # Which lingering episodes are outliers -> should produce a bool array
+    outlierIndices = [outlierIndices >= (meanTimeLing + 1.5 * iqrMean)]
     outliers = []
-    for x in range(len(outlierIndices)): # Get indices of all outlier episodes in the actual data
-        if outlierIndices[x] == True: # If the current lingering episode is an outlier
-            outliers = outliers + [frame for frame in range(allLing[x][0], allLing[x][1])] # generate indicies between the start and end of lingering episodes
+    for x in range(len(timeForEpi)): # Get indices of all outlier episodes in the actual data
+        outliers = outliers + [frame for frame in range(timeForEpi[x][0], timeForEpi[x][1])] # generate indicies between the start and end of lingering episodes
 
     # Calculate bouts of activity
     boutOfActivity = np.delete(data, outliers, axis=0) # Delete all frames that belong to outlier lingering episodes
-    ## Convert bouts into chunks -> frame values
-    prev_frame = boutOfActivity[0]
-    total_chunks = []
-    cur_chunk = [prev_frame[0]]
-    for c in range(1, len(boutOfActivity)):
-        frame = boutOfActivity[c]
-        if frame[0] != prev_frame[0] + 1: # If this frame doesn't follow the previous one -> end of chunk
-            total_chunks.append(cur_chunk)
-            cur_chunk = [frame[0]]
-        else: # Add current frame to the current chunk
-            cur_chunk.append(frame[0])
-        prev_frame = frame
-    if len(cur_chunk) != 0: # Add current chunk at the end of the data
-        total_chunks.append(cur_chunk)
-
-
-    # Go through each locomotor bout and split into checking events
-    ## Find all intervals between two consecutive visits to the home base (need to confirm if a visit means that the rat has a lingering episode there).
-    checkingBoutsDurations = []
-    boutLeftPoints = []
-    boutRightPoints = []
-    for locomotorBout in total_chunks:
-        right_points = [] # start of hb visitation (think of it as the ')', or end, of an excursion)
-        left_points = [] # end of hb visitation (think of it as the '(', or start, of an excursion)
-        hb = False if env.SpecimenLocation(locomotorBout[0][1], locomotorBout[0][2]) != mainHomeBase else True # Currently in homebase
-        first_visit = True if hb else False # Covers the edge case of the bouts beginning with a lingering episode
-        for i in range(len(boutOfActivity)):
-            frame = boutOfActivity[i]
-            if not hb and env.SpecimenLocation(frame[1], frame[2]) == mainHomeBase: # If not in homebase in previous frame, but now currently in the homebase
-                hb = True
-                if not first_visit:
-                    right_points.append(i) # End of excursion
-            elif hb and env.SpecimenLocation(frame[1], frame[2]) != mainHomeBase: # If not in the homebase currently, but previously in the home base
-                hb = False
-                first_visit = False
-                left_points.append(i - 1) # Beginning of excursion
-        
-        curCheckingBoutsDuration = []
-        for i in range(len(right_points)):
-            start_of_excursion = left_points[i]
-            end_of_excursion = right_points[i]
-            curCheckingBoutsDuration.append(end_of_excursion, start_of_excursion)
-        checkingBoutsDurations.append(curCheckingBoutsDuration)
-        boutLeftPoints.append(left_points)
-        boutRightPoints.append(right_points)
-
-    ## Calculate relevant values based on all bouts
-    checkingBoutsDurationsFlattened = np.ravel(checkingBoutsDurations)
-    meanTimeReturn = np.sum(checkingBoutsDurationsFlattened) / len(checkingBoutsDurationsFlattened) # Mean time of lingering episode
-    q75MeanReturn, q25MeanReturn = np.percentile(checkingBoutsDurationsFlattened, [75, 25])
-    iqrMeanReturn = q75MeanReturn - q25MeanReturn
-
-    ## Create truth mask on each locomotour bout to split them
-    returnIntervalTruthMask = []
-    for locoBoutReturnIntervals in checkingBoutsDurations:
-        totalReturnIntervals = np.array(locoBoutReturnIntervals)
-        outlierReturnIntervals = [totalReturnIntervals >= (meanTimeReturn + 1.5 * iqrMeanReturn)]
-        returnIntervalTruthMask.append(outlierReturnIntervals)
-
-    ## Split locomotor bouts into separate bouts of checking.
-    boutSplits = []
-    for b in range(len(boutLeftPoints)):
-        currentSplits = []
-        starts = boutLeftPoints[b]
-        ends = boutRightPoints[b]
-        for i in range(len(ends)):
-            if returnIntervalTruthMask[b][i]: # If the current return interval is an outlier
-                currentSplits.append(starts[i])
-        boutSplits.append(currentSplits)
-
-    ### Split locomotor bouts into checking bouts (and concatenate them to one long list of bouts)
-    checkingBouts = []
-    for b in range(len(total_chunks)):
-        prev_split = 0
-        currentBoutSplits = boutSplits[b]
-        currentLocomotorBout = total_chunks[b]
-        for i in range(len(currentBoutSplits)):
-            actualSplitPoint = currentBoutSplits[i] + 1
-            curCheckingBout = currentLocomotorBout[prev_split:actualSplitPoint]
-            
-            checkingBouts.append(curCheckingBout)
-            prev_split = actualSplitPoint
-
-    # Final filtering -> Look through each checking bout and confirm that they have at least one visit to the homebase & two progression episodes (confirm how long an episode has to be).
-    final_bouts = []
-
-    for cBout in checkingBouts:
-        addBout = False
-        progressions = 0
-        hbVisit = False
-        progEp = False
-        for i in range(len(cBout)):
-            frame = cBout[i]
-            specimenLocale = env.SpecimenLocation(frame[1], frame[2])
-
-            if frame[4] == 1 and not progEp: # Check if there are at least two progressions (by checking the number of progression episodes) in a checking bout
-                progressions += 1
-                progEp = True
-            elif frame[4] == 0 and progEp:
-                progEp = False
-
-            if specimenLocale == mainHomeBase: # CONFIRM if there has to be a lingering episode to count as a visit! Check if the bout visits the homebase at least once.
-                hbVisit = True
-            
-            if hbVisit and progressions == 2: # if the two 'win' conditions are fulfilled, end the search early.
-                addBout = True
-                break
-        
-        if addBout: # Check if the bout satisfies the final filtering requirements. If so, add it to the final bouts.
-            final_bouts.append(cBout)
-    
-    return final_bouts
-
-
-
-
-        
-    
-
 
     # # Filter out all bouts that have too long excursion times
-
-    # Find all continuous 
     
-    # Find all possible intervals -> use on bouts of activity data
+    # Find all possible intervals
     ## Find the start and end points of all homebase visitations (their frames).
-    # right_points = [] # start of hb visitation (think of it as the ')', or end, of an excursion)
-    # left_points = [] # end of hb visitation (think of it as the '(', or start, of an excursion)
-    # hb = False if env.SpecimenLocation(boutOfActivity[0][1], boutOfActivity[0][2]) != mainHomeBase else True # Currently in homebase
-    # first_visit = True if hb else False # Covers the edge case of the bouts beginning with a lingering episode
-    # for i in range(len(boutOfActivity)):
-    #     frame = boutOfActivity[i]
-    #     if not hb and env.SpecimenLocation(frame[1], frame[2]) == mainHomeBase: # If not in homebase in previous frame, but now currently in the homebase
-    #         hb = True
-    #         if not first_visit:
-    #             right_points.append(i) # End of excursion
-    #     elif hb and env.SpecimenLocation(frame[1], frame[2]) != mainHomeBase: # If not in the homebase currently, but previously in the home base
-    #         hb = False
-    #         first_visit = False
-    #         left_points.append(i - 1) # Beginning of excursion
+    right_points = [] # start of hb visitation (think of it as the ')', or end, of an interval)
+    left_points = [] # end of hb visitation (think of it as the '(', or start, of an interval)
+    hb = False if env.SpecimenLocation(data[0][1], data[0][2]) != mainHomeBase else True
+    for i in range(len(data)):
+        frame = data[i]
+        if not hb and env.SpecimenLocation(frame[1], frame[2]) == mainHomeBase:
+            hb = True
+            right_points.append(i)
+        elif hb and env.SpecimenLocation(frame[1], frame[2]) != mainHomeBase:
+            hb = False
+            left_points.append(i - 1)
 
-    # ## Create the intervals from the above 
-    # for i in range(len(right_points) - 1):
-    #     start_of_excursion = left_points[i]
-    #     end_of_excursion = right_points[i + 1]
-        
+    ## Create the intervals from the above 
 
 
-    # ## Check if their excursion stuff meets the criteria
+    ## Check if their excursion stuff meets the criteria
 
-    # # Filter out lingering episodes that don't start and end in homebase
-    # outliers = list(filter(lambda x : env.SpecimenLocation(x[0][1], x[0][2]) == mainHomeBase and env.SpecimenLocation(x[-1][1], x[-1][2]) == mainHomeBase, outliers))
+    # Filter out lingering episodes that don't start and end in homebase
+    outliers = list(filter(lambda x : env.SpecimenLocation(x[0][1], x[0][2]) == mainHomeBase and env.SpecimenLocation(x[-1][1], x[-1][2]) == mainHomeBase, outliers))
 
-    # # Dunno :)
-
-
-## Bout Summary Measures ##
-
-def Calculate_Bout_Total(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None):
-    """
-        Calculates total number of bouts in a session.
-
-        Also referred to as BoutNumber_max
-
-        Reference ID is: calc_bout_totalBouts
-    """
-    # Check if required summary measures have been calculated already
-    CheckForMissingDependencies('calc_bout_totalBouts', requiredSummaryMeasures.keys())
-    # Perform any necessary pre-calcs
-    requiredCalcs = DATA_DEPENDENCIES["calc_bout_totalBouts"]
-    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
-
-    ### Summary Measure Logic
-    checkingBouts = requiredSummaryMeasures["calc_boutsOfChecking"]
-
-    return len(checkingBouts)
-
-def Calculate_Bout_Total_Duration(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None):
-    """
-        Calculates total duration of bouts of checking in a session (in seconds).
-
-        Also referred to as DurationOfBout_s_sum.
-        
-        TODO: Ask what DurationOfBout_s is.
-
-        Reference ID is: calc_bout_totalBoutDuration
-    """
-    # Check if required summary measures have been calculated already
-    CheckForMissingDependencies('calc_bout_totalBoutDuration', requiredSummaryMeasures.keys())
-    # Perform any necessary pre-calcs
-    requiredCalcs = DATA_DEPENDENCIES["calc_bout_totalBoutDuration"]
-    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
-
-    ### Summary Measure Logic
-    checkingBouts = requiredSummaryMeasures["calc_boutsOfChecking"]
-
-    return (sum([len(bout) for bout in checkingBouts])) / FRAMES_PER_SECOND
+    # Dunno :)
 
 
-def Calculate_Bout_Mean_Time_Until_Next_Bout(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None):
-    """
-        Calculates the mean time to next checking bout (average duartion of inter-bout intervals). Returns it in seconds.
-
-        Also referred to as UNKNOWN
-
-        Reference ID is: calc_bout_meanTimeUntilNextBout
-    """
-    # Check if required summary measures have been calculated already
-    CheckForMissingDependencies('calc_bout_meanTimeUntilNextBout', requiredSummaryMeasures.keys())
-    # Perform any necessary pre-calcs
-    requiredCalcs = DATA_DEPENDENCIES["calc_bout_meanTimeUntilNextBout"]
-    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
-
-    ### Summary Measure Logic
-    checkingBouts = requiredSummaryMeasures["calc_boutsOfChecking"]
-
-    timesUntilNextBout = []
-    for i in range(len(checkingBouts) - 1):
-        currentBoutEndFrame = checkingBouts[i][-1][0] # Get the last frame's (in the current bout) frame number
-        nextBoutStartFrame = checkingBouts[i + 1][0][0] # Get the first frame's (in the next bout) frame number
-        timesUntilNextBout.append(nextBoutStartFrame - currentBoutEndFrame) # Add the time (in frames) until next bout
-    
-    return np.mean(timesUntilNextBout) / FRAMES_PER_SECOND
-
-def Calculate_Bout_Mean_Check_Frequency(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None):
-    """
-        Calculates the average frequency (per-bout) of rat returning to the homebase during a bout.
-
-        Also referred to as UNKNOWN
-
-        Reference ID is: calc_bout_meanCheckFreq
-    """
-    # Check if required summary measures have been calculated already
-    CheckForMissingDependencies('calc_bout_meanCheckFreq', requiredSummaryMeasures.keys())
-    # Perform any necessary pre-calcs
-    requiredCalcs = DATA_DEPENDENCIES["calc_bout_meanCheckFreq"]
-    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
-
-    ### Summary Measure Logic
-    checkingBouts = requiredSummaryMeasures["calc_boutsOfChecking"]
-    mainHomeBase = requiredSummaryMeasures["calc_homebases"][0]
-
-    totalChecks = 0
-    # Find the number of checks (returns to homebase) for every bout
-    for bout in checkingBouts:
-        hb = False
-        checks = 0
-        for i in range(len(bout)):
-            frame = bout[i]
-            specimenLocale = env.SpecimenLocation(frame[1], frame[2])
-            if not hb and specimenLocale == mainHomeBase: # Entered homebase - count the check
-                hb = True
-                checks += 1 # Ask Anna if checks occur only after a progression or during a lingering, because if a rat lingers onto another locale then immediately back onto the current locale, it could count many checks.
-            elif hb and specimenLocale != mainHomeBase: # Left homebase -> allow another check to be counted (upon return to homebase)
-                hb = False
-        totalChecks += checks
-    
-    return totalChecks / len(checkingBouts)
-
-def Calculate_Bout_Mean_Rate_Of_Checks(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None):
-    """
-        Calculates the mean rate of checking (or, the average reciprocal return time to the main homebase). Returns in seconds (NEED TO CONFIRM THIS; MAY NEED TO RETURN IN HZ, WHICH WILL NEED ITS OWN DIVISION METHOD THINGY)
-
-        Also referred to as RateOfChecksInBout_Hz
-
-        Reference ID is: calc_bout_meanRateOfChecks
-    """
-    # Check if required summary measures have been calculated already
-    CheckForMissingDependencies('calc_bout_meanRateOfChecks', requiredSummaryMeasures.keys())
-    # Perform any necessary pre-calcs
-    requiredCalcs = DATA_DEPENDENCIES["calc_bout_meanRateOfChecks"]
-    desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
-
-    ### Summary Measure Logic
-    checkingBouts = requiredSummaryMeasures["calc_boutsOfChecking"]
-    mainHomeBase = requiredSummaryMeasures["calc_homebases"][0]
-
-    
-    meanRateOfChecks = 0
-    # Find the reciprocal return times
-    for bout in checkingBouts:
-        excursionTimes = []
-        exc = False
-
-        # Start and end frames of excursions -> used to calculate their durations
-        start = -1 
-        end = -1
-
-        # Find average excursion time (times before homebase visits), not including any excursions that don't result in a return to the main homebase.
-        for i in range(len(bout)): ## WHAT ABOUT THE CASE OF A RAT STARTING OFF IN A LINGERING EPISODE OUTSIDE OF THE MAIN HOMEBASE. IS THAT A PART OF THE EXCURSION TOO?
-            frame = bout[i]
-            specimenLocale = env.SpecimenLocation(frame[1], frame[2])
-            if not exc and specimenLocale != mainHomeBase and frame[4] == 1: # If specimen isn't already counted as on an excursion, it's progressing somewhere and it's not in the main homebase.
-                exc = True
-                start = frame[0]
-            elif exc and specimenLocale == mainHomeBase:
-                exc = False
-                end = frame[0]
-                # Add excursion duration to bout's overall excursion times
-                excursionTimes.append(end - start)
-        
-        # Add the mean reciprocal return time for the bout.
-        meanRateOfChecks += 1 / np.mean(excursionTimes)
-            
-    return (meanRateOfChecks / len(checkingBouts)) / FRAMES_PER_SECOND
-        
 
 ### TESTING ###
 # x = np.array([1, 5, 21, 1, 2, 5, 9, 21])

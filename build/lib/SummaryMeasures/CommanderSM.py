@@ -12,6 +12,7 @@ import numpy as np
 from . import FieldSM as fsm
 from . import FunctionalSM as fcsm
 from . FunctionalSM import DATA_MAPPING, SM_MAPPING
+import pandas as pd
 
 
 
