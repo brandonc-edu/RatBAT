@@ -124,7 +124,7 @@ class FetchPreprocessedDataView(APIView):
                 return Response({"error": "No trials provided in the request."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Call the FRDR service to fetch preprocessed data
-            frdr_url = "http://ratbat.cas.mcmaster.ca/api/frdr-query/frdr-query-preprocessed/"
+            frdr_url = "/api/frdr-query/frdr-query-preprocessed/"
             response = requests.post(frdr_url, json={"trials": selected_trials})
 
             if response.status_code != 200:
@@ -160,7 +160,7 @@ class FetchPreprocessedDataView(APIView):
                         print(f"Failed to download file: {file_url}")
             elif response.status_code == 200 and fetched_urls == []:
                 # If the API call succeeded and returned an empty list, fetch smoothed data
-                timeseries_url = "http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/"
+                timeseries_url = "/api/frdr-query/get-timeseries/"
                 response = requests.get(timeseries_url, params={"trials": ",".join(map(str, selected_trials))})
 
                 if response.status_code != 200:
