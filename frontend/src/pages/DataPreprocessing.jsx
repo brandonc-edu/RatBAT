@@ -28,7 +28,7 @@ const DataPreprocessing = () => {
     const fetchDataFiles = async () => {
       try {
         // Use the correct endpoint URL
-        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/');
+        const response = await axios.get('/api/frdr-query/get-timeseries/');
         const trials = response.data;
     
         // Assuming the response contains a dictionary of trial IDs and their metadata
@@ -130,7 +130,7 @@ const DataPreprocessing = () => {
   
     try {
       const response = await axios.post(
-        'http://ratbat.cas.mcmaster.ca/api/data-preprocessing/preprocess/',
+        '/api/data-preprocessing/preprocess/',
         payload,
         { timeout: 1800000 } // Set timeout to 30 minutes (1800000 ms)
       );
@@ -155,7 +155,7 @@ const DataPreprocessing = () => {
 
   const handleDownload = (file) => {
     const link = document.createElement('a');
-    link.href = `http://ratbat.cas.mcmaster.ca/api/data-preprocessing/download/${file}`;
+    link.href = `/api/data-preprocessing/download/${file}`;
     link.download = file;
     link.click();
   };
@@ -173,7 +173,7 @@ const DataPreprocessing = () => {
   
     try {
       const response = await axios.post(
-        'http://ratbat.cas.mcmaster.ca/api/data-preprocessing/fetch-preprocessed/',
+        '/api/data-preprocessing/fetch-preprocessed/',
         payload
       );
   

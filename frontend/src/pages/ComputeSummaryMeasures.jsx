@@ -20,7 +20,7 @@ const ComputeSummaryMeasures = () => {
     // Fetch available trial IDs from the backend
     const fetchDataFiles = async () => {
       try {
-        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/');
+        const response = await axios.get('/api/frdr-query/get-timeseries/');
         const trials = response.data;
     
         // Assuming the response contains a dictionary of trial IDs and their metadata
@@ -39,7 +39,7 @@ const ComputeSummaryMeasures = () => {
     // Fetch summary measures options from the backend
     const fetchSummaryMeasures = async () => {
       try {
-        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/summary-measures/summary-measures/');
+        const response = await axios.get('/api/summary-measures/summary-measures/');
         console.log("Fetched summary measures:", response.data);
         setSummaryMeasuresOptions(response.data);
       } catch (error) {
