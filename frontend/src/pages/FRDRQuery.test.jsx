@@ -67,7 +67,7 @@ describe('FRDRQuery Component', () => {
     
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://ratbat.cas.mcmaster.ca/api/frdr-query/query-data/',
+        '/api/frdr-query/query-data/',
         expect.objectContaining({ method: 'POST' })
       );
     });
@@ -107,7 +107,7 @@ describe('FRDRQuery Component', () => {
     
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://ratbat.cas.mcmaster.ca/api/frdr-query/frdr-query/',
+        '/api/frdr-query/frdr-query/',
         expect.objectContaining({ method: 'POST' })
       );
     });
