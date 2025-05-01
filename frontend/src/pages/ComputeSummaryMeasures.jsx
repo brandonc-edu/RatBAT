@@ -15,12 +15,13 @@ const ComputeSummaryMeasures = () => {
   const [showInfo, setShowInfo] = useState(false);
   const modalRef = useRef(null);
   const offset = useRef({ x: 0, y: 0 });
+  const [setNullIfLowVisits, setSetNullIfLowVisits] = useState(true);
 
   useEffect(() => {
     // Fetch available trial IDs from the backend
     const fetchDataFiles = async () => {
       try {
-        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/frdr-query/get-timeseries/');
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/frdr-query/get-timeseries/`);
         const trials = response.data;
     
         // Assuming the response contains a dictionary of trial IDs and their metadata
@@ -39,7 +40,7 @@ const ComputeSummaryMeasures = () => {
     // Fetch summary measures options from the backend
     const fetchSummaryMeasures = async () => {
       try {
-        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/summary-measures/summary-measures/');
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/summary-measures/summary-measures/`);
         console.log("Fetched summary measures:", response.data);
         setSummaryMeasuresOptions(response.data);
       } catch (error) {
@@ -203,17 +204,17 @@ const ComputeSummaryMeasures = () => {
       alert("Please select at least one trial.");
       return;
     }
-
+  
     try {
       const response = await axios.post('/api/summary-measures/compute-summary-measures/', {
         trial_ids: selectedDataFiles.map(file => file.id), // Send trial IDs
         summary_measures: selectedSummaryMeasures,
         environment: 'common', // or 'q20s' / 'q17'
+        set_null_if_low_visits: setNullIfLowVisits, // Include the flag in the payload
       });
-
+  
       console.log("Results from API:", response.data);
       const formattedResults = formatResults(response.data);
-      console.log("Formatted Results:", formattedResults);
       setResults(formattedResults);
       setSelectedResults([]); // Reset selected results after applying
     } catch (error) {
@@ -493,6 +494,16 @@ const ComputeSummaryMeasures = () => {
             <option value={10}>10 Decimals</option>
           </select>
         </div>
+        <div className="flag-toggle">
+            <label>
+                <input
+                type="checkbox"
+                checked={setNullIfLowVisits}
+                onChange={(e) => setSetNullIfLowVisits(e.target.checked)}
+                />
+                Set variables to NULL if KPname01 (Main Homebase) visits ≤ 3
+            </label>
+            </div>
         <div className="result-items">
           <table className="result-table">
             <thead>
