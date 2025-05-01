@@ -151,9 +151,6 @@ def update_timeseries(model, data):
     """
     
     data.replace(np.nan, None, inplace = True)
-    # Replace foreign key references ids with actual referenced model
-    fkeys = get_foreign_keys(model)
-    fkeys = {key.name:key for key in fkeys}
     
     row_models = list(model.objects.filter(trial__trial_id__in = data["trial_id"]))
     if len(row_models) == 0:
@@ -164,6 +161,5 @@ def update_timeseries(model, data):
         row_models[i].y_s = data.loc[i,"y_s"]
         row_models[i].v_s = data.loc[i,"v_s"]
         row_models[i].movementtype_s = data.loc[i,"movementtype_s"] 
-    start = time.time()
+        
     model.objects.bulk_update(row_models, ["x_s","y_s","v_s","movementtype_s"], batch_size = 100)
-    print(time.time()-start)

@@ -47,10 +47,26 @@ class ComputeSummaryMeasuresView(APIView):
             trial_ids = request.data.get('trial_ids')  # Accept trial IDs from the request
             summary_measures = request.data.get('summary_measures')
             environment = request.data.get('environment', 'common')
+            set_null_if_low_visits = request.data.get('set_null_if_low_visits', True)  # Optional flag, default is True
 
             if not trial_ids or not summary_measures:
                 return Response({"error": "Trial IDs and summary measures are required."}, status=status.HTTP_400_BAD_REQUEST)
-
+            
+            NULLIFY_MEASURES = [
+                'calc_homebases',
+                'calc_HB1_cumulativeReturn',
+                'calc_HB1_meanDurationStops',
+                'calc_HB1_meanReturn',
+                'calc_HB1_meanExcursionStops',
+                'calc_HB1_stopDuration',
+                'calc_HB2_stopDuration',
+                'calc_HB2_cumulativeReturn',
+                'calc_HB1_expectedReturn',
+                'calc_sessionTotalLocalesVisited',
+                'calc_sessionTotalStops',
+                'calc_sessionReturnTimeMean'
+            ]
+            
             results = {}
             for trial_id in trial_ids:
                 try:
@@ -63,24 +79,29 @@ class ComputeSummaryMeasuresView(APIView):
                         return Response({"error": f"Preprocessed file for trial {trial_id} not found."}, status=status.HTTP_404_NOT_FOUND)
 
                     # Load the preprocessed data
-                    print(f"Loading preprocessed file: {preprocessed_file_path}")
                     data = pd.read_csv(preprocessed_file_path)
 
                     # Ensure the data is numeric and exclude non-numeric rows (like headers)
                     data = data.apply(pd.to_numeric, errors='coerce')  # Convert all columns to numeric, replacing invalid values with NaN
                     data = data.dropna()  # Drop rows with NaN values (e.g., if headers were mistakenly included)
-
-                    # Convert to NumPy array
-                    data = data.to_numpy()
-
-                    # Log the shape of the data for debugging
-                    print(f"Data shape for trial {trial_id}: {data.shape}")
-
+                    data_array = data.to_numpy()
+                    
                     # Compute summary measures
-                    commander = Commander(data, environment)
+                    commander = Commander(data_array, environment)
                     reordered_measures, data_dependencies = Karpov.ResolveDependencies(summary_measures)
-                    calculated_measures = commander.CalculateSummaryMeasures(data, reordered_measures, data_dependencies)
-                    results[trial_id] = calculated_measures
+                    
+                    # pass the numpy array
+                    calculated = commander.CalculateSummaryMeasures(data_array, reordered_measures, data_dependencies)
+
+                    if set_null_if_low_visits:
+                        hb = calculated.get('calc_homebases')
+                        # hb is e.g. (visit_count, other_value)
+                        if isinstance(hb, tuple) and isinstance(hb[0], int) and hb[0] <= 3:
+                            for key in NULLIFY_MEASURES:
+                                if key in calculated:
+                                    calculated[key] = None
+
+                    results[trial_id] = calculated
                 except Exception as e:
                     return Response({"error": f"Error processing trial {trial_id}: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 

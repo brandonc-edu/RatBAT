@@ -108,7 +108,7 @@ const CompileDataPage = () => {
     // Fetch metadata variables from the backend
     const fetchMetadataVariables = async () => {
       try {
-        const response = await axios.get('http://ratbat.cas.mcmaster.ca/api/frdr-query/get-fields/');
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/frdr-query/get-fields/`);
         // Define the fields you want to remove
         const unwantedFields = ["sample_id", "t", "x", "y", "x_s", "y_s", "v_s", "movementtype_s"];
         // Flatten the response and filter out unwanted fields
@@ -148,7 +148,7 @@ const CompileDataPage = () => {
           fields: selectedMetadataVariables,
         };
         console.log("Sending request to query-data with payload:", JSON.stringify(payload, null, 2));
-        const response = await axios.post('http://ratbat.cas.mcmaster.ca/api/frdr-query/query-data/', payload);
+        const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/frdr-query/query-data/`, payload);
         console.log(`Metadata response for trial ${trialId}:`, response.data);
         return response.data;
       } catch (error) {
@@ -285,17 +285,13 @@ const CompileDataPage = () => {
       ...compiledData.map(({ file, metadata, measures }) => {
         const fileCell = `="${file}"`; // Ensure file name is included
   
-        // Transform metadata keys using metadataFieldMapping
         const metadataCells = selectedMetadataVariables.map((variable) => {
-          // Find the original key using metadataFieldMapping
-          const originalKey = Object.keys(metadataFieldMapping).find(
-            (key) => metadataFieldMapping[key] === variable
-          ) || variable;
-  
-          // Use the original key to access metadata
-          return metadata[originalKey] || '';
+          // Directly access using the transformed key
+          const value = metadata[variable] || '';
+          // Wrap the text value in quotes (and prepend an equal sign to force text format in Excel if needed)
+          return `="${value}"`;
         });
-  
+        
         const summaryCells = selectedSummaryMeasures.flatMap((measure) => {
           if (measure === "calc_distanceTravelled") {
             const distanceValues = measures[measure] || [];
@@ -323,7 +319,7 @@ const CompileDataPage = () => {
       }),
     ].join("\n");
   
-    const encodedUri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`);
+    const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "compiled_data.csv");
