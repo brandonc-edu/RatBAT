@@ -25,8 +25,7 @@ class Commander:
         Think of the Commander class as a middleman.
     """
 
-    def __init__(self, preProcessedData, environment):
-        self.data =  preProcessedData
+    def __init__(self, environment):
         self.env = self.SelectEnvironment(environment)
         self.storedAuxiliaryInfo = {}
         self.calculatedSummaryMeasures = {}

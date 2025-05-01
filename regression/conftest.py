@@ -38,7 +38,7 @@ timings = {}
 @pytest.fixture
 def test_data(): # Return a list of tuples of smoothed data files & their corresponding summary measures (as a dict)
     # Get smoothed data files
-    data_01_01 = pd.read_excel(os.path.join(CUR_FILE_PATH, './data/Q405HT1001_02_0_0053_0015689_smoothed.xlsx'), header=None).to_numpy()
+    data_01_02 = pd.read_excel(os.path.join(CUR_FILE_PATH, './data/Q405HT1001_02_0_0053_0015689_smoothed.xlsx'), header=None).to_numpy()
     data_01_04 = pd.read_excel(os.path.join(CUR_FILE_PATH, './data/Q405HT1001_04_0_0059_0015691_smoothed.xlsx'), header=None).to_numpy()
     data_01_10 = pd.read_excel(os.path.join(CUR_FILE_PATH, './data/Q405HT1001_10_0_0250_0015697_smoothed.xlsx'), header=None).to_numpy()
     data_02_06 = pd.read_excel(os.path.join(CUR_FILE_PATH, './data/Q405HT1002_06_2_0166_0015703_smoothed.xlsx'), header=None).to_numpy()
@@ -46,12 +46,12 @@ def test_data(): # Return a list of tuples of smoothed data files & their corres
 
     # Get summary measures
     summ_stats = pd.read_excel(TEST_DATA_SUM_PATH)
-    stats_01_01 = summ_stats.iloc[0].to_dict()
+    stats_01_02 = summ_stats.iloc[1].to_dict()
     stats_01_04 = summ_stats.iloc[3].to_dict()
     stats_01_10 = summ_stats.iloc[9].to_dict()
     stats_02_06 = summ_stats.iloc[15].to_dict()
     stats_03_01 = summ_stats.iloc[20].to_dict()
-    return [(data_01_01, stats_01_01), (data_01_04, stats_01_04), (data_01_10, stats_01_10), (data_02_06, stats_02_06), (data_03_01, stats_03_01)]
+    return [(data_01_02, stats_01_02), (data_01_04, stats_01_04), (data_01_10, stats_01_10), (data_02_06, stats_02_06), (data_03_01, stats_03_01)]
 
 @pytest.fixture(params=range(5))
 def all_test_data(request, test_data):
@@ -118,3 +118,5 @@ def run_and_measure(func, *args, **kwargs):
     timings[calc_name] = execution_time
     
     return result
+
+# print(test_data()[0][1])
