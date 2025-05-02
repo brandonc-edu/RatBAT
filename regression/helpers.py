@@ -18,12 +18,12 @@ def test_data(): # Return a list of tuples of smoothed data files & their corres
 
     # Get summary measures
     summ_stats = pd.read_excel(TEST_DATA_SUM_PATH)
-    stats_01_01 = summ_stats.iloc[0].to_dict()
+    stats_01_02 = summ_stats.iloc[1].to_dict()
     stats_01_04 = summ_stats.iloc[3].to_dict()
     stats_01_10 = summ_stats.iloc[9].to_dict()
     stats_02_06 = summ_stats.iloc[15].to_dict()
     stats_03_01 = summ_stats.iloc[20].to_dict()
-    return (data_01_02, stats_01_01), (data_01_04, stats_01_04), (data_01_10, stats_01_10), (data_02_06, stats_02_06), (data_03_01, stats_03_01)
+    return (data_01_02, stats_01_02), (data_01_04, stats_01_04), (data_01_10, stats_01_10), (data_02_06, stats_02_06), (data_03_01, stats_03_01)
 
 
 FILE_1, FILE_2, FILE_3, FILE_4, FILE_5 = test_data()

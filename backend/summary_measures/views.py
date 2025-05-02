@@ -1,9 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from SummaryMeasures.CommanderSM import Commander
-from SummaryMeasures.DependenciesSM import Karpov
-from SummaryMeasures.FunctionalSM import DATA_DEPENDENCIES
+from rBat.SummaryMeasures.CommanderSM import Commander
+from rBat.SummaryMeasures.DependenciesSM import Karpov
+from rBat.SummaryMeasures.FunctionalSM import SM_MAPPING
 
 import pandas as pd
 import os
@@ -11,7 +11,11 @@ import os
 class ListSummaryMeasuresView(APIView):
     def get(self, request, *args, **kwargs):
         try:
-            summary_measures = list(DATA_DEPENDENCIES.keys())
+            summary_measures = list(SM_MAPPING.keys())
+            # Exclude 'calc_boutsOfChecking' from being displayed
+            if 'calc_boutsOfChecking' in summary_measures:
+                summary_measures.remove('calc_boutsOfChecking')
+                
             # Ensure calc_homebases is included at the start
             if 'calc_homebases' in summary_measures:
                 summary_measures.remove('calc_homebases')
@@ -86,12 +90,12 @@ class ComputeSummaryMeasuresView(APIView):
                     data = data.dropna()  # Drop rows with NaN values (e.g., if headers were mistakenly included)
                     data_array = data.to_numpy()
                     
-                    # Compute summary measures
-                    commander = Commander(data_array, environment)
-                    reordered_measures, data_dependencies = Karpov.ResolveDependencies(summary_measures)
+                    # Create Commander instance with the environment
+                    commander = Commander(environment)
+                    reordered_measures, SM_MAPPING = Karpov.ResolveDependencies(summary_measures)
                     
-                    # pass the numpy array
-                    calculated = commander.CalculateSummaryMeasures(data_array, reordered_measures, data_dependencies)
+                    # Pass the numpy array
+                    calculated = commander.CalculateSummaryMeasures(data_array, reordered_measures, SM_MAPPING)
 
                     if set_null_if_low_visits:
                         hb = calculated.get('calc_homebases')

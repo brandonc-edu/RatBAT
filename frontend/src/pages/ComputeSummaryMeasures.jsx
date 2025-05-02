@@ -260,6 +260,12 @@ const ComputeSummaryMeasures = () => {
     calc_distanceTravelled_distancesProgression: "Distances (Progression) (5-min intervals)",
     calc_distanceTravelled_distancesAll: "Distances (All) (5-min intervals)",
     calc_sessionReturnTimeMean : "Mean Return Time All Locales",
+    calc_expectedMainHomeBaseReturn : "Expected Return Time Main Homebase",
+    calc_bout_totalBouts : "Bout Total",
+    calc_bout_totalBoutDuration : "Bout Total Duration",
+    calc_bout_meanTimeUntilNextBout : "Bout Mean Time Until Next Bout",
+    calc_bout_meanCheckFreq : "Bout Mean Check Frequency",
+    calc_bout_meanRateOfChecks : "Bout Mean Rate Of Checks",
   };
 
   const measureTooltips = {
@@ -276,6 +282,10 @@ const ComputeSummaryMeasures = () => {
     calc_sessionTotalStops: 'KP_session_Stops_total#',
     calc_distanceTravelled : "Calculate_Distance_Travelled",
     calc_sessionReturnTimeMean : "KP_session_ReturnTime_mean",
+    calc_expectedMainHomeBaseReturn : "KPexpReturntime01",
+    calc_bout_totalBouts : "BoutNumber_max",
+    calc_bout_totalBoutDuration : "DurationOfBout_s_sum",
+    calc_bout_meanRateOfChecks : "RateOfChecksInBout_Hz",
   };
 
   // New mapping for full definitions to be shown on the info buttons
@@ -292,7 +302,13 @@ const ComputeSummaryMeasures = () => {
     calc_sessionTotalLocalesVisited: 'Gives the number of different locales visited during the session.',
     calc_sessionTotalStops: 'Gives the total number of stops during the session.',
     calc_sessionReturnTimeMean: 'Calculates a weighted mean return time to all locales.',
-    calc_distanceTravelled : 'Calculates all distances travelled metrics.'
+    calc_distanceTravelled : 'Calculates all distances travelled metrics.',
+    calc_expectedMainHomeBaseReturn : "Calculates the expected return time to the main homebase.",
+    calc_bout_totalBouts : "Calculates total number of bouts in a session.",
+    calc_bout_totalBoutDuration : "Calculates total duration of bouts of checking in a session (in seconds).",
+    calc_bout_meanTimeUntilNextBout : "Calculates the mean time to next checking bout (average duartion of inter-bout intervals). Returns it in seconds.",
+    calc_bout_meanCheckFreq : "Calculates the average frequency (per-bout) of rat returning to the homebase during a bout.",
+    calc_bout_meanRateOfChecks : "Calculates the mean rate of checking (or, the average reciprocal return time to the main homebase). Returns in seconds."
   };
 
   const formatResults = (data) => {
@@ -383,7 +399,8 @@ const ComputeSummaryMeasures = () => {
     "calc_HB1_cumulativeReturn",
     "calc_HB2_cumulativeReturn",
     "calc_sessionTotalLocalesVisited",
-    "calc_sessionTotalStops"
+    "calc_sessionTotalStops",
+    "calc_bout_totalBouts"
   ];
 
   return (

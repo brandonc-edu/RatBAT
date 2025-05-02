@@ -11,7 +11,7 @@ class Test_SM_Package:
 
     def setup_method(self, method):
         print(f"Now setting up method: {method}")
-        self.interface = csm.Commander(None, "common")
+        self.interface = csm.Commander("common")
 
     # Using commander interface & Karpov for ease of testing
     @pytest.mark.parametrize("smoothed_data, actual_summ_measures", TEST_CASES)
@@ -20,6 +20,7 @@ class Test_SM_Package:
         sm_deps, data_deps = Karpov.ResolveDependencies(["calc_homebases"])
         results = run_and_measure(self.interface.CalculateSummaryMeasures, smoothed_data, sm_deps, data_deps)
         print(results)
+        print(actual_summ_measures)
 
         # Compare results (main & secondary home bases match)
         assert results["calc_homebases"][0] == actual_summ_measures["KPname01"]
@@ -145,7 +146,7 @@ class Test_SM_Package:
         results = run_and_measure(self.interface.CalculateSummaryMeasures, smoothed_data, sm_deps, data_deps)
 
         # Compare results
-        assert results["calc_bout_totalBouts"] == actual_summ_measures["BoutNumber_max#"]
+        assert results["calc_bout_totalBouts"] == actual_summ_measures["BoutNumber_max"]
 
     @pytest.mark.parametrize("smoothed_data, actual_summ_measures", TEST_CASES)
     def test_bout_totalBoutDuration(self, smoothed_data, actual_summ_measures):

@@ -23,10 +23,14 @@ class Commander:
         as well as communicating them to whatever functionality calls it.
 
         Think of the Commander class as a middleman.
+
+        Parameters
+        ----------
+        environment : str
+            String denoting which test environment the specimen was in.
     """
 
-    def __init__(self, preProcessedData, environment):
-        self.data =  preProcessedData
+    def __init__(self, environment: str):
         self.env = self.SelectEnvironment(environment)
         self.storedAuxiliaryInfo = {}
         self.calculatedSummaryMeasures = {}
@@ -37,7 +41,7 @@ class Commander:
         Parameters
         ----------
         environmentName : str
-            Identifier of the environment to be used for calculation of summary measures. Available environmentName values are: common (all non-Q21 to Q23 & non-Q17 environments). 
+            Identifier of the environment to be used for calculation of summary measures. Available environmentName values are: common (all non-Q21 to Q23 & non-Q17 environments) and q20s (covers Q21 to Q23 environments)
 
         Returns
         -------
@@ -48,8 +52,6 @@ class Commander:
             return fsm.COMMON_ENV
         elif environmentName == "q20s":
             return fsm.Q20S_ENV
-        elif environmentName == "q17":
-            return fsm.Q17_ENV
         else:
             raise Exception("Invalid environmentName passed: please pass common, q20s, or q17 as the environmentName.")
         
@@ -125,7 +127,10 @@ class Commander:
                 Dictionary mapping summary measure ref. ids (see FunctionalSM) to their calculated outputs.
         """
         # Handle data jitter
-        data = self.AccountForJitter(data)
+        if self.env == fsm.COMMON_ENV:
+            data = self.AccountForJitter(data)
+        elif self.env == fsm.Q20S_ENV:
+            data = self.AccountForJitter(data, min=-80, max=80)
 
         # Perform pre-calculations where possible to reduce overhead
         self.PerformPreCalculations(data, self.env, commonCalculations)
@@ -139,13 +144,3 @@ class Commander:
         
 
 ### TESTING ###
-# from DependenciesSM import Karpov
-# test = Commander(None, "common")
-# data = pd.read_excel("./SummaryMeasures/Q405HT1003_01_0_0299_0015708_smoothed.xlsx")
-# # # print(data.head()) # Getting 1.1 when I import it (for segmentType for the first row) which is weird, but not lethal for now.
-# data = data.to_numpy()
-# # # print(data[:5])
-# summaries = ["calc_HB1_cumulativeReturn", "calc_HB1_meanDurationStops", "calc_homebases", "calc_HB1_meanReturn", "calc_HB1_meanExcursionStops"]
-# ordered, common = Karpov.ResolveDependencies(summaries)
-# results = test.CalculateSummaryMeasures(data, ordered, common)
-# print(results)
