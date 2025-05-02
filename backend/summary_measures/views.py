@@ -1,9 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from SummaryMeasures.CommanderSM import Commander
-from SummaryMeasures.DependenciesSM import Karpov
-from SummaryMeasures.FunctionalSM import SM_MAPPING
+from rBat.SummaryMeasures.CommanderSM import Commander
+from rBat.SummaryMeasures.DependenciesSM import Karpov
+from rBat.SummaryMeasures.FunctionalSM import SM_MAPPING
 
 import pandas as pd
 import os
