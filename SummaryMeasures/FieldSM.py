@@ -25,24 +25,6 @@ LOCALE_MAPPING = [70, 75, 80, 85, 10,
                   55, 5, 4, 3, 25,
                   50, 45, 40, 35, 30]
 
-# LOCALE_MAPPING_ALT = [50, 45, 40, 35, 30,
-#                       55, 5, 4, 3, 25,
-#                       60, 6, 0, 2, 20,
-#                       65, 7, 8, 1, 15,
-#                       70, 75, 80, 85, 10]
-
-# LOCALE_MAPPING_ALT_2 = [30, 35, 40, 45, 50,
-#                         25, 3, 4, 5, 55,
-#                         20, 2, 0, 6, 60,
-#                         15, 1, 8, 7, 65,
-#                         10, 85, 80, 75, 70]
-
-# LOCALE_MAPPING_ALT_3 = [10, 75, 80, 85, 10,
-#                         15, 1, 8, 7, 65,
-#                         20, 2, 0, 6, 60,
-#                         25, 3, 4, 5, 55,
-#                         10, 85, 80, 75, 70]
-
 
 # Classes
 
@@ -100,7 +82,7 @@ class Environment:
         """
         self.grid = self.GenerateGrid(grid)
         self.objects = objects
-        self.shape = shape
+        self.shape = shape # Could potentially create shape for it. Ask Clients about circular environments.
 
     def GenerateGrid(self, lineCoords):
         """From a series of vertical & horizontal line coordinates (see COMMON_GRID variable), create a meshgrid to simulate the test environment's grid.
@@ -224,16 +206,41 @@ COMMON_ENV = Environment(
 )
 
 ## Q21 to Q23 Environments -> Requires definition by researchers.
-Q20S_ENV = None
+Q20S_ENV = Environment(
+    [
+        [ # Horizontal Lines
+            [(-80, -80), (80, -80)],
+            [(-80, -60), (80, -60)],
+            [(-80, -20), (80, -20)],
+            [(-80, 20), (80, 20)],
+            [(-80, 60), (80, 60)],
+            [(-80, 80), (80, 80)]
+        ],
+        [ # Vertical Lines
+            [(-80, -80), (-80, 80)],
+            [(-60, -80), (-60, 80)],
+            [(-20, -80), (-20, 80)],
+            [(20, -80), (20, 80)],
+            [(60, -80), (60, 80)],
+            [(80, -80), (80, 80)],
+        ]
+    ],
+    [ # List of objects
+        Rectangle([(-44, 36), (-36, 44)]),
+        Rectangle([(72, 72), (80, 80)]),
+        Rectangle([(-5.25, -44.25), (5.25, -35.75)]),
+        PolygonObject([
+            (74.3431, -80),
+            (80, -74.3431),
+            (74.3431, -68.6863),
+            (68.6863, -74.3431),
+            (74.3431, -80)
+        ])
+    ],
+    'FillerShape'
+)
 
 ## Q17 Environment -> Circular environment. NOT APPLICABLE FOR SUMMARY MEASURES AND WILL BE REMOVED UPON CONFIRMATION WITH RESEARCHERS
 Q17_ENV = None
 
 # TESTING
-# print(COMMON_ENV.grid)
-# increases = [21, 41, 81, 121, 161]
-# for y in range(5):
-#     print(f"Row {y}")
-#     for x in range(5):
-#         # print(f"Column {y}")
-#         print(f"Index: {COMMON_ENV.SpecimenLocation(increases[x], increases[y], index=True)}, EW Locale: {COMMON_ENV.SpecimenLocation(increases[x], increases[y])}, coords: ({increases[x]}, {increases[y]})")

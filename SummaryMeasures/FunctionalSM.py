@@ -223,23 +223,11 @@ def CalculateStops(data: np.ndarray, env: fsm.Environment) -> tuple[list[int], l
         frame = data[i]
         if frame[4] == 0: # Part of a lingering episode
             specimenLocale =  env.SpecimenLocation(frame[1], frame[2], index=True) # Get current locale of specimen
-            # if GetLocaleFromIndex(specimenLocale) in [50, 4] and not relevantLocale:
-            #     print(f"Currently in locale: {GetLocaleFromIndex(specimenLocale)}")
-            #     relevantLocale = True
+
             stopped = True # Lingering episode begins (if it hasn't already begun)
             # Count the stop
-            # if not stopped: # If it was previously moving and just now stopped
-            #     stopped = True
-                # locDur = [0 for x in range(25)]
             locDur[specimenLocale] += 1
         elif frame[4] == 1 and stopped: # lingering episode ends
-            # if relevantLocale:
-            #     relevantLocale = False
-            #     print("End of lingering containing relevant locales")
-            #     print(locDur)
-            #     print(np.argmax(locDur))
-            #     print(GetLocaleFromIndex(np.argmax(locDur)))
-            #     print(f"Frame of ending: {frame[0]}")
             stopped = False
             # Get the maximum duration for each locale and add a stop to the max locale
             maxLocale = np.argmax(locDur)
@@ -247,7 +235,6 @@ def CalculateStops(data: np.ndarray, env: fsm.Environment) -> tuple[list[int], l
                 stopLocales[maxLocale] += 1
             prevStopLocale = maxLocale
             # Add stop frames to total stop durations
-            # stopFrames = [sum(comb) for comb in zip(stopFrames, locDur)]
             stopFrames[maxLocale] += sum(locDur) 
             # Reset local locale stop durations (for a stop episode)
             locDur = [0 for x in range(25)]
@@ -424,29 +411,43 @@ def CalculateMeanStopsExcursions(data: np.ndarray, env: fsm.Environment, require
     desiredCalcs = HandleMissingInputs('calc_HB1_meanExcursionStops', data, env, requiredSummaryMeasures, preExistingCalcs)
 
     ### Summary Measure Logic
-    # localeVisits = desiredCalcs['locale_stops_calc'][0]
-    # localeDuration = desiredCalcs['locale_stops_calc'][1]
     mainHomeBase = requiredSummaryMeasures['calc_homebases'][0]
 
     totalExcursions = 0
     totalStops = 0
     excursion = False
-    stopped = False
+    # stopped = False
+    previousLocale = -1
+
+    f = 0
+    while f < len(data):
+        stopLocale, preStopIndex, postStopIndex = CalculateStopLocale(data[f:], env, index=False)
+        if stopLocale == -1: # no more visitations, period
+            break
+        if stopLocale != previousLocale: # If not a successive stop, then count it
+            if stopLocale != mainHomeBase:
+                if not excursion:
+                    excursion = True
+                    totalExcursions += 1
+                totalStops += 1
+            else:
+                excursion = False
+        f += postStopIndex
     # Count number of excursions (and their total stops) for each locale
-    for i in range(len(data)):
-        frame = data[i]
-        specimenLocale = env.SpecimenLocation(frame[1], frame[2])
-        if specimenLocale != mainHomeBase: # If the specimen is not in the main home base
-            if frame[4] == 1 and not excursion: # If the specimen is no longer in its main home base, it's on an excursion. Has to be moving in a progressive episode to be counted as an excursion (lingering between main home base and elsewhere doesn't count).
-                totalExcursions += 1
-                excursion = True
-            if frame[4] == 0 and excursion and not stopped: # If the specimen is lingering while on an excursion
-                totalStops += 1 ## UPDATE WITH PROPER STOP CALCULATION METHODS. NEEDS TO CALCULATE ACCORDING TO REAL STOP METHOD.
-                stopped = True
-            elif frame[4] == 1:
-                stopped = False 
-        else:
-            excursion = False
+    # for i in range(len(data)):
+    #     frame = data[i]
+    #     specimenLocale = env.SpecimenLocation(frame[1], frame[2])
+    #     if specimenLocale != mainHomeBase: # If the specimen is not in the main home base
+    #         if frame[4] == 1 and not excursion: # If the specimen is no longer in its main home base, it's on an excursion. Has to be moving in a progressive episode to be counted as an excursion (lingering between main home base and elsewhere doesn't count).
+    #             totalExcursions += 1
+    #             excursion = True
+    #         if frame[4] == 0 and excursion and not stopped: # If the specimen is lingering while on an excursion
+    #             totalStops += 1 ## UPDATE WITH PROPER STOP CALCULATION METHODS. NEEDS TO CALCULATE ACCORDING TO REAL STOP METHOD.
+    #             stopped = True
+    #         elif frame[4] == 1:
+    #             stopped = False 
+    #     else:
+    #         excursion = False
     return totalStops / totalExcursions
 
 def Calculate_Main_Homebase_Stop_Duration(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> float:
@@ -490,7 +491,6 @@ def Calculate_Secondary_Homebase_Stop_Duration(data: np.ndarray, env: fsm.Enviro
         print("WARNING: Cannot calculate mean return time to main home base, as second home base does not exist!")
         return None
 
-    # localeVisits = desiredCalcs['locale_stops_calc'][0]
     localeDuration = desiredCalcs['locale_stops_calc'][1]
     secondaryHomeBase = requiredSummaryMeasures['calc_homebases'][1]
 
@@ -514,11 +514,10 @@ def Calculate_Frequency_Stops_Secondary_Homebase(data: np.ndarray, env: fsm.Envi
     ### Summary Measure Logic
     # Constraint: cannot calculate the summary measure if 2nd home base isn't present
     if requiredSummaryMeasures["calc_homebases"][1] == None:
-        print("WARNING: Cannot calculate mean return time to main home base, as second home base does not exist!")
+        print("WARNING: Cannot number of stops within the secondary home base, as second home base does not exist!")
         return None
 
     localeVisits = desiredCalcs['locale_stops_calc'][0]
-    # localeDuration = desiredCalcs['locale_stops_calc'][1]
     secondaryHomeBase = requiredSummaryMeasures['calc_homebases'][1]
 
     ind = GetIndexFromLocale(secondaryHomeBase)
@@ -539,7 +538,6 @@ def Calculated_Expected_Return_Frequency_Main_Homebase(data: np.ndarray, env: fs
 
     ### Summary Measure Logic
     localeVisits = desiredCalcs['locale_stops_calc'][0]
-    # localeDuration = desiredCalcs['locale_stops_calc'][1]
     mainHomeBase = requiredSummaryMeasures['calc_homebases'][0]
 
     # The total number of locales visited during the session
@@ -553,7 +551,7 @@ def Calculated_Expected_Return_Frequency_Main_Homebase(data: np.ndarray, env: fs
 
 def Calculate_Mean_Return_Time_All_Locales(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> float:
     """
-        Calculates the mean return time to all locales,
+        Calculates the mean return time to all locales, or rather, the average time it takes to visit or stop in a locale.
 
         Warning: There must be at least two stop within the first home base (for there to be a main home base). I think.
 
@@ -570,23 +568,19 @@ def Calculate_Mean_Return_Time_All_Locales(data: np.ndarray, env: fsm.Environmen
         return None
 
     localeVisits = desiredCalcs['locale_stops_calc'][0]
+    localeDurations = desiredCalcs['locale_stops_calc'][1]
     mainHomeBase = requiredSummaryMeasures['calc_homebases'][0]
 
-    totalExcursionDuration = 0
-    excursion = False
-    # Count number of excursions (and their total stops) for each locale
-    for i in range(len(data)):
-        frame = data[i]
-        specimenLocale = env.SpecimenLocation(frame[1], frame[2])
-        specimenLocaleIndex = GetIndexFromLocale(specimenLocale)
-        if specimenLocale != mainHomeBase: # If the specimen is not in the main home base
-            if frame[4] == 1 and not excursion: # If the specimen is no longer in its main home base, it's on an excursion. Has to be moving in a progressive episode to be counted as an excursion (lingering between main home base and elsewhere doesn't count).
-                excursion = True
-            elif excursion and localeVisits[specimenLocaleIndex] > 1: # If the specimen is on an excursion in a locale that it will/has stopped in more than once
-                totalExcursionDuration += 1
-        else:
-            excursion = False
-    return (totalExcursionDuration / sum(localeVisits)) / FRAMES_PER_SECOND
+    excursionTimes = []
+    totalExcursionsDuration = sum(localeDurations)
+    for loc in range(len(localeDurations)):
+        if localeVisits[loc] > 0: # If the locale was visited at least once.
+            excursionTimeForLocale = totalExcursionsDuration - localeDurations[loc] # Calculate the current locales total excursion (away from locale) time.
+            excursionTimes.append(excursionTimeForLocale / localeVisits[loc]) # Calculate the average return time to the current locale 
+
+    # Average the total excursion time
+    meanReturnTimeToAllLocales = np.mean(excursionTimes)
+    return  meanReturnTimeToAllLocales / FRAMES_PER_SECOND
 
 
 def Expected_Return_Time_Main_Homebase(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> float:
@@ -600,16 +594,11 @@ def Expected_Return_Time_Main_Homebase(data: np.ndarray, env: fsm.Environment, r
         Reference ID is: calc_expectedMainHomeBaseReturn
     """
     # # Check if required summary measures have been calculated already
-    # CheckForMissingDependencies('calc_expectedMainHomeBaseReturn', requiredSummaryMeasures.keys())
-    # # Perform any necessary pre-calcs
-    # requiredCalcs = DATA_DEPENDENCIES["calc_expectedMainHomeBaseReturn"]
-    # desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
-    # Check missing calculations of any kind. (Errors on missing summary measure calcs).
     desiredCalcs = HandleMissingInputs("calc_expectedMainHomeBaseReturn", data, env, requiredSummaryMeasures, preExistingCalcs)
 
     ### Summary Measure Logic
     if requiredSummaryMeasures["calc_homebases"][1] == None:
-        print("WARNING: Cannot calculate mean return time to all locales, as the first home base is only stopped in once!")
+        print("WARNING: Cannot calculate mean return time to main homebase, as the first home base is only stopped in once!")
         return None
     
     mainHomeBaseMeanReturn = requiredSummaryMeasures['calc_HB1_meanReturn']
@@ -696,7 +685,7 @@ def Calculate_Distance_Travelled(data: np.ndarray, env: fsm.Environment, require
     totalDistanceProgression = sum(distancesProgression)
     return (totalDistanceProgression, totalDistanceAll), totalDurationSeconds, totalDistanceProgression / (totalDurationSeconds), (distancesProgression, distancesAll)
 
-# Below summary isn't finished yet! Do not call it. Ever. For now.
+
 def Calculate_Bouts(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasures: dict, preExistingCalcs: dict = None) -> list[list]:
     """
         Calculates the bouts of checking and returns a list of lists containing frames from the time-spatial data comprising checking bouts.
@@ -706,10 +695,6 @@ def Calculate_Bouts(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasu
         Reference ID is: calc_boutsOfChecking
     """
     # Check if required summary measures have been calculated already
-    # CheckForMissingDependencies('calc_boutsOfChecking', requiredSummaryMeasures.keys())
-    # Perform any necessary pre-calcs
-    # requiredCalcs = DATA_DEPENDENCIES.get("calc_boutsOfChecking", [])
-    # desiredCalcs = CalculateMissingCalcs(data, env, preExistingCalcs, requiredCalcs)
     desiredCalcs = HandleMissingInputs('calc_boutsOfChecking', data, env, requiredSummaryMeasures, preExistingCalcs)
 
     ### Summary Measure Logic
@@ -799,22 +784,8 @@ def Calculate_Bouts(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasu
             ch += 1
             continue
         
-        
-        # for i in range(len(boutOfActivity)):
-        #     frame = boutOfActivity[i]
-        #     if not hb_visit and env.SpecimenLocation(frame[1], frame[2]) == mainHomeBase and frame[4] == 0: # If not visiting homebase in previous frame, but now currently in the homebase
-        #         hb_visit = True
-        #         if not first_visit:
-        #             right_points.append(i) # End of excursion
-        #     elif hb_visit and env.SpecimenLocation(frame[1], frame[2]) != mainHomeBase and frame[4] == 1: # If not in the homebase currently and currently progressing, but previously visiting the home base
-        #         hb_visit = False
-        #         first_visit = False
-        #         left_points.append(i - 1) # Beginning of excursion
-        
         curCheckingBoutsDuration = []
-        # if len(right_points) == 0:
-        #     print("Hey there buddy")
-        for i in range(len(right_points)):
+        for i in range(len(right_points)): # Get total excursion lengths
             start_of_excursion = left_points[i]
             end_of_excursion = right_points[i]
             curCheckingBoutsDuration.append(end_of_excursion + 1 - start_of_excursion)
@@ -837,11 +808,7 @@ def Calculate_Bouts(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasu
 
 
     ## Calculate relevant values based on all bouts
-    # for i in range(len(checkingBoutsDurations)): # Set bout durations = 0 in the case that consecutive visits to home base was found.
-    #     if len(checkingBoutsDurations[i]) == 0:
-    #         checkingBoutsDurations[i] = [0]
     checkingBoutsDurationsFlattened = [x for cBD in checkingBoutsDurations for x in cBD if x != 0]
-    # numZeroes = len([0 for x in checkingBoutsDurationsFlattened if x == 0])  # Counts number of bouts that didn't have any consecutive visits to main home base.
     meanTimeReturn = np.sum(checkingBoutsDurationsFlattened) / max(len(checkingBoutsDurationsFlattened), 1) # Mean time of lingering episode
     q75MeanReturn, q25MeanReturn = np.percentile(checkingBoutsDurationsFlattened, [75, 25])
     iqrMeanReturn = q75MeanReturn - q25MeanReturn
@@ -924,48 +891,6 @@ def Calculate_Bouts(data: np.ndarray, env: fsm.Environment, requiredSummaryMeasu
             final_bouts.append(cBout)
     
     return final_bouts
-
-
-
-
-        
-    
-
-
-    # # Filter out all bouts that have too long excursion times
-
-    # Find all continuous 
-    
-    # Find all possible intervals -> use on bouts of activity data
-    ## Find the start and end points of all homebase visitations (their frames).
-    # right_points = [] # start of hb visitation (think of it as the ')', or end, of an excursion)
-    # left_points = [] # end of hb visitation (think of it as the '(', or start, of an excursion)
-    # hb = False if env.SpecimenLocation(boutOfActivity[0][1], boutOfActivity[0][2]) != mainHomeBase else True # Currently in homebase
-    # first_visit = True if hb else False # Covers the edge case of the bouts beginning with a lingering episode
-    # for i in range(len(boutOfActivity)):
-    #     frame = boutOfActivity[i]
-    #     if not hb and env.SpecimenLocation(frame[1], frame[2]) == mainHomeBase: # If not in homebase in previous frame, but now currently in the homebase
-    #         hb = True
-    #         if not first_visit:
-    #             right_points.append(i) # End of excursion
-    #     elif hb and env.SpecimenLocation(frame[1], frame[2]) != mainHomeBase: # If not in the homebase currently, but previously in the home base
-    #         hb = False
-    #         first_visit = False
-    #         left_points.append(i - 1) # Beginning of excursion
-
-    # ## Create the intervals from the above 
-    # for i in range(len(right_points) - 1):
-    #     start_of_excursion = left_points[i]
-    #     end_of_excursion = right_points[i + 1]
-        
-
-
-    # ## Check if their excursion stuff meets the criteria
-
-    # # Filter out lingering episodes that don't start and end in homebase
-    # outliers = list(filter(lambda x : env.SpecimenLocation(x[0][1], x[0][2]) == mainHomeBase and env.SpecimenLocation(x[-1][1], x[-1][2]) == mainHomeBase, outliers))
-
-    # # Dunno :)
 
 
 ## Bout Summary Measures ##
@@ -1094,19 +1019,6 @@ def Calculate_Bout_Mean_Rate_Of_Checks(data: np.ndarray, env: fsm.Environment, r
                 excursionTimes.append(end - start)
                 start = postStopIndex
             f += postStopIndex
-
-        # Find average excursion time (times before homebase visits), not including any excursions that don't result in a return to the main homebase.
-        # for i in range(len(bout)): ## WHAT ABOUT THE CASE OF A RAT STARTING OFF IN A LINGERING EPISODE OUTSIDE OF THE MAIN HOMEBASE. IS THAT A PART OF THE EXCURSION TOO?
-        #     frame = bout[i]
-        #     specimenLocale = env.SpecimenLocation(frame[1], frame[2])
-        #     if not exc and specimenLocale != mainHomeBase and frame[4] == 1: # If specimen isn't already counted as on an excursion, it's progressing somewhere and it's not in the main homebase.
-        #         exc = True
-        #         start = frame[0]
-        #     elif exc and specimenLocale == mainHomeBase:
-        #         exc = False
-        #         end = frame[0]
-        #         # Add excursion duration to bout's overall excursion times
-        #         excursionTimes.append(end - start)
         
         # Add the mean reciprocal return time for the bout.
         meanRateOfChecks += 1 / np.mean(excursionTimes)
@@ -1115,11 +1027,3 @@ def Calculate_Bout_Mean_Rate_Of_Checks(data: np.ndarray, env: fsm.Environment, r
         
 
 ### TESTING ###
-# x = np.array([1, 5, 21, 1, 2, 5, 9, 21])
-# print(x[np.argpartition(x, len(x) - 2)][-2:])
-
-# x = 10
-# print(np.log10(x))
-
-# x = np.array([[1, 2, 3, 10], [4, 5, 6, 11], [7, 8, 9, 12]])
-# print(x[:, [0, 2, 3]])

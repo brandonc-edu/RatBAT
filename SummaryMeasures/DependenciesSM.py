@@ -120,9 +120,3 @@ class Karpov:
 
 ### TESTING ###
 
-# ls = ['calc_expectedMainHomeBaseReturn']
-# ordered = Karpov.OrderSummaryMeasures(ls)
-# added = Karpov.AddRequiredSummaryMeasures(ls)
-# ordered, data = Karpov.ResolveDependencies(ls)
-# print(ordered)
-# print(data)

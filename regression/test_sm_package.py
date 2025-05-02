@@ -11,7 +11,7 @@ class Test_SM_Package:
 
     def setup_method(self, method):
         print(f"Now setting up method: {method}")
-        self.interface = csm.Commander(None, "common")
+        self.interface = csm.Commander("common")
 
     # Using commander interface & Karpov for ease of testing
     @pytest.mark.parametrize("smoothed_data, actual_summ_measures", TEST_CASES)
