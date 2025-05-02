@@ -27,6 +27,12 @@ const CompileDataPage = () => {
     calc_sessionTotalLocalesVisited: 'Total Locales Visited',
     calc_sessionTotalStops: 'Total Stops',
     calc_sessionReturnTimeMean : "Mean Return Time All Locales",
+    calc_expectedMainHomeBaseReturn : "Expected Return Time Main Homebase",
+    calc_bout_totalBouts : "Bout Total",
+    calc_bout_totalBoutDuration : "Bout Total Duration",
+    calc_bout_meanTimeUntilNextBout : "Bout Mean Time Until Next Bout",
+    calc_bout_meanCheckFreq : "Bout Mean Check Frequency",
+    calc_bout_meanRateOfChecks : "Bout Mean Rate Of Checks",
   };
 
   const measureSelectAreaDisplayNames = {
@@ -43,6 +49,12 @@ const CompileDataPage = () => {
     calc_sessionTotalStops: 'Total Stops',
     calc_sessionReturnTimeMean : "Mean Return Time All Locales",
     calc_distanceTravelled : "Distance Travelled",
+    calc_expectedMainHomeBaseReturn : "Expected Return Time Main Homebase",
+    calc_bout_totalBouts : "Calculate Bout Total",
+    calc_bout_totalBoutDuration : "Calculate Bout Total Duration",
+    calc_bout_meanTimeUntilNextBout : "Calculate Bout Mean Time Until Next Bout",
+    calc_bout_meanCheckFreq : "Calculate Bout Mean Check Frequency",
+    calc_bout_meanRateOfChecks : "Calculate Bout Mean Rate Of Checks",
   };
 
   // Define measure keys that need whole-number formatting
@@ -51,7 +63,8 @@ const CompileDataPage = () => {
     "calc_HB1_cumulativeReturn",
     "calc_sessionTotalLocalesVisited",
     "calc_sessionTotalStops",
-    "calc_HB2_cumulativeReturn"
+    "calc_HB2_cumulativeReturn",
+    "calc_bout_totalBouts"
   ];
 
   const metadataFieldMapping = {
