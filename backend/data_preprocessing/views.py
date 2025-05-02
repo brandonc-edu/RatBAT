@@ -5,9 +5,9 @@ import os
 import pandas as pd
 import numpy as np
 import requests
-from preprocessing.Preprocessor import Preprocessor
+from rBat.preprocessing.Preprocessor import Preprocessor
 from django.http import FileResponse
-from preprocessing.Preprocessor import LOG_TRANSFORM_FUNCTIONS
+from rBat.preprocessing.Preprocessor import LOG_TRANSFORM_FUNCTIONS
 import os
 from dotenv import load_dotenv
 
