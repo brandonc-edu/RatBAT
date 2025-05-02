@@ -14,6 +14,13 @@ This project is temporarily hosted on: http://ratbat.cas.mcmaster.ca/
 
 The Summary Measures & Preprocessing Toolkit package can be found at: https://pypi.org/project/rBat/
 
+## How to update urls for future FRDR updates?
+
+As new smoothed data is added to the FRDR, urls will be updated with new publication numbers, and data files will need to be accessible by the app. To account for this a simple process has been implemented to apply these changes as they happen:
+1. Update any changed publication numbers in `database/data/FRDR_update_log.csv`.
+2. For any study that now has smoothed data, update `default_smoothed_available` to `TRUE` in `database/data/FRDR_update_log.csv`.
+3. Run `python backend/manage.py update_urls`.
+
 ## Quick guide for TAs to go through the webapp end-to-end fast:
 In STEP 1: FRDR Query select the Trial filter → type in a number like 13186 in the first textbox (trial id:) → Apply button → Load Data from FRDR button. 
 Then in STEP 2: Data Preprocessing select the trial and click Fetch Preprocessed button.
