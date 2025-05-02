@@ -1,6 +1,6 @@
 """DependenciesSM
 
-This module contains all of the required functionality in regards to proper planning of SM calculations (in particular, their dependencies).
+This module contains all of the required functionality in regards to proper planning of SM calculations (in particular, their summary measure and data dependencies).
 
 
 Authors: Brandon Carrasco
@@ -45,11 +45,12 @@ class Karpov:
         """
         requiredSMs = []
         for sm in summary_measures:
-            if sm not in SM_DEPENDENCIES.keys():
+            if sm not in SM_DEPENDENCIES.keys(): # Summary measure has no dependencies
                 continue
-            dependencies = SM_DEPENDENCIES[sm]
+            dependencies = [dep for dep in SM_DEPENDENCIES[sm] if dep not in summary_measures] # Get all SM dependencies for the current summary measure, that aren't in the original request or updated summary measure list
             if len(dependencies) > 0:
-                requiredSMs = requiredSMs + [dep for dep in dependencies if dep not in summary_measures] # If dependency not already in summary measures, add it
+                dependencies = dependencies + Karpov.AddRequiredSummaryMeasures(dependencies + summary_measures) # Get dependencies of new summary measures
+                requiredSMs = requiredSMs + dependencies # If dependency not already in summary measures, add it
         return list(set(requiredSMs))
 
     def OrderSummaryMeasures(summary_measures: list[str]) -> list[str]:
