@@ -73,7 +73,7 @@ pip-requirements-parser==32.0.1
 pip_audit==2.9.0
 platformdirs==4.3.6
 prompt_toolkit==3.0.48
-psutil==6.1.1
+psutil
 ptyprocess==0.7.0
 pure_eval==0.2.3
 py-serializable==2.0.0
@@ -95,8 +95,6 @@ requests==2.32.3
 rich==13.7.1
 ruamel.yaml==0.18.10
 ruamel.yaml.clib==0.2.12
-safety==3.4.0
-safety-schemas==0.0.14
 scikit-learn==1.5.2
 scipy==1.14.1
 shapely==2.0.7
