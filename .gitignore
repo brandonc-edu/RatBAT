@@ -1,4 +1,5 @@
 venv/
+env/
 backend/summary_measures/migrations/
 backend/env
 backend/db_connector/migrations/
